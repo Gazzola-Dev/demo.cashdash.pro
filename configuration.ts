@@ -2,9 +2,9 @@ const production = process.env.NODE_ENV === "production";
 
 const configuration = {
   site: {
-    name: "Eco3D",
+    name: "My AI, Quest.",
     description:
-      "Discover eco-friendly 3D printed products made with biodegradable PHA at Eco3D",
+      "Quest is a proactive AI assistant, designed to help you understand and leverage AI.",
     siteUrl: process.env.NEXT_PUBLIC_SITE_URL,
     twitterHandle: "",
     instagramHandle: "",

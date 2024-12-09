@@ -8,21 +8,20 @@ import Providers from "@/providers/Providers";
 import { poppins } from "@/styles/fonts";
 
 export const metadata: Metadata = {
-  title: "Eco3D",
+  title: "My AI, Quest.",
   description:
-    "Discover eco-friendly 3D printed products made with biodegradable PHA at Eco3D",
+    "Quest proactively helps you to make the most of AI in your professional and personal life.",
   authors: { name: "Aaron Gazzola" },
   keywords:
-    "3D printing, eco-friendly, biodegradable, PHA, sustainable products",
+    "AI, Chat bot, Quest, My AI, Quest, AI assistant, proactive AI, AI assistant",
   robots: "index, follow",
   openGraph: {
-    title: "Eco3D",
-    description:
-      "Explore sustainable 3D printed products made with biodegradable PHA at Eco3D",
+    title: "My AI, Quest.",
+    description: "",
     type: "website",
-    url: "https://eco3d.shop",
-    siteName: "Eco3D",
-    images: "https://eco3d.shop/images/logo.png",
+    url: "https://myai.quest",
+    siteName: "My AI, Quest.",
+    // images: "https://eco3d.shop/images/logo.png",
     locale: "en_US",
   },
 };
