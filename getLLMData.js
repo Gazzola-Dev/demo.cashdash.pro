@@ -1,6 +1,5 @@
 const fs = require("fs/promises");
 const path = require("path");
-
 const OUTPUT_DIR = "llm-data";
 
 async function exists(path) {
@@ -12,18 +11,17 @@ async function exists(path) {
   }
 }
 
-async function copyDir(src, dest) {
+async function flatCopyDir(src, dest) {
   await fs.mkdir(dest, { recursive: true });
   const entries = await fs.readdir(src, { withFileTypes: true });
 
   for (const entry of entries) {
     const srcPath = path.join(src, entry.name);
-    const destPath = path.join(dest, entry.name);
-
     if (entry.isDirectory()) {
-      await copyDir(srcPath, destPath);
+      await flatCopyDir(srcPath, dest);
     } else {
-      await fs.copyFile(srcPath, destPath);
+      const uniqueName = `${path.basename(src)}_${entry.name}`;
+      await fs.copyFile(srcPath, path.join(dest, uniqueName));
     }
   }
 }
@@ -31,32 +29,27 @@ async function copyDir(src, dest) {
 async function combineTypesFiles(typesDir, outputPath) {
   const files = await fs.readdir(typesDir);
   let combined = "";
-
   for (const file of files) {
     if (file !== "database.types.ts") {
       const content = await fs.readFile(path.join(typesDir, file), "utf-8");
       combined += `// From ${file}\n${content}\n\n`;
     }
   }
-
   await fs.writeFile(outputPath, combined);
 }
 
 async function combineMigrations(migrationsDir, outputPath) {
   const files = (await fs.readdir(migrationsDir)).sort();
   let combined = "";
-
   for (const file of files) {
     const content = await fs.readFile(path.join(migrationsDir, file), "utf-8");
     combined += `-- From ${file}\n${content}\n\n`;
   }
-
   const timestamp = files[files.length - 1].split("_")[0];
-  const finalPath = path.join(
-    path.dirname(outputPath),
-    `${timestamp}combined_migrations.sql`,
+  await fs.writeFile(
+    path.join(OUTPUT_DIR, `${timestamp}combined_migrations.sql`),
+    combined,
   );
-  await fs.writeFile(finalPath, combined);
 }
 
 async function main() {
@@ -65,7 +58,7 @@ async function main() {
   const dirsToCopy = ["actions", "hooks", "docs"];
   for (const dir of dirsToCopy) {
     if (await exists(dir)) {
-      await copyDir(dir, path.join(OUTPUT_DIR, dir));
+      await flatCopyDir(dir, OUTPUT_DIR);
     }
   }
 
@@ -106,9 +99,7 @@ async function main() {
 
   for (const file of filesToCopy) {
     if (await exists(file)) {
-      const destPath = path.join(OUTPUT_DIR, path.basename(file));
-      await fs.mkdir(path.dirname(destPath), { recursive: true });
-      await fs.copyFile(file, destPath);
+      await fs.copyFile(file, path.join(OUTPUT_DIR, path.basename(file)));
     }
   }
 }
