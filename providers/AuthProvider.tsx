@@ -1,16 +1,9 @@
 "use client";
 import useSupabase from "@/hooks/useSupabase";
-import { User } from "@supabase/supabase-js";
 import { useQueryClient } from "@tanstack/react-query";
 import { ReactNode, useEffect } from "react";
 
-const AuthClientProvider = ({
-  children,
-  user,
-}: {
-  children: ReactNode;
-  user?: User | null;
-}) => {
+const AuthProvider = ({ children }: { children: ReactNode }) => {
   const supabase = useSupabase();
   const queryClient = useQueryClient();
 
@@ -25,4 +18,4 @@ const AuthClientProvider = ({
   return <>{children}</>;
 };
 
-export default AuthClientProvider;
+export default AuthProvider;

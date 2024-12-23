@@ -1,10 +1,10 @@
+import AuthProvider from "@/providers/AuthProvider";
 import ProgressProvider from "@/providers/ProgressProvider";
+import QueryProvider from "@/providers/QueryProvider";
 import SuspendedSearchParamsProvider from "@/providers/SearchParamsProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
-import { ReactNode } from "react";
-import AuthProvider from "@/providers/AuthServerProvider";
 import { ZIndexProvider } from "@/providers/ZIndexProvider";
-import QueryProvider from "@/providers/QueryProvider";
+import { ReactNode } from "react";
 
 const Providers = ({ children }: { children: ReactNode }) => {
   return (
