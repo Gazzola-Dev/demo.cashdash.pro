@@ -1,16 +1,14 @@
-"use client";
 import AppLayout from "@/components/layout/AppLayoutComponents";
-import { Toaster } from "@/components/ui/toaster";
 import Providers from "@/providers/Providers";
 import "@/styles/globals.css";
+import { Metadata } from "next";
 
-// make server-side for metadata
-// export const metadata: Metadata = {
-//   title: "Cash Dash Pro",
-//   description: "Upwork and Github project management platform",
-// };
+export const metadata: Metadata = {
+  title: "Cash Dash Pro",
+  description: "Upwork and Github AI powered project management",
+};
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -21,7 +19,6 @@ export default function RootLayout({
         <Providers>
           <AppLayout>{children}</AppLayout>
         </Providers>
-        <Toaster />
       </body>
     </html>
   );
