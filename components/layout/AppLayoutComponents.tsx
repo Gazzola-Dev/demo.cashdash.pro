@@ -1,11 +1,6 @@
+"use client";
 import { signOutAction } from "@/actions/userActions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,199 +10,278 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useIsAdmin } from "@/hooks/userHooks";
 import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  useSidebar,
+} from "@/components/ui/sidebar";
+import {
+  AppData,
+  AppLayoutProps,
+  NavMainProps,
+  NavProjectsProps,
+  NavSecondaryProps,
+  NavUserProps,
+} from "@/types/ui.types";
+import {
+  BadgeCheck,
   Bell,
-  ChevronDown,
-  Folder,
-  Home,
+  BookOpen,
+  ChevronsUpDown,
+  Command,
+  CreditCard,
+  Frame,
+  LifeBuoy,
   LogOut,
-  Settings,
-  User,
+  Map,
+  PieChart,
+  Send,
+  Settings2,
+  Sparkles,
+  SquareTerminal,
 } from "lucide-react";
-import { ReactNode } from "react";
 
-interface NavItem {
-  title: string;
-  path: string;
-  icon: typeof Home | typeof Settings | typeof Folder;
-  items?: { title: string; path: string }[];
-}
+const data: AppData = {
+  user: {
+    name: "shadcn",
+    email: "m@example.com",
+    avatar: "/api/placeholder/32/32",
+  },
+  navMain: [
+    {
+      title: "Dashboard",
+      url: "/dashboard",
+      icon: SquareTerminal,
+      isActive: true,
+      items: [
+        { title: "Overview", url: "/dashboard" },
+        { title: "Analytics", url: "/dashboard/analytics" },
+      ],
+    },
+    {
+      title: "Projects",
+      url: "/projects",
+      icon: Frame,
+      items: [
+        { title: "All Projects", url: "/projects" },
+        { title: "New Project", url: "/projects/new" },
+      ],
+    },
+    {
+      title: "Documentation",
+      url: "/docs",
+      icon: BookOpen,
+    },
+    {
+      title: "Settings",
+      url: "/settings",
+      icon: Settings2,
+      items: [
+        { title: "Profile", url: "/settings/profile" },
+        { title: "Team", url: "/settings/team" },
+        { title: "Billing", url: "/settings/billing" },
+      ],
+    },
+  ],
+  navSecondary: [
+    { title: "Support", url: "/support", icon: LifeBuoy },
+    { title: "Feedback", url: "/feedback", icon: Send },
+  ],
+  projects: [
+    { name: "Design System", url: "/projects/design", icon: Frame },
+    { name: "Analytics", url: "/projects/analytics", icon: PieChart },
+    { name: "Infrastructure", url: "/projects/infra", icon: Map },
+  ],
+};
 
-export function AppLayout({ children }: { children: ReactNode }) {
+export function AppLayout({ children }: AppLayoutProps) {
   return (
     <div className="flex min-h-screen">
       <AppSidebar />
-      <main className="flex-1">
-        <div className="flex flex-col">
-          <AppHeader />
-          <div className="flex-1 p-4 md:p-6">{children}</div>
-        </div>
-      </main>
+      <main className="flex-1 p-6">{children}</main>
     </div>
-  );
-}
-
-function AppHeader() {
-  return (
-    <header className="sticky top-0 z-50 w-full border-b">
-      <div className="flex h-14 items-center px-4">
-        <div className="flex flex-1 items-center justify-between">
-          <div className="w-full flex-1" />
-          <UserNav />
-        </div>
-      </div>
-    </header>
   );
 }
 
 function AppSidebar() {
-  const isAdmin = useIsAdmin();
-
-  const navItems: NavItem[] = [
-    {
-      title: "Dashboard",
-      path: "/dashboard",
-      icon: Home,
-    },
-    {
-      title: "Projects",
-      path: "/projects",
-      icon: Folder,
-      items: [
-        { title: "All Projects", path: "/projects" },
-        { title: "Add Project", path: "/projects/new" },
-      ],
-    },
-    ...(isAdmin
-      ? [
-          {
-            title: "Admin",
-            path: "/admin",
-            icon: Settings,
-            items: [
-              { title: "Users", path: "/admin/users" },
-              { title: "Settings", path: "/admin/settings" },
-            ],
-          },
-        ]
-      : []),
-  ];
-
   return (
-    <nav className="hidden lg:block w-[300px] border-r px-4 py-6">
-      <div className="flex h-full flex-col">
-        <div className="flex items-center gap-2 px-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <span className="text-lg font-bold">A</span>
-          </div>
-          <span className="font-semibold">My AI, Quest</span>
-        </div>
+    <SidebarProvider>
+      <Sidebar variant="inset">
+        <SidebarHeader>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton size="lg" asChild>
+                <a href="/">
+                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary">
+                    <Command className="size-4" />
+                  </div>
+                  <div className="grid flex-1 text-left text-sm leading-tight">
+                    <span className="truncate font-semibold">CashDash.Pro</span>
+                    <span className="truncate text-xs">Developer Edition</span>
+                  </div>
+                </a>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarHeader>
 
-        <div className="mt-8 flex flex-1 flex-col gap-4">
-          <NavItems items={navItems} />
-          <ProjectsList />
-        </div>
+        <SidebarContent>
+          <NavMain items={data.navMain} />
+          <NavProjects projects={data.projects} />
+          <NavSecondary items={data.navSecondary} className="mt-auto" />
+        </SidebarContent>
 
-        <div className="mt-auto">
-          <UserNav />
-        </div>
-      </div>
-    </nav>
+        <SidebarFooter>
+          <NavUser user={data.user} />
+        </SidebarFooter>
+      </Sidebar>
+    </SidebarProvider>
   );
 }
 
-function NavItems({ items }: { items: NavItem[] }) {
+function NavMain({ items }: NavMainProps) {
   return (
-    <div className="space-y-1">
-      {items.map(item =>
-        item.items ? (
-          <Collapsible key={item.path}>
-            <CollapsibleTrigger asChild>
-              <Button variant="ghost" className="w-full justify-start">
-                {item.icon && <item.icon className="mr-2 h-4 w-4" />}
-                {item.title}
-                <ChevronDown className="ml-auto h-4 w-4" />
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-1">
-              {item.items.map(subItem => (
-                <Button
-                  key={subItem.path}
-                  variant="ghost"
-                  className="w-full justify-start pl-8"
-                  asChild
-                >
-                  <a href={subItem.path}>{subItem.title}</a>
-                </Button>
-              ))}
-            </CollapsibleContent>
-          </Collapsible>
-        ) : (
-          <NavButton key={item.path} item={item} />
-        ),
-      )}
-    </div>
+    <SidebarGroup>
+      <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+      <SidebarMenu>
+        {items.map(item => (
+          <SidebarMenuItem key={item.title}>
+            <SidebarMenuButton asChild>
+              <a href={item.url}>
+                <item.icon className="size-4" />
+                <span>{item.title}</span>
+              </a>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        ))}
+      </SidebarMenu>
+    </SidebarGroup>
   );
 }
 
-function NavButton({ item }: { item: NavItem }) {
-  const Icon = item.icon;
-
+function NavProjects({ projects }: NavProjectsProps) {
   return (
-    <Button variant="ghost" className="w-full justify-start" asChild>
-      <a href={item.path}>
-        <Icon className="mr-2 h-4 w-4" />
-        {item.title}
-      </a>
-    </Button>
+    <SidebarGroup>
+      <SidebarGroupLabel>Projects</SidebarGroupLabel>
+      <SidebarMenu>
+        {projects.map(project => (
+          <SidebarMenuItem key={project.name}>
+            <SidebarMenuButton asChild size="sm">
+              <a href={project.url}>
+                <project.icon className="size-4" />
+                <span>{project.name}</span>
+              </a>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        ))}
+      </SidebarMenu>
+    </SidebarGroup>
   );
 }
 
-function ProjectsList() {
+function NavSecondary({ items, className }: NavSecondaryProps) {
   return (
-    <div className="space-y-1">
-      <h3 className="px-2 text-sm font-medium">Recent Projects</h3>
-    </div>
+    <SidebarGroup className={className}>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {items.map(item => (
+            <SidebarMenuItem key={item.title}>
+              <SidebarMenuButton asChild size="sm">
+                <a href={item.url}>
+                  <item.icon className="size-4" />
+                  <span>{item.title}</span>
+                </a>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
   );
 }
 
-function UserNav() {
+function NavUser({ user }: NavUserProps) {
+  const { isMobile } = useSidebar();
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src="/avatars/01.png" alt="@user" />
-            <AvatarFallback>U</AvatarFallback>
-          </Avatar>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
-        <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium">user@example.com</p>
-            <p className="text-xs text-muted-foreground">User Account</p>
-          </div>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem>
-            <User className="mr-2 h-4 w-4" />
-            Profile
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Bell className="mr-2 h-4 w-4" />
-            Notifications
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => signOutAction()}>
-          <LogOut className="mr-2 h-4 w-4" />
-          Log out
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <SidebarMenu>
+      <SidebarMenuItem>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <SidebarMenuButton size="lg">
+              <Avatar className="size-8 rounded-lg">
+                <AvatarImage src={user.avatar} alt={user.name} />
+                <AvatarFallback className="rounded-lg">
+                  {user.name.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-semibold">{user.name}</span>
+                <span className="truncate text-xs">{user.email}</span>
+              </div>
+              <ChevronsUpDown className="ml-auto size-4" />
+            </SidebarMenuButton>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            className="w-56 rounded-lg"
+            side={isMobile ? "bottom" : "right"}
+            align="end"
+            sideOffset={4}
+          >
+            <DropdownMenuLabel>
+              <div className="flex items-center gap-2 p-1">
+                <Avatar className="size-8 rounded-lg">
+                  <AvatarImage src={user.avatar} alt={user.name} />
+                  <AvatarFallback className="rounded-lg">
+                    {user.name.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="grid flex-1 text-left text-sm">
+                  <span className="font-semibold">{user.name}</span>
+                  <span className="text-xs">{user.email}</span>
+                </div>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem>
+                <Sparkles className="mr-2 size-4" />
+                Upgrade Plan
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem>
+                <BadgeCheck className="mr-2 size-4" />
+                Account
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <CreditCard className="mr-2 size-4" />
+                Billing
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Bell className="mr-2 size-4" />
+                Notifications
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => signOutAction()}>
+              <LogOut className="mr-2 size-4" />
+              Log out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </SidebarMenuItem>
+    </SidebarMenu>
   );
 }
 
