@@ -1,14 +1,7 @@
 "use client";
 import { signOutAction } from "@/actions/userActions";
+import RouteBreadcrumb from "@/components/layout/RouteBreadCrumb";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -67,17 +60,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               <Menu className="h-4 w-4" />
             </SidebarTrigger>
             <Separator orientation="vertical" className="mr-2 h-4" />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink href="/">Dashboard</BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Current Page</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
+            <RouteBreadcrumb />
             <div className="ml-auto flex items-center gap-4">
               <form className="relative">
                 <Label htmlFor="search" className="sr-only">
