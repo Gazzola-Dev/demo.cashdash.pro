@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Separator } from "@/components/ui/separator";
 import {
   Sidebar,
   SidebarContent,
@@ -18,14 +19,16 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
+  SidebarInset,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
+  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { layoutData } from "@/constants/ui.constants";
 import {
-  AppData,
   AppLayoutProps,
   NavMainProps,
   NavProjectsProps,
@@ -35,116 +38,66 @@ import {
 import {
   BadgeCheck,
   Bell,
-  BookOpen,
   ChevronsUpDown,
   Command,
   CreditCard,
-  Frame,
-  LifeBuoy,
   LogOut,
-  Map,
-  PieChart,
-  Send,
-  Settings2,
+  Menu,
   Sparkles,
-  SquareTerminal,
 } from "lucide-react";
-
-const data: AppData = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/api/placeholder/32/32",
-  },
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: SquareTerminal,
-      isActive: true,
-      items: [
-        { title: "Overview", url: "/dashboard" },
-        { title: "Analytics", url: "/dashboard/analytics" },
-      ],
-    },
-    {
-      title: "Projects",
-      url: "/projects",
-      icon: Frame,
-      items: [
-        { title: "All Projects", url: "/projects" },
-        { title: "New Project", url: "/projects/new" },
-      ],
-    },
-    {
-      title: "Documentation",
-      url: "/docs",
-      icon: BookOpen,
-    },
-    {
-      title: "Settings",
-      url: "/settings",
-      icon: Settings2,
-      items: [
-        { title: "Profile", url: "/settings/profile" },
-        { title: "Team", url: "/settings/team" },
-        { title: "Billing", url: "/settings/billing" },
-      ],
-    },
-  ],
-  navSecondary: [
-    { title: "Support", url: "/support", icon: LifeBuoy },
-    { title: "Feedback", url: "/feedback", icon: Send },
-  ],
-  projects: [
-    { name: "Design System", url: "/projects/design", icon: Frame },
-    { name: "Analytics", url: "/projects/analytics", icon: PieChart },
-    { name: "Infrastructure", url: "/projects/infra", icon: Map },
-  ],
-};
 
 export function AppLayout({ children }: AppLayoutProps) {
   return (
-    <div className="flex min-h-screen">
-      <AppSidebar />
-      <main className="flex-1 p-6">{children}</main>
-    </div>
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full">
+        <AppSidebar />
+        <SidebarInset>
+          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+            <SidebarTrigger>
+              <Menu className="h-4 w-4" />
+            </SidebarTrigger>
+            <Separator orientation="vertical" className="h-4" />
+          </header>
+          <main className="flex-1 p-6 container mx-auto w-full max-w-7xl">
+            {children}
+          </main>{" "}
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
   );
 }
 
 function AppSidebar() {
   return (
-    <SidebarProvider>
-      <Sidebar variant="inset">
-        <SidebarHeader>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton size="lg" asChild>
-                <a href="/">
-                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary">
-                    <Command className="size-4" />
-                  </div>
-                  <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">CashDash.Pro</span>
-                    <span className="truncate text-xs">Developer Edition</span>
-                  </div>
-                </a>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarHeader>
+    <Sidebar variant="inset">
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="lg" asChild>
+              <a href="/">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary">
+                  <Command className="size-4" />
+                </div>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-semibold">CashDash.Pro</span>
+                  <span className="truncate text-xs">Developer Edition</span>
+                </div>
+              </a>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
 
-        <SidebarContent>
-          <NavMain items={data.navMain} />
-          <NavProjects projects={data.projects} />
-          <NavSecondary items={data.navSecondary} className="mt-auto" />
-        </SidebarContent>
+      <SidebarContent>
+        <NavMain items={layoutData.navMain} />
+        <NavProjects projects={layoutData.projects} />
+        <NavSecondary items={layoutData.navSecondary} className="mt-auto" />
+      </SidebarContent>
 
-        <SidebarFooter>
-          <NavUser user={data.user} />
-        </SidebarFooter>
-      </Sidebar>
-    </SidebarProvider>
+      <SidebarFooter>
+        <NavUser user={layoutData.user} />
+      </SidebarFooter>
+    </Sidebar>
   );
 }
 

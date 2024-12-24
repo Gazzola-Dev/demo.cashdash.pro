@@ -1,4 +1,4 @@
-import AppLayout from "@/components/layout/AppLayoutComponents";
+import AppLayout from "@/components/layout/AppLayout";
 import Providers from "@/providers/Providers";
 import "@/styles/globals.css";
 import { Metadata } from "next";
