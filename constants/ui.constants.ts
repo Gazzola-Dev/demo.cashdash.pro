@@ -1,14 +1,41 @@
 import { AppData } from "@/types/ui.types";
 import {
-  BookOpen,
+  Calendar,
   Frame,
+  KanbanSquare,
+  LayoutDashboard,
   LifeBuoy,
-  Map,
-  PieChart,
   Send,
   Settings2,
-  SquareTerminal,
 } from "lucide-react";
+
+const placeholderTasks = [
+  { id: "task-1", title: "Implement user authentication system" },
+  { id: "task-2", title: "Design new dashboard layout" },
+  { id: "task-3", title: "Fix responsive layout issues" },
+  { id: "task-4", title: "Update API documentation" },
+];
+
+const teams = [
+  {
+    name: "Acme Corp",
+    slug: "acme-corp",
+    logo: Frame,
+    plan: "Pro Plan",
+  },
+  {
+    name: "Startup Inc",
+    slug: "startup-inc",
+    logo: Frame,
+    plan: "Free Plan",
+  },
+  {
+    name: "Tech Solutions",
+    slug: "tech-solutions",
+    logo: Frame,
+    plan: "Team Plan",
+  },
+];
 
 export const layoutData: AppData = {
   user: {
@@ -16,49 +43,32 @@ export const layoutData: AppData = {
     email: "m@example.com",
     avatar: "/api/placeholder/32/32",
   },
+  teams,
   navMain: [
     {
       title: "Dashboard",
-      url: "/dashboard",
-      icon: SquareTerminal,
-      isActive: true,
       items: [
-        { title: "Overview", url: "/dashboard" },
-        { title: "Analytics", url: "/dashboard/analytics" },
-      ],
-    },
-    {
-      title: "Projects",
-      url: "/projects",
-      icon: Frame,
-      items: [
-        { title: "All Projects", url: "/projects" },
-        { title: "New Project", url: "/projects/new" },
-      ],
-    },
-    {
-      title: "Documentation",
-      url: "/docs",
-      icon: BookOpen,
-    },
-    {
-      title: "Settings",
-      url: "/settings",
-      icon: Settings2,
-      items: [
-        { title: "Profile", url: "/settings/profile" },
-        { title: "Team", url: "/settings/team" },
-        { title: "Billing", url: "/settings/billing" },
+        { title: "Overview", url: "/overview", icon: LayoutDashboard },
+        { title: "Calendar", url: "/calendar", icon: Calendar },
+        { title: "Kanban", url: "/kanban", icon: KanbanSquare },
       ],
     },
   ],
+  recentTasks: placeholderTasks.map(task => ({
+    title: task.title,
+    url: `/tasks/${task.id}`,
+  })),
+  taskActions: [
+    { title: "New Task", url: "/tasks/new" },
+    { title: "All Tasks", url: "/tasks" },
+  ],
   navSecondary: [
+    { title: "Settings", url: "/settings", icon: Settings2 },
     { title: "Support", url: "/support", icon: LifeBuoy },
     { title: "Feedback", url: "/feedback", icon: Send },
   ],
-  projects: [
-    { name: "Design System", url: "/projects/design", icon: Frame },
-    { name: "Analytics", url: "/projects/analytics", icon: PieChart },
-    { name: "Infrastructure", url: "/projects/infra", icon: Map },
+  projectActions: [
+    { title: "All Projects", url: "/projects" },
+    { title: "New Project", url: "/projects/new" },
   ],
 };

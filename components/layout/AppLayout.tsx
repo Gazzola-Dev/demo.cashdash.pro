@@ -1,6 +1,8 @@
 "use client";
+
 import { signOutAction } from "@/actions/userActions";
 import RouteBreadcrumb from "@/components/layout/RouteBreadCrumb";
+import { TeamSwitcher } from "@/components/layout/TeamSwitcher";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -20,7 +22,6 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
-  SidebarHeader,
   SidebarInset,
   SidebarMenu,
   SidebarMenuButton,
@@ -32,8 +33,6 @@ import {
 import { layoutData } from "@/constants/ui.constants";
 import {
   AppLayoutProps,
-  NavMainProps,
-  NavProjectsProps,
   NavSecondaryProps,
   NavUserProps,
 } from "@/types/ui.types";
@@ -41,7 +40,6 @@ import {
   BadgeCheck,
   Bell,
   ChevronsUpDown,
-  Command,
   CreditCard,
   LogOut,
   Menu,
@@ -57,7 +55,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         <SidebarInset>
           <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
             <SidebarTrigger className="-ml-1">
-              <Menu className="h-4 w-4" />
+              <Menu className="size-4" />
             </SidebarTrigger>
             <Separator orientation="vertical" className="mr-2 h-4" />
             <RouteBreadcrumb />
@@ -71,7 +69,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                   placeholder="Search..."
                   className="h-9 w-64 rounded-md border bg-background px-8 text-sm"
                 />
-                <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Search className="absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               </form>
             </div>
           </header>
@@ -89,27 +87,47 @@ export function AppLayout({ children }: AppLayoutProps) {
 function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <a href="/">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary">
-                  <Command className="size-4" />
-                </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">CashDash.Pro</span>
-                  <span className="truncate text-xs">Developer Edition</span>
-                </div>
-              </a>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarHeader>
+      <TeamSwitcher teams={layoutData.teams} />
 
       <SidebarContent>
-        <NavMain items={layoutData.navMain} />
-        <NavProjects projects={layoutData.projects} />
+        <SidebarGroup>
+          <SidebarGroupLabel>Dashboard</SidebarGroupLabel>
+          <SidebarMenu>
+            {layoutData.navMain[0].items.map(item => (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton asChild>
+                  <a href={item.url}>
+                    <item.icon className="size-4" />
+                    <span>{item.title}</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Recent Tasks</SidebarGroupLabel>
+          <SidebarMenu>
+            {layoutData.recentTasks.map(task => (
+              <SidebarMenuItem key={task.url}>
+                <SidebarMenuButton asChild size="sm">
+                  <a href={task.url}>
+                    <span className="truncate">{task.title}</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+            {layoutData.taskActions.map(action => (
+              <SidebarMenuItem key={action.url}>
+                <SidebarMenuButton asChild size="sm">
+                  <a href={action.url}>{action.title}</a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarGroup>
+
         <NavSecondary items={layoutData.navSecondary} className="mt-auto" />
       </SidebarContent>
 
@@ -117,46 +135,6 @@ function AppSidebar() {
         <NavUser user={layoutData.user} />
       </SidebarFooter>
     </Sidebar>
-  );
-}
-
-function NavMain({ items }: NavMainProps) {
-  return (
-    <SidebarGroup>
-      <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-      <SidebarMenu>
-        {items.map(item => (
-          <SidebarMenuItem key={item.title}>
-            <SidebarMenuButton asChild>
-              <a href={item.url}>
-                <item.icon className="size-4" />
-                <span>{item.title}</span>
-              </a>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        ))}
-      </SidebarMenu>
-    </SidebarGroup>
-  );
-}
-
-function NavProjects({ projects }: NavProjectsProps) {
-  return (
-    <SidebarGroup>
-      <SidebarGroupLabel>Projects</SidebarGroupLabel>
-      <SidebarMenu>
-        {projects.map(project => (
-          <SidebarMenuItem key={project.name}>
-            <SidebarMenuButton asChild size="sm">
-              <a href={project.url}>
-                <project.icon className="size-4" />
-                <span>{project.name}</span>
-              </a>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        ))}
-      </SidebarMenu>
-    </SidebarGroup>
   );
 }
 

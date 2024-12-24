@@ -7,29 +7,44 @@ export interface User {
   avatar: string;
 }
 
+export interface Team {
+  name: string;
+  slug: string;
+  logo: LucideIcon;
+  plan: string;
+}
+
 export interface NavItem {
   title: string;
   url: string;
   icon: LucideIcon;
-  isActive?: boolean;
-  items?: Array<{
-    title: string;
-    url: string;
-  }>;
 }
 
-export interface Project {
-  name: string;
+export interface DashboardItem {
+  title: string;
   url: string;
   icon: LucideIcon;
 }
 
-export interface NavMainProps {
-  items: NavItem[];
+export interface TaskItem {
+  title: string;
+  url: string;
 }
 
-export interface NavProjectsProps {
-  projects: Project[];
+export interface ActionItem {
+  title: string;
+  url: string;
+}
+
+export interface NavMainProps {
+  items: {
+    title: string;
+    items: DashboardItem[];
+  }[];
+}
+
+export interface TeamSwitcherProps {
+  teams: Team[];
 }
 
 export interface NavSecondaryProps {
@@ -47,7 +62,13 @@ export interface AppLayoutProps {
 
 export interface AppData {
   user: User;
-  navMain: NavItem[];
+  teams: Team[];
+  navMain: {
+    title: string;
+    items: DashboardItem[];
+  }[];
+  recentTasks: TaskItem[];
+  taskActions: ActionItem[];
   navSecondary: NavItem[];
-  projects: Project[];
+  projectActions: ActionItem[];
 }
