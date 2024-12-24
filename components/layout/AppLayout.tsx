@@ -2,6 +2,14 @@
 import { signOutAction } from "@/actions/userActions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
@@ -10,6 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import {
   Sidebar,
@@ -43,6 +52,7 @@ import {
   CreditCard,
   LogOut,
   Menu,
+  Search,
   Sparkles,
 } from "lucide-react";
 
@@ -53,14 +63,40 @@ export function AppLayout({ children }: AppLayoutProps) {
         <AppSidebar />
         <SidebarInset>
           <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-            <SidebarTrigger>
+            <SidebarTrigger className="-ml-1">
               <Menu className="h-4 w-4" />
             </SidebarTrigger>
-            <Separator orientation="vertical" className="h-4" />
+            <Separator orientation="vertical" className="mr-2 h-4" />
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink href="/">Dashboard</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Current Page</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+            <div className="ml-auto flex items-center gap-4">
+              <form className="relative">
+                <Label htmlFor="search" className="sr-only">
+                  Search
+                </Label>
+                <input
+                  id="search"
+                  placeholder="Search..."
+                  className="h-9 w-64 rounded-md border bg-background px-8 text-sm"
+                />
+                <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              </form>
+            </div>
           </header>
-          <main className="flex-1 p-6 container mx-auto w-full max-w-7xl">
-            {children}
-          </main>{" "}
+          <div className="flex flex-1 flex-col gap-4 p-4">
+            <main className="rounded-xl bg-background p-6 shadow">
+              {children}
+            </main>
+          </div>
         </SidebarInset>
       </div>
     </SidebarProvider>
@@ -69,7 +105,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
 function AppSidebar() {
   return (
-    <Sidebar variant="inset">
+    <Sidebar collapsible="icon">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
