@@ -36,5 +36,5 @@ yarn-error.log*
 next-env.d.ts
 
 # Development
-llm-data/
+.llm-data/
 changes.txt

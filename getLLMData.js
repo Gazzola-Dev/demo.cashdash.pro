@@ -1,6 +1,6 @@
 const fs = require("fs/promises");
 const path = require("path");
-const OUTPUT_DIR = "llm-data";
+const OUTPUT_DIR = ".llm-data";
 
 async function exists(path) {
   try {
@@ -20,8 +20,9 @@ async function flatCopyDir(src, dest) {
     if (entry.isDirectory()) {
       await flatCopyDir(srcPath, dest);
     } else {
-      const uniqueName = `${path.basename(src)}_${entry.name}`;
-      await fs.copyFile(srcPath, path.join(dest, uniqueName));
+      // Remove the directory prefix from the filename
+      const fileName = entry.name;
+      await fs.copyFile(srcPath, path.join(dest, fileName));
     }
   }
 }
@@ -29,22 +30,26 @@ async function flatCopyDir(src, dest) {
 async function combineTypesFiles(typesDir, outputPath) {
   const files = await fs.readdir(typesDir);
   let combined = "";
+
   for (const file of files) {
     if (file !== "database.types.ts") {
       const content = await fs.readFile(path.join(typesDir, file), "utf-8");
       combined += `// From ${file}\n${content}\n\n`;
     }
   }
+
   await fs.writeFile(outputPath, combined);
 }
 
 async function combineMigrations(migrationsDir, outputPath) {
   const files = (await fs.readdir(migrationsDir)).sort();
   let combined = "";
+
   for (const file of files) {
     const content = await fs.readFile(path.join(migrationsDir, file), "utf-8");
     combined += `-- From ${file}\n${content}\n\n`;
   }
+
   const timestamp = files[files.length - 1].split("_")[0];
   await fs.writeFile(
     path.join(OUTPUT_DIR, `${timestamp}combined_migrations.sql`),
