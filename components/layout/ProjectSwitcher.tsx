@@ -4,7 +4,6 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -14,6 +13,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import configuration from "@/configuration";
+import { cn } from "@/lib/utils";
 import { ChevronsUpDown, ListFilter, Plus } from "lucide-react";
 import * as React from "react";
 
@@ -25,7 +25,7 @@ type Team = {
 };
 
 export function ProjectSwitcher({ teams }: { teams: Team[] }) {
-  const { isMobile } = useSidebar();
+  const { isMobile, open } = useSidebar();
   const [activeTeam, setActiveTeam] = React.useState(teams[0]);
 
   return (
@@ -33,17 +33,24 @@ export function ProjectSwitcher({ teams }: { teams: Team[] }) {
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <SidebarMenuButton size="lg">
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+            <SidebarMenuButton size="lg" className="overflow-visible">
+              <div
+                className={cn(
+                  "flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground",
+                  !open && "ml-1.5 mt-5",
+                )}
+              >
                 <activeTeam.logo className="size-4" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">
                   {activeTeam.name}
                 </span>
-                <span className="truncate text-xs">{activeTeam.plan}</span>
+                <span className="truncate text-xs">30 character tagline</span>
               </div>
-              <ChevronsUpDown className="ml-auto size-4" />
+              <ChevronsUpDown
+                className={cn("ml-auto size-4", !open && "hidden")}
+              />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -53,12 +60,14 @@ export function ProjectSwitcher({ teams }: { teams: Team[] }) {
             side={isMobile ? "bottom" : "right"}
             sideOffset={4}
           >
-            <DropdownMenuLabel className="text-xs">Teams</DropdownMenuLabel>
+            <DropdownMenuLabel className="text-xs">
+              My Projects
+            </DropdownMenuLabel>
             {teams.map((team, index) => (
               <DropdownMenuItem
                 key={team.slug}
                 onClick={() => setActiveTeam(team)}
-                className="gap-2 p-2"
+                className="gap-2 p-2 cursor-pointer"
               >
                 <div className="flex size-6 items-center justify-center rounded-sm border">
                   <team.logo className="size-4 shrink-0" />
@@ -70,7 +79,6 @@ export function ProjectSwitcher({ teams }: { teams: Team[] }) {
                 >
                   {team.name}
                 </a>
-                <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
               </DropdownMenuItem>
             ))}
             <DropdownMenuSeparator />

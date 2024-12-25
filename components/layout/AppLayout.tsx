@@ -13,7 +13,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import {
   Sidebar,
@@ -47,9 +46,9 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
-  Search,
   UsersRound,
 } from "lucide-react";
+import Link from "next/link";
 
 export function AppLayout({ children }: AppLayoutProps) {
   return (
@@ -63,19 +62,6 @@ export function AppLayout({ children }: AppLayoutProps) {
             </SidebarTrigger>
             <Separator orientation="vertical" className="mr-2 h-4" />
             <RouteBreadcrumb />
-            <div className="ml-auto flex items-center gap-4">
-              <form className="relative">
-                <Label htmlFor="search" className="sr-only">
-                  Search
-                </Label>
-                <input
-                  id="search"
-                  placeholder="Search..."
-                  className="h-9 w-64 rounded-md border bg-background px-8 text-sm"
-                />
-                <Search className="absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              </form>
-            </div>
           </header>
           <div className="flex flex-1 flex-col gap-4 p-4">
             <main className="rounded-xl bg-background p-6 shadow">
@@ -89,69 +75,88 @@ export function AppLayout({ children }: AppLayoutProps) {
 }
 
 function AppSidebar() {
+  const { open } = useSidebar();
   return (
     <Sidebar collapsible="icon">
       <ProjectSwitcher teams={layoutData.teams} />
 
-      <SidebarContent>
+      <SidebarContent className="mt-4">
         <SidebarGroup>
           <SidebarGroupLabel>Project</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild size="sm">
-                <a
+                <Link
+                  className="cursor-pointer"
                   href={configuration.paths.project.overview({
                     project_slug: layoutData.teams[0].slug,
                   })}
                 >
                   <LayoutDashboard className="size-4" />
                   <span>Overview</span>
-                </a>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild size="sm">
-                <a
+                <Link
+                  className="cursor-pointer"
                   href={configuration.paths.project.timeline({
                     project_slug: layoutData.teams[0].slug,
                   })}
                 >
                   <Clock className="size-4" />
                   <span>Timeline</span>
-                </a>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild size="sm">
-                <a
+                <Link
+                  className="cursor-pointer"
                   href={configuration.paths.project.kanban({
                     project_slug: layoutData.teams[0].slug,
                   })}
                 >
                   <Kanban className="size-4" />
                   <span>Kanban</span>
-                </a>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Tasks</SidebarGroupLabel>
+          <SidebarGroupLabel>Starred Tasks</SidebarGroupLabel>
           <SidebarMenu>
-            {layoutData.recentTasks.map(task => (
+            {layoutData.recentTasks.map((task, i) => (
               <SidebarMenuItem key={task.url}>
                 <SidebarMenuButton asChild size="sm">
-                  <a href={task.url}>
-                    <span className="truncate">{task.title}</span>
-                  </a>
+                  <Link
+                    href={task.url}
+                    className="whitespace-nowrap cursor-pointer"
+                  >
+                    <span className="">
+                      {i * 7 + 1} -{open ? task.title : ""}
+                    </span>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
-            {layoutData.taskActions.map(action => (
+          </SidebarMenu>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>Recent Tasks</SidebarGroupLabel>
+          <SidebarMenu>
+            {layoutData.taskActions.map((action, i) => (
               <SidebarMenuItem key={action.url}>
                 <SidebarMenuButton asChild size="sm">
-                  <a href={action.url}>{action.title}</a>
+                  <Link
+                    href={action.url}
+                    className="whitespace-nowrap cursor-pointer"
+                  >
+                    {i * 1 + 1} - {open ? action.title : ""}
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
@@ -176,10 +181,10 @@ function NavSecondary({ items, className }: NavSecondaryProps) {
           {items.map(item => (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton asChild size="sm">
-                <a href={item.url}>
+                <Link className="cursor-pointer" href={item.url}>
                   <item.icon className="size-4" />
                   <span>{item.title}</span>
-                </a>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
@@ -234,28 +239,40 @@ function NavUser({ user }: NavUserProps) {
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
-                <a href={configuration.paths.settings.profile}>
+                <Link
+                  className="cursor-pointer"
+                  href={configuration.paths.settings.profile}
+                >
                   <CircleUser className="mr-2 size-4" />
                   Profile
-                </a>
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <a href={configuration.paths.settings.team}>
+                <Link
+                  className="cursor-pointer"
+                  href={configuration.paths.settings.team}
+                >
                   <UsersRound className="mr-2 size-4" />
                   Team
-                </a>
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <a href={configuration.paths.settings.notifications}>
+                <Link
+                  className="cursor-pointer"
+                  href={configuration.paths.settings.notifications}
+                >
                   <Bell className="mr-2 size-4" />
                   Notifications
-                </a>
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <a href={configuration.paths.settings.billing}>
+                <Link
+                  className="cursor-pointer"
+                  href={configuration.paths.settings.billing}
+                >
                   <CreditCard className="mr-2 size-4" />
                   Billing
-                </a>
+                </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
