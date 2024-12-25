@@ -11,18 +11,32 @@ async function exists(path) {
   }
 }
 
+async function shouldIncludeFile(dirName, fileName) {
+  // Only process files from specific directories
+  const validDirs = ["hooks", "actions", "types", "constants"];
+  if (!validDirs.includes(dirName)) {
+    return false;
+  }
+
+  // Check if the file name contains an additional period
+  const periods = fileName.split(".").length - 1;
+  return periods >= 2;
+}
+
 async function flatCopyDir(src, dest) {
   await fs.mkdir(dest, { recursive: true });
   const entries = await fs.readdir(src, { withFileTypes: true });
 
   for (const entry of entries) {
     const srcPath = path.join(src, entry.name);
+    const dirName = path.basename(src);
+
     if (entry.isDirectory()) {
       await flatCopyDir(srcPath, dest);
     } else {
-      // Remove the directory prefix from the filename
-      const fileName = entry.name;
-      await fs.copyFile(srcPath, path.join(dest, fileName));
+      if (shouldIncludeFile(dirName, entry.name)) {
+        await fs.copyFile(srcPath, path.join(dest, entry.name));
+      }
     }
   }
 }
@@ -32,13 +46,18 @@ async function combineTypesFiles(typesDir, outputPath) {
   let combined = "";
 
   for (const file of files) {
-    if (file !== "database.types.ts") {
-      const content = await fs.readFile(path.join(typesDir, file), "utf-8");
-      combined += `// From ${file}\n${content}\n\n`;
-    }
+    if (file === "database.types.ts") continue;
+
+    // Only include files with additional period in their name
+    if (file.split(".").length < 3) continue;
+
+    const content = await fs.readFile(path.join(typesDir, file), "utf-8");
+    combined += `// From ${file}\n${content}\n\n`;
   }
 
-  await fs.writeFile(outputPath, combined);
+  if (combined) {
+    await fs.writeFile(outputPath, combined);
+  }
 }
 
 async function combineMigrations(migrationsDir, outputPath) {
@@ -60,23 +79,21 @@ async function combineMigrations(migrationsDir, outputPath) {
 async function main() {
   await fs.mkdir(OUTPUT_DIR, { recursive: true });
 
-  // Directories to copy
-  const dirsToCopy = ["actions", "hooks", "docs"];
+  // Directories to copy (only process specific directories)
+  const dirsToCopy = ["actions", "hooks", "types", "constants"];
+
   for (const dir of dirsToCopy) {
     if (await exists(dir)) {
       await flatCopyDir(dir, OUTPUT_DIR);
     }
   }
 
-  // Handle types directory and database types
-  if (await exists("types")) {
-    await combineTypesFiles("types", path.join(OUTPUT_DIR, "combinedTypes.ts"));
-    if (await exists("types/database.types.ts")) {
-      await fs.copyFile(
-        "types/database.types.ts",
-        path.join(OUTPUT_DIR, "database.types.ts"),
-      );
-    }
+  // Handle database types separately since they're special
+  if (await exists("types/database.types.ts")) {
+    await fs.copyFile(
+      "types/database.types.ts",
+      path.join(OUTPUT_DIR, "database.types.ts"),
+    );
   }
 
   // Handle Supabase specific files
@@ -99,7 +116,7 @@ async function main() {
     "package.json",
     "README.md",
     "tailwind.config.ts",
-    "tailwind.config.js", // Include both .ts and .js versions
+    "tailwind.config.js",
     "tsconfig.json",
     "next.config.mjs",
     "configuration.ts",
@@ -110,14 +127,11 @@ async function main() {
 
   for (const file of filesToCopy) {
     if (await exists(file)) {
-      // For files in subdirectories, create the directory structure
       const destPath = path.join(OUTPUT_DIR, path.basename(file));
       const destDir = path.dirname(destPath);
-
       if (destDir !== OUTPUT_DIR) {
         await fs.mkdir(destDir, { recursive: true });
       }
-
       await fs.copyFile(file, destPath);
     }
   }

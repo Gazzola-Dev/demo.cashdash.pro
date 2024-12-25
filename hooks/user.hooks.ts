@@ -5,7 +5,7 @@ import {
   getUserRoleAction,
   signOutAction,
   updateUserAction,
-} from "@/actions/userActions";
+} from "@/actions/user.actions";
 import useSupabase from "@/hooks/useSupabase";
 import { useToastQueue } from "@/hooks/useToastQueue";
 import { ActionResponse } from "@/types/action.types";

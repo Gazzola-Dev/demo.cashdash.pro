@@ -1,6 +1,6 @@
 "use client";
 
-import { signOutAction } from "@/actions/userActions";
+import { signOutAction } from "@/actions/user.actions";
 import { ProjectSwitcher } from "@/components/layout/ProjectSwitcher";
 import RouteBreadcrumb from "@/components/layout/RouteBreadCrumb";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";

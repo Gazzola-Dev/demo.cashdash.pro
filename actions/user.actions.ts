@@ -1,6 +1,6 @@
 "use server";
 
-import getActionResponse from "@/actions/getActionResponse";
+import getActionResponse from "@/actions/action.util";
 import getSupabaseServerActionClient from "@/clients/action-client";
 
 // Get user action (auth.users)
@@ -114,39 +114,6 @@ export const signOutAction = async () => {
     if (error) throw new Error(error.message);
 
     return getActionResponse();
-  } catch (error) {
-    return getActionResponse({ error });
-  }
-};
-
-// Get user role action (auth.users)
-export const getUserRoleAction = async () => {
-  const supabase = await getSupabaseServerActionClient();
-  try {
-    const { data: userData, error: userError } = await supabase.auth.getUser();
-    if (userError) throw new Error(userError.message);
-
-    const userId = userData.user?.id;
-    if (!userId) throw new Error("User not found");
-
-    const { data, error } = await supabase
-      .from("user_roles")
-      .select("*")
-      .eq("user_id", userId)
-      .single();
-    if (error) throw new Error(error.message);
-
-    return getActionResponse({ data });
-  } catch (error) {
-    return getActionResponse({ error });
-  }
-};
-
-export const getUserIsAdminAction = async () => {
-  try {
-    const { data, error } = await getUserRoleAction();
-    if (error) throw new Error(error);
-    return getActionResponse({ data: data?.role === "admin" });
   } catch (error) {
     return getActionResponse({ error });
   }
