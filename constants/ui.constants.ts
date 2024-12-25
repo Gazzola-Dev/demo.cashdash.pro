@@ -1,74 +1,67 @@
-import { AppData } from "@/types/ui.types";
-import {
-  Calendar,
-  Frame,
-  KanbanSquare,
-  LayoutDashboard,
-  LifeBuoy,
-  Send,
-  Settings2,
-} from "lucide-react";
+import configuration from "@/configuration";
+import { Code2, LifeBuoy, Send, Settings2 } from "lucide-react";
 
-const placeholderTasks = [
-  { id: "task-1", title: "Implement user authentication system" },
-  { id: "task-2", title: "Design new dashboard layout" },
-  { id: "task-3", title: "Fix responsive layout issues" },
-  { id: "task-4", title: "Update API documentation" },
-];
-
-const teams = [
-  {
-    name: "Acme Corp",
-    slug: "acme-corp",
-    logo: Frame,
-    plan: "Pro Plan",
-  },
-  {
-    name: "Startup Inc",
-    slug: "startup-inc",
-    logo: Frame,
-    plan: "Free Plan",
-  },
-  {
-    name: "Tech Solutions",
-    slug: "tech-solutions",
-    logo: Frame,
-    plan: "Team Plan",
-  },
-];
-
-export const layoutData: AppData = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/api/placeholder/32/32",
-  },
-  teams,
-  navMain: [
+export const layoutData = {
+  teams: [
     {
-      title: "Dashboard",
-      items: [
-        { title: "Overview", url: "/overview", icon: LayoutDashboard },
-        { title: "Calendar", url: "/calendar", icon: Calendar },
-        { title: "Kanban", url: "/kanban", icon: KanbanSquare },
-      ],
+      name: "Acme Inc",
+      slug: "acme",
+      logo: Code2,
+      plan: "Pro Plan",
+    },
+    {
+      name: "Monster Inc",
+      slug: "monster",
+      logo: Code2,
+      plan: "Team Plan",
     },
   ],
-  recentTasks: placeholderTasks.map(task => ({
-    title: task.title,
-    url: `/tasks/${task.id}`,
-  })),
-  taskActions: [
-    { title: "New Task", url: "/tasks/new" },
-    { title: "All Tasks", url: "/tasks" },
-  ],
   navSecondary: [
-    { title: "Settings", url: "/settings", icon: Settings2 },
-    { title: "Support", url: "/support", icon: LifeBuoy },
-    { title: "Feedback", url: "/feedback", icon: Send },
+    {
+      title: "Settings",
+      url: configuration.paths.settings.all,
+      icon: Settings2,
+    },
+    {
+      title: "Support",
+      url: configuration.paths.support,
+      icon: LifeBuoy,
+    },
+    {
+      title: "feedback",
+      url: configuration.paths.feedback,
+      icon: Send,
+    },
   ],
-  projectActions: [
-    { title: "All Projects", url: "/projects" },
-    { title: "New Project", url: "/projects/new" },
+  recentTasks: [
+    {
+      title: "Update landing page",
+      url: configuration.paths.tasks.view({
+        project_slug: "acme",
+        task_slug: "landing-page",
+      }),
+    },
+    {
+      title: "Fix mobile navigation",
+      url: configuration.paths.tasks.view({
+        project_slug: "acme",
+        task_slug: "mobile-nav",
+      }),
+    },
   ],
+  taskActions: [
+    {
+      title: "View All Tasks",
+      url: configuration.paths.tasks.all({ project_slug: "acme" }),
+    },
+    {
+      title: "Create New Task",
+      url: configuration.paths.tasks.new({ project_slug: "acme" }),
+    },
+  ],
+  user: {
+    name: "John Doe",
+    email: "john@example.com",
+    avatar: "/avatar.png",
+  },
 };

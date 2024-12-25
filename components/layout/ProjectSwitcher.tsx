@@ -13,7 +13,8 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { ChevronsUpDown, Plus } from "lucide-react";
+import configuration from "@/configuration";
+import { ChevronsUpDown, ListFilter, Plus } from "lucide-react";
 import * as React from "react";
 
 type Team = {
@@ -23,7 +24,7 @@ type Team = {
   plan: string;
 };
 
-export function TeamSwitcher({ teams }: { teams: Team[] }) {
+export function ProjectSwitcher({ teams }: { teams: Team[] }) {
   const { isMobile } = useSidebar();
   const [activeTeam, setActiveTeam] = React.useState(teams[0]);
 
@@ -46,7 +47,8 @@ export function TeamSwitcher({ teams }: { teams: Team[] }) {
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+            className="w-56 rounded-lg bg-background border shadow-lg"
+            onClick={e => e.stopPropagation()}
             align="start"
             side={isMobile ? "bottom" : "right"}
             sideOffset={4}
@@ -61,16 +63,28 @@ export function TeamSwitcher({ teams }: { teams: Team[] }) {
                 <div className="flex size-6 items-center justify-center rounded-sm border">
                   <team.logo className="size-4 shrink-0" />
                 </div>
-                <a href={`/projects/${team.slug}`}>{team.name}</a>
+                <a
+                  href={configuration.paths.project.overview({
+                    project_slug: team.name,
+                  })}
+                >
+                  {team.name}
+                </a>
                 <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
               </DropdownMenuItem>
             ))}
             <DropdownMenuSeparator />
             <DropdownMenuItem className="gap-2 p-2">
               <div className="flex size-6 items-center justify-center rounded-md border bg-background">
+                <ListFilter className="size-4" />
+              </div>
+              <a href={configuration.paths.project.all}>All Projects</a>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="gap-2 p-2">
+              <div className="flex size-6 items-center justify-center rounded-md border bg-background">
                 <Plus className="size-4" />
               </div>
-              <div className="font-medium">Add team</div>
+              <a href={configuration.paths.project.new}>New Project</a>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

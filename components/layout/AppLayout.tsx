@@ -1,8 +1,8 @@
 "use client";
 
 import { signOutAction } from "@/actions/userActions";
+import { ProjectSwitcher } from "@/components/layout/ProjectSwitcher";
 import RouteBreadcrumb from "@/components/layout/RouteBreadCrumb";
-import { TeamSwitcher } from "@/components/layout/TeamSwitcher";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -30,6 +30,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
+import configuration from "@/configuration";
 import { layoutData } from "@/constants/ui.constants";
 import {
   AppLayoutProps,
@@ -37,14 +38,17 @@ import {
   NavUserProps,
 } from "@/types/ui.types";
 import {
-  BadgeCheck,
   Bell,
   ChevronsUpDown,
+  CircleUser,
+  Clock,
   CreditCard,
+  Kanban,
+  LayoutDashboard,
   LogOut,
   Menu,
   Search,
-  Sparkles,
+  UsersRound,
 } from "lucide-react";
 
 export function AppLayout({ children }: AppLayoutProps) {
@@ -87,27 +91,53 @@ export function AppLayout({ children }: AppLayoutProps) {
 function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
-      <TeamSwitcher teams={layoutData.teams} />
+      <ProjectSwitcher teams={layoutData.teams} />
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Dashboard</SidebarGroupLabel>
+          <SidebarGroupLabel>Project</SidebarGroupLabel>
           <SidebarMenu>
-            {layoutData.navMain[0].items.map(item => (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild>
-                  <a href={item.url}>
-                    <item.icon className="size-4" />
-                    <span>{item.title}</span>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild size="sm">
+                <a
+                  href={configuration.paths.project.overview({
+                    project_slug: layoutData.teams[0].slug,
+                  })}
+                >
+                  <LayoutDashboard className="size-4" />
+                  <span>Overview</span>
+                </a>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild size="sm">
+                <a
+                  href={configuration.paths.project.timeline({
+                    project_slug: layoutData.teams[0].slug,
+                  })}
+                >
+                  <Clock className="size-4" />
+                  <span>Timeline</span>
+                </a>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild size="sm">
+                <a
+                  href={configuration.paths.project.kanban({
+                    project_slug: layoutData.teams[0].slug,
+                  })}
+                >
+                  <Kanban className="size-4" />
+                  <span>Kanban</span>
+                </a>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Recent Tasks</SidebarGroupLabel>
+          <SidebarGroupLabel>Tasks</SidebarGroupLabel>
           <SidebarMenu>
             {layoutData.recentTasks.map(task => (
               <SidebarMenuItem key={task.url}>
@@ -203,24 +233,29 @@ function NavUser({ user }: NavUserProps) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <Sparkles className="mr-2 size-4" />
-                Upgrade Plan
+              <DropdownMenuItem asChild>
+                <a href={configuration.paths.settings.profile}>
+                  <CircleUser className="mr-2 size-4" />
+                  Profile
+                </a>
               </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <BadgeCheck className="mr-2 size-4" />
-                Account
+              <DropdownMenuItem asChild>
+                <a href={configuration.paths.settings.team}>
+                  <UsersRound className="mr-2 size-4" />
+                  Team
+                </a>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <CreditCard className="mr-2 size-4" />
-                Billing
+              <DropdownMenuItem asChild>
+                <a href={configuration.paths.settings.notifications}>
+                  <Bell className="mr-2 size-4" />
+                  Notifications
+                </a>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Bell className="mr-2 size-4" />
-                Notifications
+              <DropdownMenuItem asChild>
+                <a href={configuration.paths.settings.billing}>
+                  <CreditCard className="mr-2 size-4" />
+                  Billing
+                </a>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
@@ -234,5 +269,3 @@ function NavUser({ user }: NavUserProps) {
     </SidebarMenu>
   );
 }
-
-export default AppLayout;

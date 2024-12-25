@@ -1,10 +1,12 @@
+import { Slugs } from "@/types/nav.types";
+
 const production = process.env.NODE_ENV === "production";
 
 const configuration = {
   site: {
-    name: "My AI, Quest.",
+    name: "Cash Dash Pro",
     description:
-      "Quest is a proactive AI assistant, designed to help you understand and leverage AI.",
+      "CashDash.Pro is a developer-focused task management platform that integrates GitHub activity with financial tracking, providing real-time insights into project progress, budget alignment, and development metrics through AI-powered analysis.",
     siteUrl: process.env.NEXT_PUBLIC_SITE_URL,
     twitterHandle: "",
     instagramHandle: "",
@@ -13,28 +15,31 @@ const configuration = {
   },
   paths: {
     appHome: "/",
-    admin: {
-      path: "/admin",
-      products: "/admin/products",
-      product: (id: string) => `/admin/products/${id}`,
-      users: "/admin/users",
-      user: (id: string) => `/admin/users/${id}`,
-      orders: "/admin/orders",
-      order: (id: string) => `/admin/orders/${id}`,
-      queue: "/admin/queue",
-      queueItem: (id: string) => `/admin/queue/${id}`,
-      promo: "/admin/promo",
+    project: {
+      overview: ({ project_slug = "" }: Slugs) => `/${project_slug}`,
+      timeline: ({ project_slug = "" }: Slugs) => `/${project_slug}/timeline`,
+      kanban: ({ project_slug = "" }: Slugs) => `/${project_slug}/kanban`,
+      all: "/projects",
+      new: "/projects/new",
     },
-    auth: "/auth",
-    signIn: "/auth?form=sign-in",
-    forgotPassword: "/auth?form=forgot-password",
-    resetPassword: "/reset-password",
-    authCallback: "/auth/callback",
-    resetPasswordCallback: "/reset-password/callback",
-    pricing: "/pricing",
+    tasks: {
+      all: ({ project_slug = "" }: Slugs) => `/${project_slug}/tasks`,
+      new: ({ project_slug = "" }: Slugs) => `/${project_slug}/tasks/new`,
+      view: ({ project_slug = "", task_slug = "" }: Slugs) =>
+        `/${project_slug}/${task_slug}`,
+    },
+    settings: {
+      all: "/settings",
+      new: "/settings/billing",
+      profile: "/settings/profile",
+      notifications: "/settings/notifications",
+      billing: "/settings/billing",
+      team: "/settings/team",
+    },
+    support: "/support",
+    feedback: "/feedback",
     privacy: "/privacy",
     terms: "/terms",
-    faq: "/faq",
     notFound: "/404",
   },
   production,
