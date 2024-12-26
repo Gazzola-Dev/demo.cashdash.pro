@@ -127,7 +127,7 @@ function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Starred Tasks</SidebarGroupLabel>
+          <SidebarGroupLabel>Priority Tasks</SidebarGroupLabel>
           <SidebarMenu>
             {layoutData.recentTasks.map((task, i) => (
               <SidebarMenuItem key={task.url}>
