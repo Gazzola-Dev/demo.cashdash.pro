@@ -1,6 +1,5 @@
-// ProjectSwitcher.tsx
 "use client";
-
+import { setCurrentProjectAction } from "@/actions/layout.actions";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -16,27 +15,44 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import configuration from "@/configuration";
+import { useToastQueue } from "@/hooks/useToastQueue";
 import { cn } from "@/lib/utils";
+import { LayoutProject } from "@/types/layout.types";
 import { ChevronsUpDown, ListFilter, Plus } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 
-type Team = {
-  name: string;
-  slug: string;
-  logo: React.ElementType;
-  plan: string;
-};
-
 interface ProjectSwitcherProps {
-  teams: Team[];
+  projects: (LayoutProject & { logo: React.ElementType })[];
 }
 
-export function ProjectSwitcher({ teams }: ProjectSwitcherProps) {
+export function ProjectSwitcher({ projects }: ProjectSwitcherProps) {
   const { isMobile, open } = useSidebar();
-  const [activeTeam, setActiveTeam] = React.useState<Team | null>(
-    teams[0] || null,
-  );
+  const router = useRouter();
+  const { toast } = useToastQueue();
+  const [activeTeam, setActiveTeam] = React.useState<
+    LayoutProject & { logo: React.ElementType }
+  >(projects.find(team => team.isCurrent) || projects[0]);
+
+  const handleProjectSelect = async (
+    project: LayoutProject & { logo: React.ElementType },
+  ) => {
+    try {
+      await setCurrentProjectAction(project.id);
+      setActiveTeam(project);
+      router.refresh(); // Refresh the page to update layout data
+      toast({
+        title: `Switched to ${project.name}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Failed to switch project",
+        description:
+          error instanceof Error ? error.message : "An error occurred",
+      });
+    }
+  };
 
   if (!activeTeam) return null;
 
@@ -58,7 +74,9 @@ export function ProjectSwitcher({ teams }: ProjectSwitcherProps) {
                 <span className="truncate font-semibold">
                   {activeTeam.name}
                 </span>
-                <span className="truncate text-xs">{activeTeam.plan}</span>
+                <span className="truncate text-xs capitalize">
+                  {activeTeam.status}
+                </span>
               </div>
               <ChevronsUpDown
                 className={cn("ml-auto size-4", !open && "hidden")}
@@ -74,26 +92,21 @@ export function ProjectSwitcher({ teams }: ProjectSwitcherProps) {
             <DropdownMenuLabel className="text-xs">
               My Projects
             </DropdownMenuLabel>
-            {teams.map(team => (
+            {projects.map(team => (
               <DropdownMenuItem
-                key={team.slug}
-                onClick={() => setActiveTeam(team)}
+                key={team.id}
+                onClick={() => handleProjectSelect(team)}
                 className="cursor-pointer"
               >
                 <div className="flex size-6 items-center justify-center rounded-sm border">
                   <team.logo className="size-4 shrink-0" />
                 </div>
-                <Link
-                  href={configuration.paths.project.overview({
-                    project_slug: team.slug,
-                  })}
-                  className="ml-2 truncate"
-                >
+                <div className="ml-2 flex-1 truncate">
                   {team.name}
-                  <span className="ml-auto text-xs text-muted-foreground">
-                    {team.plan}
+                  <span className="ml-auto text-xs capitalize text-muted-foreground">
+                    {team.status}
                   </span>
-                </Link>
+                </div>
               </DropdownMenuItem>
             ))}
             <DropdownMenuSeparator />

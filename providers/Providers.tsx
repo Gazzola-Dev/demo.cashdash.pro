@@ -1,7 +1,6 @@
 "use client";
 
 import useIsMounted from "@/hooks/useIsMounted";
-import AuthProvider from "@/providers/AuthProvider";
 import ProgressProvider from "@/providers/ProgressProvider";
 import QueryProvider from "@/providers/QueryProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
@@ -22,9 +21,7 @@ const Providers = ({ children }: { children: ReactNode }) => {
           disableTransitionOnChange
         >
           <ZIndexProvider>
-            <ProgressProvider>
-              <AuthProvider>{children}</AuthProvider>
-            </ProgressProvider>
+            <ProgressProvider>{children}</ProgressProvider>
           </ZIndexProvider>
         </ThemeProvider>
       </QueryProvider>

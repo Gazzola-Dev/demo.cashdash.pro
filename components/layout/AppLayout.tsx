@@ -1,6 +1,3 @@
-"use client";
-
-import { signOutAction } from "@/actions/user.actions";
 import { ProjectSwitcher } from "@/components/layout/ProjectSwitcher";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -30,58 +27,32 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import configuration from "@/configuration";
-import { useQueryClient } from "@tanstack/react-query";
+import { useSignOut } from "@/hooks/user.hooks";
+import { LayoutData, NavigationItem } from "@/types/layout.types";
 import {
   Bell,
   ChevronsUpDown,
   CircleUser,
   Clock,
+  Code2,
   CreditCard,
   Kanban,
   LayoutDashboard,
   LogOut,
   Menu,
+  Plus,
   Settings2,
   UsersRound,
 } from "lucide-react";
 import Link from "next/link";
+import React from "react";
 
 interface AppLayoutProps {
   children: React.ReactNode;
-  layoutData?: {
-    teams: Array<{
-      name: string;
-      slug: string;
-      logo: any;
-      plan: string;
-    }>;
-    user: {
-      name: string;
-      email: string;
-      avatar: string;
-    };
-    recentTasks: Array<{
-      title: string;
-      url: string;
-    }>;
-    navSecondary: Array<{
-      title: string;
-      url: string;
-      icon: string;
-    }>;
-  };
+  layoutData: LayoutData;
 }
 
 export function AppLayout({ children, layoutData }: AppLayoutProps) {
-  // If no layout data (unauthenticated), render children in centered layout
-  if (!layoutData) {
-    return (
-      <div className="flex min-h-screen w-full items-center justify-center">
-        {children}
-      </div>
-    );
-  }
-
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
@@ -104,78 +75,103 @@ export function AppLayout({ children, layoutData }: AppLayoutProps) {
   );
 }
 
-function AppSidebar({
-  layoutData,
-}: Required<Pick<AppLayoutProps, "layoutData">>) {
+function AppSidebar({ layoutData }: { layoutData: LayoutData }) {
   const { open } = useSidebar();
-  const activeTeam = layoutData.teams[0];
+  const currentProject = layoutData.currentProject;
 
-  if (!activeTeam) return null;
+  const projectsWithLogos = layoutData.projects.map(project => ({
+    ...project,
+    logo: Code2,
+  }));
 
   return (
     <Sidebar collapsible="icon">
-      <ProjectSwitcher teams={layoutData.teams} />
+      <ProjectSwitcher projects={projectsWithLogos} />
 
-      <SidebarContent className="mt-4">
-        <SidebarGroup>
-          <SidebarGroupLabel>Project</SidebarGroupLabel>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild size="sm">
-                <Link
-                  href={configuration.paths.project.overview({
-                    project_slug: activeTeam.slug,
-                  })}
-                >
-                  <LayoutDashboard className="size-4" />
-                  <span>Overview</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild size="sm">
-                <Link
-                  href={configuration.paths.project.timeline({
-                    project_slug: activeTeam.slug,
-                  })}
-                >
-                  <Clock className="size-4" />
-                  <span>Timeline</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild size="sm">
-                <Link
-                  href={configuration.paths.project.kanban({
-                    project_slug: activeTeam.slug,
-                  })}
-                >
-                  <Kanban className="size-4" />
-                  <span>Kanban</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Recent Tasks</SidebarGroupLabel>
-          <SidebarMenu>
-            {layoutData.recentTasks.map((task, i) => (
-              <SidebarMenuItem key={task.url}>
+      {!currentProject ? (
+        <div className="relative flex h-full flex-col">
+          <div className="absolute inset-0 backdrop-blur-sm" />
+          <div className="relative z-10 mx-auto mt-3.5 flex w-[calc(100%-1rem)] flex-col items-center pr-0.5">
+            <Button
+              asChild
+              size="sm"
+              className={open ? "w-full" : "h-8 w-8 p-0"}
+            >
+              <Link href={configuration.paths.project.new}>
+                <Plus className="size-4" />
+                {open && <span>New Project</span>}
+                {!open && <span className="sr-only">New Project</span>}
+              </Link>
+            </Button>
+          </div>
+          {open && (
+            <SidebarContent className="mt-4 opacity-50">
+              <NavPlaceholderContent />
+            </SidebarContent>
+          )}
+        </div>
+      ) : (
+        <SidebarContent className="mt-4">
+          <SidebarGroup>
+            <SidebarGroupLabel>Project</SidebarGroupLabel>
+            <SidebarMenu>
+              <SidebarMenuItem>
                 <SidebarMenuButton asChild size="sm">
-                  <Link href={task.url}>
-                    <span>{open ? task.title : `Task ${i + 1}`}</span>
+                  <Link
+                    href={configuration.paths.project.overview({
+                      project_slug: currentProject.slug,
+                    })}
+                  >
+                    <LayoutDashboard className="size-4" />
+                    <span>Overview</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarGroup>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild size="sm">
+                  <Link
+                    href={configuration.paths.project.timeline({
+                      project_slug: currentProject.slug,
+                    })}
+                  >
+                    <Clock className="size-4" />
+                    <span>Timeline</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild size="sm">
+                  <Link
+                    href={configuration.paths.project.kanban({
+                      project_slug: currentProject.slug,
+                    })}
+                  >
+                    <Kanban className="size-4" />
+                    <span>Kanban</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroup>
 
-        <NavSecondary items={layoutData.navSecondary} className="mt-auto" />
-      </SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupLabel>Recent Tasks</SidebarGroupLabel>
+            <SidebarMenu>
+              {layoutData.recentTasks.map((task, i) => (
+                <SidebarMenuItem key={task.id}>
+                  <SidebarMenuButton asChild size="sm">
+                    <Link href={task.url}>
+                      <span>{open ? task.title : `Task ${i + 1}`}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroup>
+
+          <NavSecondary items={layoutData.navSecondary} className="mt-auto" />
+        </SidebarContent>
+      )}
 
       <SidebarFooter>
         <NavUser user={layoutData.user} />
@@ -184,44 +180,86 @@ function AppSidebar({
   );
 }
 
+// Helper component to show placeholder content when no project is selected
+function NavPlaceholderContent() {
+  return (
+    <>
+      <SidebarGroup>
+        <SidebarGroupLabel>Project</SidebarGroupLabel>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="sm">
+              <LayoutDashboard className="size-4" />
+              <span>Overview</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="sm">
+              <Clock className="size-4" />
+              <span>Timeline</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="sm">
+              <Kanban className="size-4" />
+              <span>Kanban</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarGroup>
+
+      <SidebarGroup>
+        <SidebarGroupLabel>Recent Tasks</SidebarGroupLabel>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="sm">
+              <span>No tasks yet</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarGroup>
+    </>
+  );
+}
+
 function NavSecondary({
   items,
   className,
 }: {
-  items: NonNullable<AppLayoutProps["layoutData"]>["navSecondary"];
+  items: NavigationItem[];
   className?: string;
 }) {
   return (
     <SidebarGroup className={className}>
       <SidebarGroupContent>
         <SidebarMenu>
-          {items.map(item => (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild size="sm">
-                <Link href={item.url}>
-                  <Settings2 className="size-4" />
-                  <span>{item.title}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
+          {items.map(item => {
+            const Icon = item.icon || Settings2;
+            return (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton asChild size="sm">
+                  <Link href={item.url}>
+                    <Icon className="size-4" />
+                    <span>{item.title}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
   );
 }
 
-function NavUser({
-  user,
-}: {
-  user: NonNullable<AppLayoutProps["layoutData"]>["user"];
-}) {
+function NavUser({ user }: { user: LayoutData["user"] }) {
   const { isMobile } = useSidebar();
-  const queryClient = useQueryClient();
+  const { mutate: signOut } = useSignOut();
 
-  const handleSignOut = async () => {
-    await signOutAction();
-    queryClient.invalidateQueries({ queryKey: ["user"] });
+  const { open } = useSidebar();
+
+  const handleSignOut = () => {
+    signOut();
   };
 
   return (
@@ -240,7 +278,7 @@ function NavUser({
                 <span className="truncate font-semibold">{user.name}</span>
                 <span className="truncate text-xs">{user.email}</span>
               </div>
-              <ChevronsUpDown className="ml-auto size-4" />
+              {open && <ChevronsUpDown className="ml-auto size-4" />}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -301,3 +339,5 @@ function NavUser({
     </SidebarMenu>
   );
 }
+
+export default AppLayout;
