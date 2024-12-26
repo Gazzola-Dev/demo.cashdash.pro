@@ -2,8 +2,8 @@
 
 import { signOutAction } from "@/actions/user.actions";
 import { ProjectSwitcher } from "@/components/layout/ProjectSwitcher";
-import RouteBreadcrumb from "@/components/layout/RouteBreadCrumb";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,12 +30,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import configuration from "@/configuration";
-import { layoutData } from "@/constants/ui.constants";
-import {
-  AppLayoutProps,
-  NavSecondaryProps,
-  NavUserProps,
-} from "@/types/ui.types";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Bell,
   ChevronsUpDown,
@@ -46,22 +41,57 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  Settings2,
   UsersRound,
 } from "lucide-react";
 import Link from "next/link";
 
-export function AppLayout({ children }: AppLayoutProps) {
+interface AppLayoutProps {
+  children: React.ReactNode;
+  layoutData?: {
+    teams: Array<{
+      name: string;
+      slug: string;
+      logo: any;
+      plan: string;
+    }>;
+    user: {
+      name: string;
+      email: string;
+      avatar: string;
+    };
+    recentTasks: Array<{
+      title: string;
+      url: string;
+    }>;
+    navSecondary: Array<{
+      title: string;
+      url: string;
+      icon: string;
+    }>;
+  };
+}
+
+export function AppLayout({ children, layoutData }: AppLayoutProps) {
+  // If no layout data (unauthenticated), render children in centered layout
+  if (!layoutData) {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center">
+        {children}
+      </div>
+    );
+  }
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
-        <AppSidebar />
+        <AppSidebar layoutData={layoutData} />
         <SidebarInset>
           <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
             <SidebarTrigger className="-ml-1">
               <Menu className="size-4" />
             </SidebarTrigger>
             <Separator orientation="vertical" className="mr-2 h-4" />
-            <RouteBreadcrumb />
           </header>
           <div className="flex flex-1 flex-col gap-4 p-4">
             <main className="rounded-xl bg-background p-6 shadow">
@@ -74,8 +104,14 @@ export function AppLayout({ children }: AppLayoutProps) {
   );
 }
 
-function AppSidebar() {
+function AppSidebar({
+  layoutData,
+}: Required<Pick<AppLayoutProps, "layoutData">>) {
   const { open } = useSidebar();
+  const activeTeam = layoutData.teams[0];
+
+  if (!activeTeam) return null;
+
   return (
     <Sidebar collapsible="icon">
       <ProjectSwitcher teams={layoutData.teams} />
@@ -87,9 +123,8 @@ function AppSidebar() {
             <SidebarMenuItem>
               <SidebarMenuButton asChild size="sm">
                 <Link
-                  className="cursor-pointer"
                   href={configuration.paths.project.overview({
-                    project_slug: layoutData.teams[0].slug,
+                    project_slug: activeTeam.slug,
                   })}
                 >
                   <LayoutDashboard className="size-4" />
@@ -100,9 +135,8 @@ function AppSidebar() {
             <SidebarMenuItem>
               <SidebarMenuButton asChild size="sm">
                 <Link
-                  className="cursor-pointer"
                   href={configuration.paths.project.timeline({
-                    project_slug: layoutData.teams[0].slug,
+                    project_slug: activeTeam.slug,
                   })}
                 >
                   <Clock className="size-4" />
@@ -113,9 +147,8 @@ function AppSidebar() {
             <SidebarMenuItem>
               <SidebarMenuButton asChild size="sm">
                 <Link
-                  className="cursor-pointer"
                   href={configuration.paths.project.kanban({
-                    project_slug: layoutData.teams[0].slug,
+                    project_slug: activeTeam.slug,
                   })}
                 >
                   <Kanban className="size-4" />
@@ -127,35 +160,13 @@ function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Priority Tasks</SidebarGroupLabel>
+          <SidebarGroupLabel>Recent Tasks</SidebarGroupLabel>
           <SidebarMenu>
             {layoutData.recentTasks.map((task, i) => (
               <SidebarMenuItem key={task.url}>
                 <SidebarMenuButton asChild size="sm">
-                  <Link
-                    href={task.url}
-                    className="whitespace-nowrap cursor-pointer"
-                  >
-                    <span className="">
-                      {i * 7 + 1} -{open ? task.title : ""}
-                    </span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarGroup>
-        <SidebarGroup>
-          <SidebarGroupLabel>Recent Tasks</SidebarGroupLabel>
-          <SidebarMenu>
-            {layoutData.taskActions.map((action, i) => (
-              <SidebarMenuItem key={action.url}>
-                <SidebarMenuButton asChild size="sm">
-                  <Link
-                    href={action.url}
-                    className="whitespace-nowrap cursor-pointer"
-                  >
-                    {i * 1 + 1} - {open ? action.title : ""}
+                  <Link href={task.url}>
+                    <span>{open ? task.title : `Task ${i + 1}`}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -173,7 +184,13 @@ function AppSidebar() {
   );
 }
 
-function NavSecondary({ items, className }: NavSecondaryProps) {
+function NavSecondary({
+  items,
+  className,
+}: {
+  items: NonNullable<AppLayoutProps["layoutData"]>["navSecondary"];
+  className?: string;
+}) {
   return (
     <SidebarGroup className={className}>
       <SidebarGroupContent>
@@ -181,8 +198,8 @@ function NavSecondary({ items, className }: NavSecondaryProps) {
           {items.map(item => (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton asChild size="sm">
-                <Link className="cursor-pointer" href={item.url}>
-                  <item.icon className="size-4" />
+                <Link href={item.url}>
+                  <Settings2 className="size-4" />
                   <span>{item.title}</span>
                 </Link>
               </SidebarMenuButton>
@@ -194,15 +211,25 @@ function NavSecondary({ items, className }: NavSecondaryProps) {
   );
 }
 
-function NavUser({ user }: NavUserProps) {
+function NavUser({
+  user,
+}: {
+  user: NonNullable<AppLayoutProps["layoutData"]>["user"];
+}) {
   const { isMobile } = useSidebar();
+  const queryClient = useQueryClient();
+
+  const handleSignOut = async () => {
+    await signOutAction();
+    queryClient.invalidateQueries({ queryKey: ["user"] });
+  };
 
   return (
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <SidebarMenuButton size="lg">
+            <Button variant="ghost" className="h-auto p-0">
               <Avatar className="size-8 rounded-lg">
                 <AvatarImage src={user.avatar} alt={user.name} />
                 <AvatarFallback className="rounded-lg">
@@ -214,7 +241,7 @@ function NavUser({ user }: NavUserProps) {
                 <span className="truncate text-xs">{user.email}</span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
-            </SidebarMenuButton>
+            </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="w-56 rounded-lg"
@@ -239,44 +266,32 @@ function NavUser({ user }: NavUserProps) {
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
-                <Link
-                  className="cursor-pointer"
-                  href={configuration.paths.settings.profile}
-                >
+                <Link href={configuration.paths.settings.profile}>
                   <CircleUser className="mr-2 size-4" />
                   Profile
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link
-                  className="cursor-pointer"
-                  href={configuration.paths.settings.team}
-                >
+                <Link href={configuration.paths.settings.team}>
                   <UsersRound className="mr-2 size-4" />
                   Team
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link
-                  className="cursor-pointer"
-                  href={configuration.paths.settings.notifications}
-                >
+                <Link href={configuration.paths.settings.notifications}>
                   <Bell className="mr-2 size-4" />
                   Notifications
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link
-                  className="cursor-pointer"
-                  href={configuration.paths.settings.billing}
-                >
+                <Link href={configuration.paths.settings.billing}>
                   <CreditCard className="mr-2 size-4" />
                   Billing
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => signOutAction()}>
+            <DropdownMenuItem onClick={handleSignOut}>
               <LogOut className="mr-2 size-4" />
               Log out
             </DropdownMenuItem>

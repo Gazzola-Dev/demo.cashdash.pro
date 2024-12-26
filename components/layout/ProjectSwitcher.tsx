@@ -1,3 +1,7 @@
+// ProjectSwitcher.tsx
+"use client";
+
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,13 +12,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
 import configuration from "@/configuration";
 import { cn } from "@/lib/utils";
 import { ChevronsUpDown, ListFilter, Plus } from "lucide-react";
+import Link from "next/link";
 import * as React from "react";
 
 type Team = {
@@ -24,16 +28,24 @@ type Team = {
   plan: string;
 };
 
-export function ProjectSwitcher({ teams }: { teams: Team[] }) {
+interface ProjectSwitcherProps {
+  teams: Team[];
+}
+
+export function ProjectSwitcher({ teams }: ProjectSwitcherProps) {
   const { isMobile, open } = useSidebar();
-  const [activeTeam, setActiveTeam] = React.useState(teams[0]);
+  const [activeTeam, setActiveTeam] = React.useState<Team | null>(
+    teams[0] || null,
+  );
+
+  if (!activeTeam) return null;
 
   return (
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <SidebarMenuButton size="lg" className="overflow-visible">
+            <Button variant="ghost" className="h-auto w-full p-0">
               <div
                 className={cn(
                   "flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground",
@@ -46,16 +58,15 @@ export function ProjectSwitcher({ teams }: { teams: Team[] }) {
                 <span className="truncate font-semibold">
                   {activeTeam.name}
                 </span>
-                <span className="truncate text-xs">30 character tagline</span>
+                <span className="truncate text-xs">{activeTeam.plan}</span>
               </div>
               <ChevronsUpDown
                 className={cn("ml-auto size-4", !open && "hidden")}
               />
-            </SidebarMenuButton>
+            </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-56 rounded-lg bg-background border shadow-lg"
-            onClick={e => e.stopPropagation()}
+            className="w-56 rounded-lg"
             align="start"
             side={isMobile ? "bottom" : "right"}
             sideOffset={4}
@@ -63,36 +74,46 @@ export function ProjectSwitcher({ teams }: { teams: Team[] }) {
             <DropdownMenuLabel className="text-xs">
               My Projects
             </DropdownMenuLabel>
-            {teams.map((team, index) => (
+            {teams.map(team => (
               <DropdownMenuItem
                 key={team.slug}
                 onClick={() => setActiveTeam(team)}
-                className="gap-2 p-2 cursor-pointer"
+                className="cursor-pointer"
               >
                 <div className="flex size-6 items-center justify-center rounded-sm border">
                   <team.logo className="size-4 shrink-0" />
                 </div>
-                <a
+                <Link
                   href={configuration.paths.project.overview({
-                    project_slug: team.name,
+                    project_slug: team.slug,
                   })}
+                  className="ml-2 truncate"
                 >
                   {team.name}
-                </a>
+                  <span className="ml-auto text-xs text-muted-foreground">
+                    {team.plan}
+                  </span>
+                </Link>
               </DropdownMenuItem>
             ))}
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="gap-2 p-2">
-              <div className="flex size-6 items-center justify-center rounded-md border bg-background">
-                <ListFilter className="size-4" />
-              </div>
-              <a href={configuration.paths.project.all}>All Projects</a>
+            <DropdownMenuItem asChild>
+              <Link
+                href={configuration.paths.project.all}
+                className="cursor-pointer"
+              >
+                <ListFilter className="mr-2 size-4" />
+                All Projects
+              </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem className="gap-2 p-2">
-              <div className="flex size-6 items-center justify-center rounded-md border bg-background">
-                <Plus className="size-4" />
-              </div>
-              <a href={configuration.paths.project.new}>New Project</a>
+            <DropdownMenuItem asChild>
+              <Link
+                href={configuration.paths.project.new}
+                className="cursor-pointer"
+              >
+                <Plus className="mr-2 size-4" />
+                New Project
+              </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

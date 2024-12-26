@@ -1,4 +1,4 @@
-import { AppLayout } from "@/components/layout/AppLayout";
+import { AppShell } from "@/components/layout/AppShell";
 import Providers from "@/providers/Providers";
 import "@/styles/globals.css";
 import { Metadata } from "next";
@@ -17,7 +17,7 @@ export default async function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body>
         <Providers>
-          <AppLayout>{children}</AppLayout>
+          <AppShell>{children}</AppShell>
         </Providers>
       </body>
     </html>
