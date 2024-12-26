@@ -1,7 +1,7 @@
 "use server";
 
-import getActionResponse from "@/actions/action.util";
 import getSupabaseServerActionClient from "@/clients/action-client";
+import getActionResponse from "@/lib/action.util";
 
 // Get user action (auth.users)
 export const getUserAction = async () => {
@@ -114,6 +114,28 @@ export const signOutAction = async () => {
     if (error) throw new Error(error.message);
 
     return getActionResponse();
+  } catch (error) {
+    return getActionResponse({ error });
+  }
+};
+
+// Get user role action (user_roles)
+export const getUserRoleAction = async () => {
+  const supabase = await getSupabaseServerActionClient();
+
+  try {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) throw new Error("Not authenticated");
+
+    const { data, error } = await supabase
+      .from("user_roles")
+      .select()
+      .eq("user_id", userData.user.id)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    return getActionResponse({ data });
   } catch (error) {
     return getActionResponse({ error });
   }
