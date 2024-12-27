@@ -41,6 +41,7 @@ const configuration = {
     privacy: "/privacy",
     terms: "/terms",
     notFound: "/404",
+    about: "/about",
   },
   production,
 };

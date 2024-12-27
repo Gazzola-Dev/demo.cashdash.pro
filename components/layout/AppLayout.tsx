@@ -58,6 +58,7 @@ import {
   SignalMedium,
   UsersRound,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 
@@ -188,7 +189,7 @@ function AppSidebar({ layoutData }: { layoutData: LayoutData }) {
             </SidebarGroup>
           </>
         )}
-        <NavSecondary className="mt-auto" />
+        <NavSecondary />
       </SidebarContent>
 
       <SidebarFooter>
@@ -198,9 +199,32 @@ function AppSidebar({ layoutData }: { layoutData: LayoutData }) {
   );
 }
 
-function NavSecondary({ className }: { className?: string }) {
+function NavSecondary() {
+  const { open } = useSidebar();
   return (
-    <SidebarGroup className={className}>
+    <SidebarGroup className="mt-auto relative">
+      <Link
+        href={configuration.paths.about}
+        className="w-full flex items-center justify-center"
+      >
+        {open ? (
+          <Image
+            className="w-28 z-10 mb-5"
+            src="/svg/brand/logo-01.svg"
+            width={473}
+            height={293}
+            alt="Cash Dash Pro Logo"
+          />
+        ) : (
+          <Image
+            className="w-8 z-10 mb-3"
+            src="/svg/brand/logo-03.svg"
+            width={473}
+            height={293}
+            alt="Cash Dash Pro Logo"
+          />
+        )}
+      </Link>
       <SidebarGroupContent>
         <SidebarMenu>
           <SidebarMenuItem>
