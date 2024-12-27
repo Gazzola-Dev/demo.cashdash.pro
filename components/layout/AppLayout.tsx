@@ -1,3 +1,4 @@
+// AppLayout.tsx
 import { ProjectSwitcher } from "@/components/layout/ProjectSwitcher";
 import RouteBreadcrumb from "@/components/layout/RouteBreadCrumb";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -29,19 +30,27 @@ import {
 } from "@/components/ui/sidebar";
 import configuration from "@/configuration";
 import { useSignOut } from "@/hooks/user.hooks";
-import { LayoutData, NavigationItem } from "@/types/layout.types";
+import { cn } from "@/lib/utils";
+import { LayoutData } from "@/types/layout.types";
 import {
+  ArrowRight,
   Bell,
   ChevronsUpDown,
+  CircleAlert,
   CircleUser,
   Clock,
   Code2,
   CreditCard,
   Kanban,
   LayoutDashboard,
+  LifeBuoy,
   LogOut,
   Menu,
+  Send,
   Settings2,
+  Signal,
+  SignalHigh,
+  SignalMedium,
   UsersRound,
 } from "lucide-react";
 import Link from "next/link";
@@ -87,11 +96,10 @@ function AppSidebar({ layoutData }: { layoutData: LayoutData }) {
     <Sidebar collapsible="icon">
       <ProjectSwitcher projects={projectsWithLogos} />
 
-      <SidebarContent className="mt-4">
+      <SidebarContent className="">
         {currentProject && (
           <>
             <SidebarGroup>
-              <SidebarGroupLabel>Project</SidebarGroupLabel>
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild size="sm">
@@ -131,14 +139,33 @@ function AppSidebar({ layoutData }: { layoutData: LayoutData }) {
                 </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroup>
-
             <SidebarGroup>
-              <SidebarGroupLabel>Recent Tasks</SidebarGroupLabel>
+              <SidebarGroupLabel className="flex items-center justify-between">
+                <h2 className="text-sm">Tasks</h2>
+                <Link
+                  className="flex items-center gap-2 text-gray-500 text-xs"
+                  href={configuration.paths.tasks.all({
+                    project_slug: currentProject.slug,
+                  })}
+                >
+                  <span className="italic font-mediu">View all</span>
+                  <ArrowRight className="size-3.5" />
+                </Link>
+              </SidebarGroupLabel>
               <SidebarMenu>
-                {layoutData.recentTasks.map((task, i) => (
+                {layoutData.priorityTasks.map((task, i) => (
                   <SidebarMenuItem key={task.id}>
                     <SidebarMenuButton asChild size="sm">
                       <Link href={task.url}>
+                        {task.priority === "high" ? (
+                          <Signal className="size-4" />
+                        ) : task.priority === "medium" ? (
+                          <SignalHigh className="size-4" />
+                        ) : task.priority === "low" ? (
+                          <SignalMedium className="size-4" />
+                        ) : task.priority === "urgent" ? (
+                          <CircleAlert className="size-4" />
+                        ) : null}
                         <span>{open ? task.title : `Task ${i + 1}`}</span>
                       </Link>
                     </SidebarMenuButton>
@@ -148,7 +175,7 @@ function AppSidebar({ layoutData }: { layoutData: LayoutData }) {
             </SidebarGroup>
           </>
         )}
-        <NavSecondary items={layoutData.navSecondary} className="mt-auto" />
+        <NavSecondary className="mt-auto" />
       </SidebarContent>
 
       <SidebarFooter>
@@ -158,72 +185,35 @@ function AppSidebar({ layoutData }: { layoutData: LayoutData }) {
   );
 }
 
-// Helper component to show placeholder content when no project is selected
-function NavPlaceholderContent() {
-  return (
-    <>
-      <SidebarGroup>
-        <SidebarGroupLabel>Project</SidebarGroupLabel>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="sm">
-              <LayoutDashboard className="size-4" />
-              <span>Overview</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="sm">
-              <Clock className="size-4" />
-              <span>Timeline</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="sm">
-              <Kanban className="size-4" />
-              <span>Kanban</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarGroup>
-
-      <SidebarGroup>
-        <SidebarGroupLabel>Recent Tasks</SidebarGroupLabel>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="sm">
-              <span>No tasks yet</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarGroup>
-    </>
-  );
-}
-
-function NavSecondary({
-  items,
-  className,
-}: {
-  items: NavigationItem[];
-  className?: string;
-}) {
+function NavSecondary({ className }: { className?: string }) {
   return (
     <SidebarGroup className={className}>
       <SidebarGroupContent>
         <SidebarMenu>
-          {items.map(item => {
-            const Icon = item.icon || Settings2;
-            return (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild size="sm">
-                  <Link href={item.url}>
-                    <Icon className="size-4" />
-                    <span>{item.title}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            );
-          })}
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild size="sm">
+              <Link href={configuration.paths.settings.all}>
+                <Settings2 className="size-4" />
+                <span>Settings</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild size="sm">
+              <Link href={configuration.paths.settings.all}>
+                <Send className="size-4" />
+                <span>Feedback</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild size="sm">
+              <Link href={configuration.paths.settings.all}>
+                <LifeBuoy className="size-4" />
+                <span>Support</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
@@ -247,7 +237,10 @@ function NavUser({ user }: { user: LayoutData["user"] }) {
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="h-auto p-0 flex items-center justify-between w-full"
+              className={cn(
+                "h-auto flex items-center justify-between w-full",
+                open ? "p-2" : "p-0",
+              )}
             >
               <Avatar className="size-8 rounded-lg">
                 <AvatarImage src={user.avatar} alt={user.name} />
@@ -269,7 +262,10 @@ function NavUser({ user }: { user: LayoutData["user"] }) {
             sideOffset={4}
           >
             <DropdownMenuLabel>
-              <div className="flex items-center gap-2 p-1">
+              <Link
+                href={configuration.paths.settings.profile}
+                className="flex items-center gap-2 p-1 cursor-pointer"
+              >
                 <Avatar className="size-8 rounded-lg">
                   <AvatarImage src={user.avatar} alt={user.name} />
                   <AvatarFallback className="rounded-lg">
@@ -280,29 +276,29 @@ function NavUser({ user }: { user: LayoutData["user"] }) {
                   <span className="font-semibold">{user.name}</span>
                   <span className="text-xs">{user.email}</span>
                 </div>
-              </div>
+              </Link>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem asChild>
+              <DropdownMenuItem className="cursor-pointer" asChild>
                 <Link href={configuration.paths.settings.profile}>
                   <CircleUser className="mr-2 size-4" />
                   Profile
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
+              <DropdownMenuItem className="cursor-pointer" asChild>
                 <Link href={configuration.paths.settings.team}>
                   <UsersRound className="mr-2 size-4" />
                   Team
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
+              <DropdownMenuItem className="cursor-pointer" asChild>
                 <Link href={configuration.paths.settings.notifications}>
                   <Bell className="mr-2 size-4" />
                   Notifications
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
+              <DropdownMenuItem className="cursor-pointer" asChild>
                 <Link href={configuration.paths.settings.billing}>
                   <CreditCard className="mr-2 size-4" />
                   Billing
@@ -310,7 +306,10 @@ function NavUser({ user }: { user: LayoutData["user"] }) {
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleSignOut}>
+            <DropdownMenuItem
+              className="cursor-pointer"
+              onClick={handleSignOut}
+            >
               <LogOut className="mr-2 size-4" />
               Log out
             </DropdownMenuItem>

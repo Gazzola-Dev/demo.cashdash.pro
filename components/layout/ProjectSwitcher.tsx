@@ -1,5 +1,4 @@
 "use client";
-import { setCurrentProjectAction } from "@/actions/layout.actions";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,7 +14,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import configuration from "@/configuration";
-import { useToastQueue } from "@/hooks/useToastQueue";
+import { useSetCurrentProject } from "@/hooks/layout.hooks";
 import { cn } from "@/lib/utils";
 import { LayoutProject } from "@/types/layout.types";
 import { ChevronsUpDown, ListFilter, Plus } from "lucide-react";
@@ -30,28 +29,20 @@ interface ProjectSwitcherProps {
 export function ProjectSwitcher({ projects }: ProjectSwitcherProps) {
   const { isMobile, open } = useSidebar();
   const router = useRouter();
-  const { toast } = useToastQueue();
+  const setCurrentProject = useSetCurrentProject();
+
+  const initialProject =
+    projects.find(project => project.isCurrent) || projects[0];
   const [activeProject, setActiveProject] = React.useState<
     LayoutProject & { logo: React.ElementType }
-  >(projects.find(team => team.isCurrent) || projects[0]);
+  >(initialProject);
 
-  const handleProjectSelect = async (
+  const handleProjectSelect = (
     project: LayoutProject & { logo: React.ElementType },
   ) => {
-    try {
-      await setCurrentProjectAction(project.id);
-      setActiveProject(project);
-      router.refresh(); // Refresh the page to update layout data
-      toast({
-        title: `Switched to ${project.name}`,
-      });
-    } catch (error) {
-      toast({
-        title: "Failed to switch project",
-        description:
-          error instanceof Error ? error.message : "An error occurred",
-      });
-    }
+    setCurrentProject.mutate(project.id);
+    setActiveProject(project);
+    router.refresh();
   };
 
   if (!activeProject) return null;
@@ -68,7 +59,7 @@ export function ProjectSwitcher({ projects }: ProjectSwitcherProps) {
               <div
                 className={cn(
                   "flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground",
-                  !open && "ml-1.5 mt-5",
+                  !open && "ml-1.5 mt-1.5",
                 )}
               >
                 <activeProject.logo className="size-4" />

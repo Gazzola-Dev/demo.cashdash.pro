@@ -1,3 +1,4 @@
+// layout.types.ts
 import { Tables } from "@/types/database.types";
 import { LucideIcon } from "lucide-react";
 
@@ -42,6 +43,6 @@ export interface LayoutData {
   currentProject?: LayoutProject;
   projects: LayoutProject[];
   recentTasks: LayoutTask[];
-  highPriorityTasks: LayoutTask[];
+  priorityTasks: LayoutTask[];
   navSecondary: NavigationItem[];
 }

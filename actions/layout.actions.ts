@@ -104,8 +104,8 @@ export const getLayoutDataAction = async (): Promise<{
       throw tasksError;
     }
 
-    // Get high priority tasks
-    const { data: highPriorityTasks, error: priorityError } = await supabase
+    // Get priority tasks ordered by urgency
+    const { data: priorityTasks, error: priorityError } = await supabase
       .from("tasks")
       .select(
         `
@@ -123,8 +123,9 @@ export const getLayoutDataAction = async (): Promise<{
         "project_id",
         projects.map(p => p.id),
       )
-      .eq("priority", "high")
+      .in("priority", ["urgent", "high", "medium", "low"])
       .not("status", "eq", "completed")
+      .order("priority", { ascending: false }) // urgent first, then high, medium, low
       .order("created_at", { ascending: false })
       .limit(5);
 
@@ -163,7 +164,7 @@ export const getLayoutDataAction = async (): Promise<{
       currentProject,
       projects,
       recentTasks: formatTasks(recentTasks),
-      highPriorityTasks: formatTasks(highPriorityTasks),
+      priorityTasks: formatTasks(priorityTasks),
       navSecondary: [
         {
           title: "Settings",

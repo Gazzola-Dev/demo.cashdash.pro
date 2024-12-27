@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { LayoutData } from "@/types/layout.types";
 import { usePathname } from "next/navigation";
+import { Fragment } from "react";
 
 interface RouteBreadcrumbProps {
   customPath?: string;
@@ -35,7 +36,7 @@ export const RouteBreadcrumb = ({
           const isLast = index === segments.length - 1;
 
           return (
-            <>
+            <Fragment key={index}>
               <BreadcrumbSeparator />
               <BreadcrumbItem key={href}>
                 {isLast ? (
@@ -48,7 +49,7 @@ export const RouteBreadcrumb = ({
                   </BreadcrumbLink>
                 )}
               </BreadcrumbItem>
-            </>
+            </Fragment>
           );
         })}
       </BreadcrumbList>
