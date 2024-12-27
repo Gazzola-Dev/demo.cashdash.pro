@@ -72,17 +72,10 @@ export function AppLayout({ children, layoutData }: AppLayoutProps) {
       <div className="flex min-h-screen w-full">
         <AppSidebar layoutData={layoutData} />
         <SidebarInset>
-          <header className="flex h-16 shrink-0 items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1">
+          <header className="flex h-12 shrink-0 items-center gap-2 px-4">
+            <SidebarTrigger className="-ml-1.5 mr-3">
               <Menu className="size-4" />
             </SidebarTrigger>
-            {layoutData.currentProject && (
-              <h3 className="text-sm">
-                {layoutData.currentProject.name.length > 10
-                  ? `${layoutData.currentProject.name.slice(0, 10)}...`
-                  : layoutData.currentProject.name}
-              </h3>
-            )}
             <RouteBreadcrumb layoutData={layoutData} />
           </header>
           <div className="flex flex-1 flex-col gap-4 p-4">
@@ -93,7 +86,6 @@ export function AppLayout({ children, layoutData }: AppLayoutProps) {
     </SidebarProvider>
   );
 }
-
 function AppSidebar({ layoutData }: { layoutData: LayoutData }) {
   const { open } = useSidebar();
   const currentProject = layoutData.currentProject;
@@ -166,7 +158,8 @@ function AppSidebar({ layoutData }: { layoutData: LayoutData }) {
               <SidebarMenu>
                 <TooltipProvider>
                   {layoutData.priorityTasks.map((task, i) => (
-                    <Tooltip key={task.id}>
+                    <Tooltip open={open ? false : undefined} key={task.id}>
+                      {" "}
                       <TooltipTrigger>
                         <SidebarMenuItem>
                           <SidebarMenuButton asChild size="sm">
@@ -220,7 +213,7 @@ function NavSecondary({ className }: { className?: string }) {
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton asChild size="sm">
-              <Link href={configuration.paths.settings.all}>
+              <Link href={configuration.paths.feedback}>
                 <Send className="size-4" />
                 <span>Feedback</span>
               </Link>
@@ -228,7 +221,7 @@ function NavSecondary({ className }: { className?: string }) {
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton asChild size="sm">
-              <Link href={configuration.paths.settings.all}>
+              <Link href={configuration.paths.support}>
                 <LifeBuoy className="size-4" />
                 <span>Support</span>
               </Link>
@@ -259,7 +252,7 @@ function NavUser({ user }: { user: LayoutData["user"] }) {
               variant="ghost"
               className={cn(
                 "h-auto flex items-center justify-between w-full",
-                open ? "p-2" : "p-0",
+                open ? "px-1 py-2" : "p-0",
               )}
             >
               <Avatar className="size-8 rounded-lg">

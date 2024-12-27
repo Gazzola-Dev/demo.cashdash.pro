@@ -1,3 +1,4 @@
+// components/layout/RouteBreadcrumb.tsx
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -8,53 +9,114 @@ import {
 } from "@/components/ui/breadcrumb";
 import { LayoutData } from "@/types/layout.types";
 import { usePathname } from "next/navigation";
-import { Fragment } from "react";
 
 interface RouteBreadcrumbProps {
-  customPath?: string;
-  className?: string;
-  layoutData?: LayoutData;
+  layoutData: LayoutData;
 }
 
-export const RouteBreadcrumb = ({
-  customPath,
-  className,
-  layoutData,
-}: RouteBreadcrumbProps) => {
+const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
+
+export default function RouteBreadcrumb({ layoutData }: RouteBreadcrumbProps) {
   const pathname = usePathname();
-  const path = customPath || pathname;
-  const segments = path.split("/").filter(Boolean);
+  const segments = pathname.split("/").filter(Boolean);
 
-  return (
-    <Breadcrumb className={className}>
-      <BreadcrumbList>
-        <BreadcrumbItem>
-          <BreadcrumbLink href="/">{/* Here */}</BreadcrumbLink>
-        </BreadcrumbItem>
-        {segments.map((segment, index) => {
-          const href = `/${segments.slice(0, index + 1).join("/")}`;
-          const isLast = index === segments.length - 1;
-
-          return (
-            <Fragment key={index}>
+  // Handle settings routes
+  if (pathname.startsWith("/settings")) {
+    return (
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/settings">
+              {capitalize(segments[0])}
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          {segments.length > 1 && (
+            <>
               <BreadcrumbSeparator />
-              <BreadcrumbItem key={href}>
-                {isLast ? (
-                  <BreadcrumbPage>
-                    {segment.charAt(0).toUpperCase() + segment.slice(1)}
-                  </BreadcrumbPage>
-                ) : (
-                  <BreadcrumbLink href={href}>
-                    {segment.charAt(0).toUpperCase() + segment.slice(1)}
+              <BreadcrumbItem>
+                <BreadcrumbPage className="capitalize">
+                  {capitalize(segments[1])}
+                </BreadcrumbPage>
+              </BreadcrumbItem>
+            </>
+          )}
+        </BreadcrumbList>
+      </Breadcrumb>
+    );
+  }
+
+  // Handle projects and tasks list/new routes
+  if (pathname.startsWith("/projects") || pathname.startsWith("/tasks")) {
+    const baseRoute = segments[0];
+    return (
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href={`/${baseRoute}`} className="capitalize">
+              {capitalize(baseRoute)}
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          {segments.length > 1 && (
+            <>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage className="capitalize">
+                  {capitalize(segments[1])}
+                </BreadcrumbPage>
+              </BreadcrumbItem>
+            </>
+          )}
+        </BreadcrumbList>
+      </Breadcrumb>
+    );
+  }
+
+  // Handle project-specific routes
+  if (segments.length >= 1) {
+    const projectSlug = segments[0];
+    const project = layoutData.projects.find(p => p.slug === projectSlug);
+    const prefix = project?.prefix || projectSlug;
+
+    return (
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href={`/${projectSlug}`}>
+              {capitalize(prefix)}
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          {segments.length > 1 && (
+            <>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                {segments.length > 2 ? (
+                  <BreadcrumbLink href={`/${projectSlug}/${segments[1]}`}>
+                    {capitalize(segments[1])}
                   </BreadcrumbLink>
+                ) : (
+                  <BreadcrumbPage>
+                    {segments[1] === "timeline"
+                      ? "Timeline"
+                      : segments[1] === "kanban"
+                        ? "Kanban"
+                        : "Overview"}
+                  </BreadcrumbPage>
                 )}
               </BreadcrumbItem>
-            </Fragment>
-          );
-        })}
-      </BreadcrumbList>
-    </Breadcrumb>
-  );
-};
+            </>
+          )}
+          {segments.length > 2 && (
+            <>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{capitalize(segments[2])}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </>
+          )}
+        </BreadcrumbList>
+      </Breadcrumb>
+    );
+  }
 
-export default RouteBreadcrumb;
+  return null;
+}

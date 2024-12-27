@@ -1,9 +1,9 @@
-// layout.actions.ts
 "use server";
 
 import getSupabaseServerActionClient from "@/clients/action-client";
 import configuration from "@/configuration";
 import getActionResponse from "@/lib/action.util";
+import { Tables } from "@/types/database.types";
 import { LayoutData, LayoutProject, LayoutTask } from "@/types/layout.types";
 
 export const getLayoutDataAction = async (): Promise<{
@@ -77,61 +77,65 @@ export const getLayoutDataAction = async (): Promise<{
     // Get current project
     const currentProject = projects.find(p => p.isCurrent) || projects[0];
 
-    // Get recent tasks
-    const { data: recentTasks, error: tasksError } = await supabase
-      .from("tasks")
-      .select(
-        `
-        id,
-        title,
-        status,
-        priority,
-        project:projects (
+    // Only proceed with task queries if there's a current project
+    let recentTasks: Partial<Tables<"tasks">>[] = [];
+    let priorityTasks: Partial<Tables<"tasks">>[] = [];
+
+    if (currentProject) {
+      // Get recent tasks
+      const { data: recentTasksData, error: tasksError } = await supabase
+        .from("tasks")
+        .select(
+          `
+          id,
+          title,
+          status,
+          priority,
           slug,
-          name
+          project:projects (
+            slug,
+            name
+          )
+        `,
         )
-      `,
-      )
-      .in(
-        "project_id",
-        projects.map(p => p.id),
-      )
-      .order("updated_at", { ascending: false })
-      .limit(5);
+        .eq("project_id", currentProject.id)
+        .order("updated_at", { ascending: false })
+        .limit(5);
 
-    if (tasksError) {
-      console.error("Error fetching tasks:", tasksError);
-      throw tasksError;
-    }
+      if (tasksError) {
+        console.error("Error fetching tasks:", tasksError);
+        throw tasksError;
+      }
+      recentTasks = recentTasksData;
 
-    // Get priority tasks ordered by urgency
-    const { data: priorityTasks, error: priorityError } = await supabase
-      .from("tasks")
-      .select(
-        `
-        id,
-        title,
-        status,
-        priority,
-        project:projects (
+      // Get priority tasks ordered by urgency
+      const { data: priorityTasksData, error: priorityError } = await supabase
+        .from("tasks")
+        .select(
+          `
+          id,
+          title,
+          status,
+          priority,
           slug,
-          name
+          project:projects (
+            slug,
+            name
+          )
+        `,
         )
-      `,
-      )
-      .in(
-        "project_id",
-        projects.map(p => p.id),
-      )
-      .in("priority", ["urgent", "high", "medium", "low"])
-      .not("status", "eq", "completed")
-      .order("priority", { ascending: false }) // urgent first, then high, medium, low
-      .order("created_at", { ascending: false })
-      .limit(5);
+        .eq("project_id", currentProject.id)
+        .in("priority", ["urgent", "high", "medium", "low"])
+        .not("status", "eq", "completed")
+        .order("priority", { ascending: false })
+        .order("created_at", { ascending: false })
+        .limit(5);
 
-    if (priorityError) {
-      console.error("Error fetching priority tasks:", priorityError);
-      throw priorityError;
+      if (priorityError) {
+        console.error("Error fetching priority tasks:", priorityError);
+        throw priorityError;
+      }
+      priorityTasks = priorityTasksData;
     }
 
     // Format tasks with URLs
@@ -146,7 +150,7 @@ export const getLayoutDataAction = async (): Promise<{
           prefix: task.project.prefix,
           url: configuration.paths.tasks.view({
             project_slug: task.project.slug,
-            task_slug: task.id,
+            task_slug: task.slug,
           }),
           project: {
             slug: task.project.slug,
