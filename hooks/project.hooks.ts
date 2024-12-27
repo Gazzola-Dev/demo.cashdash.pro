@@ -65,7 +65,8 @@ export const useCreateProject = ({
 
   return useMutation({
     mutationFn: async (project: TablesInsert<"projects">) => {
-      const { data } = await createProjectAction(project);
+      const { data, error } = await createProjectAction(project);
+      if (error) throw new Error(error);
       return data;
     },
     onSuccess: () => {

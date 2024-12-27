@@ -629,6 +629,25 @@ export type Database = {
         }
         Returns: boolean
       }
+      create_project_with_owner: {
+        Args: {
+          project_data: Json
+          owner_id: string
+        }
+        Returns: {
+          created_at: string
+          description: Json | null
+          github_owner: string | null
+          github_repo: string | null
+          github_repo_url: string | null
+          id: string
+          name: string
+          prefix: string
+          slug: string
+          status: Database["public"]["Enums"]["project_status"]
+          updated_at: string
+        }
+      }
       custom_access_token_hook: {
         Args: {
           event: Json

@@ -15,25 +15,16 @@ export const createProjectAction = async (
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) throw new Error("User not authenticated");
 
-    // Insert project
-    const { data: projectData, error: projectError } = await supabase
-      .from("projects")
-      .insert(project)
-      .select()
-      .single();
+    // Start a transaction to ensure both operations succeed or fail together
+    const { data: projectData, error: projectError } = await supabase.rpc(
+      "create_project_with_owner",
+      {
+        project_data: project,
+        owner_id: userData.user.id,
+      },
+    );
 
     if (projectError) throw projectError;
-
-    // Add creator as project owner
-    const { error: memberError } = await supabase
-      .from("project_members")
-      .insert({
-        project_id: projectData.id,
-        user_id: userData.user.id,
-        role: "owner",
-      });
-
-    if (memberError) throw memberError;
 
     return getActionResponse({ data: projectData });
   } catch (error) {
