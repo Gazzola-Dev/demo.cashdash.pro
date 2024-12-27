@@ -99,7 +99,9 @@ export default function RouteBreadcrumb({ layoutData }: RouteBreadcrumbProps) {
                       ? "Timeline"
                       : segments[1] === "kanban"
                         ? "Kanban"
-                        : "Overview"}
+                        : segments[1] === "tasks"
+                          ? "Tasks"
+                          : "Overview"}
                   </BreadcrumbPage>
                 )}
               </BreadcrumbItem>

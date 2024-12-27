@@ -4,9 +4,16 @@
 import getSupabaseServerActionClient from "@/clients/action-client";
 import getActionResponse from "@/lib/action.util";
 import { TablesInsert, TablesUpdate } from "@/types/database.types";
+import {
+  TaskListResponse,
+  TaskResponse,
+  TaskWithProfile,
+} from "@/types/task.types";
 
 // Create task action
-export const createTaskAction = async (task: TablesInsert<"tasks">) => {
+export const createTaskAction = async (
+  task: TablesInsert<"tasks">,
+): Promise<TaskResponse> => {
   const supabase = await getSupabaseServerActionClient();
 
   try {
@@ -23,14 +30,24 @@ export const createTaskAction = async (task: TablesInsert<"tasks">) => {
     const { data, error } = await supabase
       .from("tasks")
       .insert(task)
-      .select()
+      .select(
+        `
+        *,
+        project:projects (
+          id,
+          name,
+          slug
+        )
+      `,
+      )
       .single();
 
     if (error) throw error;
 
-    return getActionResponse({ data });
+    // Safely cast data since we know the shape matches our type
+    return getActionResponse({ data: data as unknown as TaskWithProfile });
   } catch (error) {
-    return getActionResponse({ error });
+    return getActionResponse<TaskWithProfile>({ error });
   }
 };
 
@@ -38,7 +55,7 @@ export const createTaskAction = async (task: TablesInsert<"tasks">) => {
 export const updateTaskAction = async (
   taskId: string,
   updates: TablesUpdate<"tasks">,
-) => {
+): Promise<TaskResponse> => {
   const supabase = await getSupabaseServerActionClient();
 
   try {
@@ -46,14 +63,23 @@ export const updateTaskAction = async (
       .from("tasks")
       .update(updates)
       .eq("id", taskId)
-      .select()
+      .select(
+        `
+        *,
+        project:projects (
+          id,
+          name,
+          slug
+        )
+      `,
+      )
       .single();
 
     if (error) throw error;
 
-    return getActionResponse({ data });
+    return getActionResponse({ data: data as unknown as TaskWithProfile });
   } catch (error) {
-    return getActionResponse({ error });
+    return getActionResponse<TaskWithProfile>({ error });
   }
 };
 
@@ -73,7 +99,7 @@ export const deleteTaskAction = async (taskId: string) => {
 };
 
 // Get task action
-export const getTaskAction = async (taskId: string) => {
+export const getTaskAction = async (taskId: string): Promise<TaskResponse> => {
   const supabase = await getSupabaseServerActionClient();
 
   try {
@@ -117,9 +143,25 @@ export const getTaskAction = async (taskId: string) => {
 
     if (error) throw error;
 
-    return getActionResponse({ data });
+    // Create base task with correct typing
+    const taskWithProfile = data as unknown as TaskWithProfile;
+
+    // If there's an assignee, fetch their profile separately
+    if (data.assignee) {
+      const { data: assigneeProfile, error: profileError } = await supabase
+        .from("profiles")
+        .select("id, display_name, avatar_url")
+        .eq("id", data.assignee)
+        .single();
+
+      if (!profileError && assigneeProfile) {
+        taskWithProfile.assignee_profile = assigneeProfile;
+      }
+    }
+
+    return getActionResponse({ data: taskWithProfile });
   } catch (error) {
-    return getActionResponse({ error });
+    return getActionResponse<TaskWithProfile>({ error });
   }
 };
 
@@ -132,7 +174,7 @@ export const listTasksAction = async (filters?: {
   search?: string;
   sort?: string;
   order?: "asc" | "desc";
-}) => {
+}): Promise<TaskListResponse> => {
   const supabase = await getSupabaseServerActionClient();
 
   try {
@@ -183,9 +225,36 @@ export const listTasksAction = async (filters?: {
 
     if (error) throw error;
 
-    return getActionResponse({ data });
+    // Cast the data with unknown first to safely convert to our type
+    const tasksWithProfiles = data as unknown as TaskWithProfile[];
+
+    // Fetch assignee profiles for tasks that have assignees
+    const assigneeIds = tasksWithProfiles
+      .filter(task => task.assignee)
+      .map(task => task.assignee);
+
+    if (assigneeIds.length > 0) {
+      const { data: assigneeProfiles, error: profileError } = await supabase
+        .from("profiles")
+        .select("id, display_name, avatar_url")
+        .in("id", assigneeIds);
+
+      if (!profileError && assigneeProfiles) {
+        const profileMap = new Map(
+          assigneeProfiles.map(profile => [profile.id, profile]),
+        );
+
+        tasksWithProfiles.forEach(task => {
+          if (task.assignee) {
+            task.assignee_profile = profileMap.get(task.assignee) || null;
+          }
+        });
+      }
+    }
+
+    return getActionResponse({ data: tasksWithProfiles });
   } catch (error) {
-    return getActionResponse({ error });
+    return getActionResponse<TaskWithProfile[]>({ error });
   }
 };
 

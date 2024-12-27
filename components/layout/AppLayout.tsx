@@ -46,6 +46,7 @@ import {
   Clock,
   Code2,
   CreditCard,
+  Dot,
   Kanban,
   LayoutDashboard,
   LifeBuoy,
@@ -73,14 +74,41 @@ export function AppLayout({ children, layoutData }: AppLayoutProps) {
       <div className="flex min-h-screen w-full">
         <AppSidebar layoutData={layoutData} />
         <SidebarInset>
-          <header className="flex h-12 shrink-0 items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1.5 mr-3">
-              <Menu className="size-4" />
-            </SidebarTrigger>
-            <RouteBreadcrumb layoutData={layoutData} />
+          <header className="flex h-12 shrink-0 items-start justify-between gap-2 px-4 pt-2">
+            <div className="flex items-center">
+              <SidebarTrigger className="-ml-1.5 mr-4">
+                <Menu className="size-4" />
+              </SidebarTrigger>
+              <RouteBreadcrumb layoutData={layoutData} />
+            </div>
+            <div className="flex items-center justify-center gap-2">
+              <Image
+                className="w-20 z-10 -mr-1 pt-0.5"
+                src="/svg/brand/logo-05.svg"
+                width={473}
+                height={293}
+                alt="Cash Dash Pro Logo"
+              />
+              <Image
+                className="w-7 z-10 -mr-1"
+                src="/svg/brand/logo-03.svg"
+                width={473}
+                height={293}
+                alt="Cash Dash Pro Logo"
+              />
+            </div>
           </header>
-          <div className="flex flex-1 flex-col gap-4 p-4">
+          <div className="flex flex-1 flex-col gap-4 p-4 justify-between w-full pb-1">
             <main className="flex flex-col items-center">{children}</main>
+            <footer className="flex items-center justify-end w-full text-xs text-gray-500 gap-2">
+              <Link href={configuration.paths.privacy}>Privacy</Link>
+              <Dot className="size-3" />
+              <Link href={configuration.paths.terms}>Terms</Link>
+              <Dot className="size-3" />
+              <p className="">
+                &copy; {new Date().getFullYear()} Cash Dash Pro
+              </p>
+            </footer>
           </div>
         </SidebarInset>
       </div>
@@ -207,7 +235,7 @@ function NavSecondary() {
         href={configuration.paths.about}
         className="w-full flex items-center justify-center"
       >
-        {open ? (
+        {/* {open ? (
           <Image
             className="w-28 z-10 mb-5"
             src="/svg/brand/logo-01.svg"
@@ -223,7 +251,7 @@ function NavSecondary() {
             height={293}
             alt="Cash Dash Pro Logo"
           />
-        )}
+        )} */}
       </Link>
       <SidebarGroupContent>
         <SidebarMenu>
