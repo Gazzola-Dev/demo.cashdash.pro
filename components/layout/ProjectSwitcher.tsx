@@ -31,7 +31,7 @@ export function ProjectSwitcher({ projects }: ProjectSwitcherProps) {
   const { isMobile, open } = useSidebar();
   const router = useRouter();
   const { toast } = useToastQueue();
-  const [activeTeam, setActiveTeam] = React.useState<
+  const [activeProject, setActiveProject] = React.useState<
     LayoutProject & { logo: React.ElementType }
   >(projects.find(team => team.isCurrent) || projects[0]);
 
@@ -40,7 +40,7 @@ export function ProjectSwitcher({ projects }: ProjectSwitcherProps) {
   ) => {
     try {
       await setCurrentProjectAction(project.id);
-      setActiveTeam(project);
+      setActiveProject(project);
       router.refresh(); // Refresh the page to update layout data
       toast({
         title: `Switched to ${project.name}`,
@@ -54,7 +54,7 @@ export function ProjectSwitcher({ projects }: ProjectSwitcherProps) {
     }
   };
 
-  if (!activeTeam) return null;
+  if (!activeProject) return null;
 
   return (
     <SidebarMenu>
@@ -68,14 +68,14 @@ export function ProjectSwitcher({ projects }: ProjectSwitcherProps) {
                   !open && "ml-1.5 mt-5",
                 )}
               >
-                <activeTeam.logo className="size-4" />
+                <activeProject.logo className="size-4" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">
-                  {activeTeam.name}
+                  {activeProject.name}
                 </span>
                 <span className="truncate text-xs capitalize">
-                  {activeTeam.status}
+                  {activeProject.status}
                 </span>
               </div>
               <ChevronsUpDown

@@ -7,7 +7,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY,
 );
 
-const USERS_TO_CREATE = 5;
+const USERS_TO_CREATE = process.env.DEV_EMAIL ? 0 : 5;
 const PROJECTS_PER_USER = 2;
 const TASKS_PER_PROJECT = 5;
 const SUBTASKS_PER_TASK = 3;
@@ -21,19 +21,14 @@ async function seed() {
   const tags = await createTags();
   console.log(`Created ${tags.length} tags`);
 
-  // Create users and their profiles
-  const users = [];
-  for (let i = 0; i < USERS_TO_CREATE; i++) {
-    const user = await createUser();
-    if (user) users.push(user);
-  }
-  console.log(`Created ${users.length} users`);
+  // Create initial user (either DEV_EMAIL or random)
+  const user = await createUser(process.env.DEV_EMAIL);
+  const users = user ? [user] : [];
+  console.log(`Created user ${user?.email}`);
 
-  // Create projects and related data for each user
-  for (const user of users) {
-    const projects = await createProjectsForUser(user, tags);
-    console.log(`Created ${projects.length} projects for user ${user.email}`);
-  }
+  // Create projects and related data
+  const projects = await createProjectsForUser(user, tags);
+  console.log(`Created ${projects.length} projects for user ${user?.email}`);
 
   console.log("Seed completed successfully!");
 }
@@ -69,14 +64,14 @@ async function createTags() {
   return tags;
 }
 
-async function createUser() {
-  const email = faker.internet.email();
-  const password = faker.internet.password();
+async function createUser(email = undefined) {
+  const userEmail = email || faker.internet.email();
+  const password = "password123";
 
   // Create auth user
   const { data: authData, error: authError } =
     await supabase.auth.admin.createUser({
-      email,
+      email: userEmail,
       password,
       email_confirm: true,
     });
@@ -90,12 +85,16 @@ async function createUser() {
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .update({
-      display_name: faker.person.fullName(),
-      professional_title: faker.person.jobTitle(),
-      bio: faker.lorem.paragraph(),
-      github_username: faker.internet.username(),
-      website: faker.internet.url(),
-      avatar_url: faker.image.avatar(),
+      display_name: email ? "Development User" : faker.person.fullName(),
+      professional_title: email
+        ? "Software Developer"
+        : faker.person.jobTitle(),
+      bio: email ? "Development account for testing." : faker.lorem.paragraph(),
+      github_username: email ? "dev-user" : faker.internet.userName(),
+      website: email ? "https://example.com" : faker.internet.url(),
+      avatar_url: email
+        ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`
+        : faker.image.avatar(),
     })
     .eq("id", authData.user.id)
     .select()
@@ -132,7 +131,7 @@ async function createProjectsForUser(user, tags) {
       slug: projectSlug,
       prefix: projectSlug.substring(0, 3).toUpperCase(),
       github_repo_url: faker.internet.url(),
-      github_owner: faker.internet.username(),
+      github_owner: faker.internet.userName(),
       github_repo: projectSlug,
     };
 

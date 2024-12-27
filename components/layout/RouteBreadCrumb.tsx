@@ -6,17 +6,19 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Circle } from "lucide-react";
+import { LayoutData } from "@/types/layout.types";
 import { usePathname } from "next/navigation";
 
 interface RouteBreadcrumbProps {
   customPath?: string;
   className?: string;
+  layoutData?: LayoutData;
 }
 
 export const RouteBreadcrumb = ({
   customPath,
   className,
+  layoutData,
 }: RouteBreadcrumbProps) => {
   const pathname = usePathname();
   const path = customPath || pathname;
@@ -26,9 +28,7 @@ export const RouteBreadcrumb = ({
     <Breadcrumb className={className}>
       <BreadcrumbList>
         <BreadcrumbItem>
-          <BreadcrumbLink href="/">
-            <Circle className="w-5 h-5 text-gray-700" />
-          </BreadcrumbLink>
+          <BreadcrumbLink href="/">{/* Here */}</BreadcrumbLink>
         </BreadcrumbItem>
         {segments.map((segment, index) => {
           const href = `/${segments.slice(0, index + 1).join("/")}`;

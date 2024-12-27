@@ -1,9 +1,11 @@
 "use client";
 import { AppLayout } from "@/components/layout/AppLayout";
 import AuthLayout from "@/components/layout/AuthLayout";
+import configuration from "@/configuration";
 import { useLayoutData } from "@/hooks/layout.hooks";
 import useSupabase from "@/hooks/useSupabase";
 import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 function AppShellClient({
@@ -16,6 +18,7 @@ function AppShellClient({
   const { data: layoutData } = useLayoutData(initialData);
   const supabase = useSupabase();
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   useEffect(() => {
     supabase.auth.onAuthStateChange((event, session) => {
@@ -24,6 +27,16 @@ function AppShellClient({
         queryClient.invalidateQueries({ queryKey: ["userRole"] });
     });
   }, [queryClient, supabase]);
+
+  // If we have layoutData (user is authenticated) but no projects, redirect to new project page
+  useEffect(() => {
+    if (
+      layoutData &&
+      (!layoutData.projects || layoutData.projects.length === 0)
+    ) {
+      router.push(configuration.paths.project.new);
+    }
+  }, [layoutData, router]);
 
   if (!layoutData) return <AuthLayout />;
 

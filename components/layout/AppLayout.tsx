@@ -1,4 +1,5 @@
 import { ProjectSwitcher } from "@/components/layout/ProjectSwitcher";
+import RouteBreadcrumb from "@/components/layout/RouteBreadCrumb";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,7 +41,6 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
-  Plus,
   Settings2,
   UsersRound,
 } from "lucide-react";
@@ -63,11 +63,10 @@ export function AppLayout({ children, layoutData }: AppLayoutProps) {
               <Menu className="size-4" />
             </SidebarTrigger>
             <Separator orientation="vertical" className="mr-2 h-4" />
+            <RouteBreadcrumb layoutData={layoutData} />
           </header>
           <div className="flex flex-1 flex-col gap-4 p-4">
-            <main className="rounded-xl bg-background p-6 shadow">
-              {children}
-            </main>
+            <main className="flex flex-col items-center">{children}</main>
           </div>
         </SidebarInset>
       </div>
@@ -88,90 +87,69 @@ function AppSidebar({ layoutData }: { layoutData: LayoutData }) {
     <Sidebar collapsible="icon">
       <ProjectSwitcher projects={projectsWithLogos} />
 
-      {!currentProject ? (
-        <div className="relative flex h-full flex-col">
-          <div className="absolute inset-0 backdrop-blur-sm" />
-          <div className="relative z-10 mx-auto mt-3.5 flex w-[calc(100%-1rem)] flex-col items-center pr-0.5">
-            <Button
-              asChild
-              size="sm"
-              className={open ? "w-full" : "h-8 w-8 p-0"}
-            >
-              <Link href={configuration.paths.project.new}>
-                <Plus className="size-4" />
-                {open && <span>New Project</span>}
-                {!open && <span className="sr-only">New Project</span>}
-              </Link>
-            </Button>
-          </div>
-          {open && (
-            <SidebarContent className="mt-4 opacity-50">
-              <NavPlaceholderContent />
-            </SidebarContent>
-          )}
-        </div>
-      ) : (
-        <SidebarContent className="mt-4">
-          <SidebarGroup>
-            <SidebarGroupLabel>Project</SidebarGroupLabel>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild size="sm">
-                  <Link
-                    href={configuration.paths.project.overview({
-                      project_slug: currentProject.slug,
-                    })}
-                  >
-                    <LayoutDashboard className="size-4" />
-                    <span>Overview</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild size="sm">
-                  <Link
-                    href={configuration.paths.project.timeline({
-                      project_slug: currentProject.slug,
-                    })}
-                  >
-                    <Clock className="size-4" />
-                    <span>Timeline</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild size="sm">
-                  <Link
-                    href={configuration.paths.project.kanban({
-                      project_slug: currentProject.slug,
-                    })}
-                  >
-                    <Kanban className="size-4" />
-                    <span>Kanban</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroup>
-
-          <SidebarGroup>
-            <SidebarGroupLabel>Recent Tasks</SidebarGroupLabel>
-            <SidebarMenu>
-              {layoutData.recentTasks.map((task, i) => (
-                <SidebarMenuItem key={task.id}>
+      <SidebarContent className="mt-4">
+        {currentProject && (
+          <>
+            <SidebarGroup>
+              <SidebarGroupLabel>Project</SidebarGroupLabel>
+              <SidebarMenu>
+                <SidebarMenuItem>
                   <SidebarMenuButton asChild size="sm">
-                    <Link href={task.url}>
-                      <span>{open ? task.title : `Task ${i + 1}`}</span>
+                    <Link
+                      href={configuration.paths.project.overview({
+                        project_slug: currentProject.slug,
+                      })}
+                    >
+                      <LayoutDashboard className="size-4" />
+                      <span>Overview</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroup>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild size="sm">
+                    <Link
+                      href={configuration.paths.project.timeline({
+                        project_slug: currentProject.slug,
+                      })}
+                    >
+                      <Clock className="size-4" />
+                      <span>Timeline</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild size="sm">
+                    <Link
+                      href={configuration.paths.project.kanban({
+                        project_slug: currentProject.slug,
+                      })}
+                    >
+                      <Kanban className="size-4" />
+                      <span>Kanban</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroup>
 
-          <NavSecondary items={layoutData.navSecondary} className="mt-auto" />
-        </SidebarContent>
-      )}
+            <SidebarGroup>
+              <SidebarGroupLabel>Recent Tasks</SidebarGroupLabel>
+              <SidebarMenu>
+                {layoutData.recentTasks.map((task, i) => (
+                  <SidebarMenuItem key={task.id}>
+                    <SidebarMenuButton asChild size="sm">
+                      <Link href={task.url}>
+                        <span>{open ? task.title : `Task ${i + 1}`}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroup>
+          </>
+        )}
+        <NavSecondary items={layoutData.navSecondary} className="mt-auto" />
+      </SidebarContent>
 
       <SidebarFooter>
         <NavUser user={layoutData.user} />
@@ -267,7 +245,10 @@ function NavUser({ user }: { user: LayoutData["user"] }) {
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-auto p-0">
+            <Button
+              variant="ghost"
+              className="h-auto p-0 flex items-center justify-between w-full"
+            >
               <Avatar className="size-8 rounded-lg">
                 <AvatarImage src={user.avatar} alt={user.name} />
                 <AvatarFallback className="rounded-lg">
