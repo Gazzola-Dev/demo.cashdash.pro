@@ -15,7 +15,10 @@ export const createProjectAction = async (
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) throw new Error("User not authenticated");
 
-    // Use the create_project_with_owner function instead of direct insert
+    // Add debug logging
+    console.log("Creating project for user:", userData.user.id);
+
+    // Use the create_project_with_owner function instead of separate calls
     const { data: projectData, error: projectError } = await supabase.rpc(
       "create_project_with_owner",
       {
@@ -29,11 +32,15 @@ export const createProjectAction = async (
 
     if (projectError) throw projectError;
 
-    // Update user's current project
+    // Update user's current project - this is already handled by a trigger
+    // but we'll keep it here for now to be explicit
     const { error: profileError } = await supabase
       .from("profiles")
       .update({ current_project_id: projectData.id })
       .eq("id", userData.user.id);
+
+    // Add debug logging
+    console.log("Profile update result:", { profileError });
 
     if (profileError) throw profileError;
 

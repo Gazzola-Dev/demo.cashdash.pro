@@ -14,23 +14,120 @@ const SUBTASKS_PER_TASK = 3;
 const COMMENTS_PER_TASK = 2;
 const TAGS_TO_CREATE = 8;
 
-async function seed() {
-  console.log("Starting seed process...");
+async function getOrCreateUser(email) {
+  if (!email) {
+    console.error("No email provided");
+    return null;
+  }
 
-  // Create tags first as they'll be used across tasks
-  const tags = await createTags();
-  console.log(`Created ${tags.length} tags`);
+  // First check if user exists
+  const {
+    data: { users },
+    error: usersError,
+  } = await supabase.auth.admin.listUsers();
+  if (usersError) {
+    console.error("Error checking existing users:", usersError);
+    return null;
+  }
 
-  // Create initial user (either DEV_EMAIL or random)
-  const user = await createUser(process.env.DEV_EMAIL);
-  const users = user ? [user] : [];
-  console.log(`Created user ${user?.email}`);
+  const existingUser = users.find(u => u.email === email);
+  if (existingUser) {
+    console.log(`Found existing user: ${email} with ID ${existingUser.id}`);
 
-  // Create projects and related data
-  const projects = await createProjectsForUser(user, tags);
-  console.log(`Created ${projects.length} projects for user ${user?.email}`);
+    // Update the profile if it exists
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .update({
+        display_name: "Development User",
+        professional_title: "Software Developer",
+        bio: "Development account for testing.",
+        github_username: "dev-user",
+        website: "https://example.com",
+        avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
+      })
+      .eq("id", existingUser.id)
+      .select()
+      .single();
 
-  console.log("Seed completed successfully!");
+    if (profileError) {
+      console.error("Error updating profile:", profileError);
+    }
+
+    return { ...existingUser, profile };
+  }
+
+  // If user doesn't exist, create new one
+  const password = "password123";
+  const { data: authData, error: authError } =
+    await supabase.auth.admin.createUser({
+      email: email,
+      password,
+      email_confirm: true,
+    });
+
+  if (authError) {
+    console.error("Error creating user:", authError);
+    return null;
+  }
+
+  // Profile is created automatically via trigger
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .update({
+      display_name: "Development User",
+      professional_title: "Software Developer",
+      bio: "Development account for testing.",
+      github_username: "dev-user",
+      website: "https://example.com",
+      avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
+    })
+    .eq("id", authData.user.id)
+    .select()
+    .single();
+
+  if (profileError) {
+    console.error("Error updating profile:", profileError);
+    return null;
+  }
+
+  console.log(`Created new user: ${email} with ID ${authData.user.id}`);
+  return { ...authData.user, profile };
+}
+
+async function clearExistingData(userId) {
+  console.log(`Clearing existing data for user ${userId}...`);
+
+  // Get all project IDs for the user
+  const { data: memberships } = await supabase
+    .from("project_members")
+    .select("project_id")
+    .eq("user_id", userId);
+
+  if (memberships?.length > 0) {
+    const projectIds = memberships.map(m => m.project_id);
+
+    // Delete all projects (this will cascade to tasks, comments, etc.)
+    const { error: deleteError } = await supabase
+      .from("projects")
+      .delete()
+      .in("id", projectIds);
+
+    if (deleteError) {
+      console.error("Error deleting projects:", deleteError);
+    }
+  }
+
+  // Reset current_project_id in profile
+  const { error: profileError } = await supabase
+    .from("profiles")
+    .update({ current_project_id: null })
+    .eq("id", userId);
+
+  if (profileError) {
+    console.error("Error resetting profile:", profileError);
+  }
+
+  console.log("Finished clearing existing data");
 }
 
 async function createTags() {
@@ -62,50 +159,6 @@ async function createTags() {
   }
 
   return tags;
-}
-
-async function createUser(email = undefined) {
-  const userEmail = email || faker.internet.email();
-  const password = "password123";
-
-  // Create auth user
-  const { data: authData, error: authError } =
-    await supabase.auth.admin.createUser({
-      email: userEmail,
-      password,
-      email_confirm: true,
-    });
-
-  if (authError) {
-    console.error("Error creating user:", authError);
-    return null;
-  }
-
-  // Profile is created automatically via trigger
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .update({
-      display_name: email ? "Development User" : faker.person.fullName(),
-      professional_title: email
-        ? "Software Developer"
-        : faker.person.jobTitle(),
-      bio: email ? "Development account for testing." : faker.lorem.paragraph(),
-      github_username: email ? "dev-user" : faker.internet.userName(),
-      website: email ? "https://example.com" : faker.internet.url(),
-      avatar_url: email
-        ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`
-        : faker.image.avatar(),
-    })
-    .eq("id", authData.user.id)
-    .select()
-    .single();
-
-  if (profileError) {
-    console.error("Error updating profile:", profileError);
-    return null;
-  }
-
-  return { ...authData.user, profile };
 }
 
 async function createProjectsForUser(user, tags) {
@@ -147,16 +200,38 @@ async function createProjectsForUser(user, tags) {
     }
 
     // Add user as project owner
-    await supabase.from("project_members").insert({
-      project_id: createdProject.id,
-      user_id: user.id,
-      role: "owner",
-    });
+    const { error: memberError } = await supabase
+      .from("project_members")
+      .insert({
+        project_id: createdProject.id,
+        user_id: user.id,
+        role: "owner",
+      });
+
+    if (memberError) {
+      console.error("Error creating project membership:", memberError);
+      continue;
+    }
+
+    // Set as current project if it's the first one
+    if (i === 0) {
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ current_project_id: createdProject.id })
+        .eq("id", user.id);
+
+      if (profileError) {
+        console.error("Error updating current project:", profileError);
+      }
+    }
 
     // Create tasks for project
     const tasks = await createTasksForProject(createdProject, user, tags);
 
     projects.push({ ...createdProject, tasks });
+    console.log(
+      `Created project ${createdProject.name} with ID ${createdProject.id}`,
+    );
   }
 
   return projects;
@@ -301,6 +376,56 @@ async function createCommentsForTask(task, user) {
 
     await supabase.from("comments").insert(comment);
   }
+}
+
+async function seed() {
+  console.log("Starting seed process...");
+
+  // Get or create user
+  const user = await getOrCreateUser(process.env.DEV_EMAIL);
+  if (!user) {
+    console.error("Failed to get or create user");
+    return;
+  }
+
+  // Clear existing data for this user
+  await clearExistingData(user.id);
+
+  // Create tags first as they'll be used across tasks
+  const tags = await createTags();
+  console.log(`Created ${tags.length} tags`);
+
+  // Create projects and related data
+  const projects = await createProjectsForUser(user, tags);
+  console.log(`Created ${projects.length} projects for user ${user.email}`);
+
+  // Verify setup
+  const { data: memberships, error: membershipError } = await supabase
+    .from("project_members")
+    .select("*")
+    .eq("user_id", user.id);
+
+  if (membershipError) {
+    console.error("Error verifying memberships:", membershipError);
+  } else {
+    console.log(`Verified ${memberships.length} project memberships for user`);
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .single();
+
+  if (profileError) {
+    console.error("Error verifying profile:", profileError);
+  } else {
+    console.log(
+      `Verified profile current_project_id: ${profile.current_project_id}`,
+    );
+  }
+
+  console.log("Seed completed successfully!");
 }
 
 // Run the seed function

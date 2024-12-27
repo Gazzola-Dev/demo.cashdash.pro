@@ -4,35 +4,37 @@
 import getSupabaseServerActionClient from "@/clients/action-client";
 import configuration from "@/configuration";
 import getActionResponse from "@/lib/action.util";
-import { LayoutData } from "@/types/layout.types";
+import { LayoutData, LayoutProject, LayoutTask } from "@/types/layout.types";
 
 export const getLayoutDataAction = async (): Promise<{
   data: LayoutData | null;
   error: string | null;
 }> => {
+  console.log("\n=== Starting getLayoutDataAction ===");
   const supabase = await getSupabaseServerActionClient();
 
   try {
+    // Check authentication
     const {
       data: { user },
       error: userError,
     } = await supabase.auth.getUser();
 
     if (!user || userError) {
+      console.log("No user found or user error:", { user, userError });
       return getActionResponse({ data: null });
     }
-
-    // Add debug logging
-    console.log("Fetching data for user:", user.id);
+    console.log("User found:", { userId: user.id, email: user.email });
 
     // Get project memberships with project details
-    const { data: projectMemberships, error: membershipError } = await supabase
+    console.log("\nFetching project memberships and projects...");
+    const { data: memberships, error: membershipError } = await supabase
       .from("project_members")
       .select(
         `
         role,
-        project:projects (
-          id,
+        projects (
+          id,  
           name,
           slug,
           status,
@@ -42,54 +44,51 @@ export const getLayoutDataAction = async (): Promise<{
       `,
       )
       .eq("user_id", user.id)
-      .order("project(updated_at)", { ascending: false });
+      .order("projects(updated_at)", { ascending: false });
 
-    // Add debug logging
-    console.log("Project memberships query result:", {
-      projectMemberships,
-      membershipError,
+    if (membershipError) {
+      console.error("Error fetching memberships:", membershipError);
+      throw membershipError;
+    }
+
+    console.log("Memberships found:", {
+      count: memberships?.length || 0,
+      data: memberships,
     });
 
     // Get user profile with current project
+    console.log("\nFetching user profile...");
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select(
-        `
-        *,
-        current_project:projects (
-          id,
-          name,
-          slug,
-          status,
-          prefix
-        )
-      `,
-      )
+      .select("*")
       .eq("id", user.id)
       .single();
 
-    // Add debug logging
-    console.log("Profile query result:", { profile, profileError });
+    if (profileError) {
+      console.error("Error fetching profile:", profileError);
+      throw profileError;
+    }
 
-    // Format projects data
-    const projects =
-      projectMemberships
-        ?.filter(pm => pm.project) // Filter out null projects
+    // Format projects data, filtering out any null projects
+    const projects: LayoutProject[] =
+      memberships
+        ?.filter(pm => pm.projects !== null)
         .map(pm => ({
-          id: pm.project!.id,
-          name: pm.project!.name,
-          slug: pm.project!.slug,
-          status: pm.project!.status,
-          prefix: pm.project!.prefix,
+          id: pm.projects!.id,
+          name: pm.projects!.name,
+          slug: pm.projects!.slug,
+          status: pm.projects!.status,
+          prefix: pm.projects!.prefix,
           role: pm.role,
-          isCurrent: pm.project!.id === profile?.current_project_id,
+          isCurrent: pm.projects!.id === profile?.current_project_id,
         })) || [];
 
-    // Get current project - use stored current project or default to most recently updated
+    // Get current project
     const currentProject = projects.find(p => p.isCurrent) || projects[0];
 
     // Get recent tasks
-    const { data: recentTasks } = await supabase
+    console.log("\nFetching recent tasks...");
+    const { data: recentTasks, error: tasksError } = await supabase
       .from("tasks")
       .select(
         `
@@ -110,8 +109,14 @@ export const getLayoutDataAction = async (): Promise<{
       .order("updated_at", { ascending: false })
       .limit(5);
 
+    if (tasksError) {
+      console.error("Error fetching tasks:", tasksError);
+      throw tasksError;
+    }
+
     // Get high priority tasks
-    const { data: highPriorityTasks } = await supabase
+    console.log("\nFetching high priority tasks...");
+    const { data: highPriorityTasks, error: priorityError } = await supabase
       .from("tasks")
       .select(
         `
@@ -134,10 +139,15 @@ export const getLayoutDataAction = async (): Promise<{
       .order("created_at", { ascending: false })
       .limit(5);
 
+    if (priorityError) {
+      console.error("Error fetching priority tasks:", priorityError);
+      throw priorityError;
+    }
+
     // Format tasks with URLs
-    const formatTasks = (tasks: any[] | null) =>
+    const formatTasks = (tasks: any[] | null): LayoutTask[] =>
       tasks
-        ?.filter(task => task.project) // Filter out tasks with null projects
+        ?.filter(task => task.project !== null)
         .map(task => ({
           id: task.id,
           title: task.title,
@@ -153,6 +163,7 @@ export const getLayoutDataAction = async (): Promise<{
           },
         })) || [];
 
+    // Construct layout data
     const layoutData: LayoutData = {
       user: {
         id: user.id,
@@ -185,27 +196,41 @@ export const getLayoutDataAction = async (): Promise<{
 
     return getActionResponse({ data: layoutData });
   } catch (error) {
+    console.error("Error in getLayoutDataAction:", error);
     return getActionResponse({ error });
   }
 };
 
-// Action to update current project
 export const setCurrentProjectAction = async (projectId: string) => {
+  console.log("\n=== Starting setCurrentProjectAction ===");
+  console.log("Project ID:", projectId);
+
   const supabase = await getSupabaseServerActionClient();
 
   try {
+    console.log("Getting user data...");
     const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) throw new Error("Not authenticated");
+    if (!userData.user) {
+      console.log("No authenticated user found");
+      throw new Error("Not authenticated");
+    }
+    console.log("User found:", userData.user.id);
 
+    console.log("Updating current project...");
     const { error } = await supabase
       .from("profiles")
       .update({ current_project_id: projectId })
       .eq("id", userData.user.id);
 
-    if (error) throw error;
+    if (error) {
+      console.error("Error updating current project:", error);
+      throw error;
+    }
 
+    console.log("Current project updated successfully");
     return getActionResponse({ data: null });
   } catch (error) {
+    console.error("Error in setCurrentProjectAction:", error);
     return getActionResponse({ error });
   }
 };
