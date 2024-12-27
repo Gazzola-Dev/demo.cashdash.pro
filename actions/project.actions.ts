@@ -15,7 +15,7 @@ export const createProjectAction = async (
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) throw new Error("User not authenticated");
 
-    // Start a transaction to ensure both operations succeed or fail together
+    // Use the create_project_with_owner function instead of direct insert
     const { data: projectData, error: projectError } = await supabase.rpc(
       "create_project_with_owner",
       {
@@ -24,10 +24,22 @@ export const createProjectAction = async (
       },
     );
 
+    // Add debug logging
+    console.log("Project creation result:", { projectData, projectError });
+
     if (projectError) throw projectError;
+
+    // Update user's current project
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .update({ current_project_id: projectData.id })
+      .eq("id", userData.user.id);
+
+    if (profileError) throw profileError;
 
     return getActionResponse({ data: projectData });
   } catch (error) {
+    console.error("Project creation error:", error);
     return getActionResponse({ error });
   }
 };

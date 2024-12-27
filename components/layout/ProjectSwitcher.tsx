@@ -53,6 +53,7 @@ export function ProjectSwitcher({ projects }: ProjectSwitcherProps) {
       });
     }
   };
+  console.log(activeProject, projects);
 
   if (!activeProject) return null;
 

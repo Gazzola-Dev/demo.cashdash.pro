@@ -83,6 +83,8 @@ function AppSidebar({ layoutData }: { layoutData: LayoutData }) {
     logo: Code2,
   }));
 
+  console.log(layoutData);
+
   return (
     <Sidebar collapsible="icon">
       <ProjectSwitcher projects={projectsWithLogos} />

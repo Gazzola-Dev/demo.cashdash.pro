@@ -13,7 +13,6 @@ export const getLayoutDataAction = async (): Promise<{
   const supabase = await getSupabaseServerActionClient();
 
   try {
-    // Get current user with profile and current project
     const {
       data: { user },
       error: userError,
@@ -23,26 +22,11 @@ export const getLayoutDataAction = async (): Promise<{
       return getActionResponse({ data: null });
     }
 
-    // Get user profile with current project
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select(
-        `
-        *,
-        current_project:projects (
-          id,
-          name,
-          slug,
-          status,
-          prefix
-        )
-      `,
-      )
-      .eq("id", user.id)
-      .single();
+    // Add debug logging
+    console.log("Fetching data for user:", user.id);
 
     // Get project memberships with project details
-    const { data: projectMemberships } = await supabase
+    const { data: projectMemberships, error: membershipError } = await supabase
       .from("project_members")
       .select(
         `
@@ -59,6 +43,33 @@ export const getLayoutDataAction = async (): Promise<{
       )
       .eq("user_id", user.id)
       .order("project(updated_at)", { ascending: false });
+
+    // Add debug logging
+    console.log("Project memberships query result:", {
+      projectMemberships,
+      membershipError,
+    });
+
+    // Get user profile with current project
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select(
+        `
+        *,
+        current_project:projects (
+          id,
+          name,
+          slug,
+          status,
+          prefix
+        )
+      `,
+      )
+      .eq("id", user.id)
+      .single();
+
+    // Add debug logging
+    console.log("Profile query result:", { profile, profileError });
 
     // Format projects data
     const projects =

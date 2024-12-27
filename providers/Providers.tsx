@@ -1,7 +1,6 @@
 "use client";
 
 import useIsMounted from "@/hooks/useIsMounted";
-import ProgressProvider from "@/providers/ProgressProvider";
 import QueryProvider from "@/providers/QueryProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { ZIndexProvider } from "@/providers/ZIndexProvider";
@@ -20,9 +19,7 @@ const Providers = ({ children }: { children: ReactNode }) => {
           enableSystem
           disableTransitionOnChange
         >
-          <ZIndexProvider>
-            <ProgressProvider>{children}</ProgressProvider>
-          </ZIndexProvider>
+          <ZIndexProvider>{children}</ZIndexProvider>
         </ThemeProvider>
       </QueryProvider>
     </NuqsAdapter>
