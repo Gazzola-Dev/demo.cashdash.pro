@@ -1,3 +1,4 @@
+// AppShellClient.tsx
 "use client";
 import { AppLayout } from "@/components/layout/AppLayout";
 import AuthLayout from "@/components/layout/AuthLayout";
@@ -6,7 +7,7 @@ import { useLayoutData } from "@/hooks/layout.hooks";
 import useSupabase from "@/hooks/useSupabase";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 
 function AppShellClient({
   children,
@@ -20,15 +21,26 @@ function AppShellClient({
   const queryClient = useQueryClient();
   const router = useRouter();
 
-  useEffect(() => {
-    supabase.auth.onAuthStateChange((event, session) => {
-      queryClient.setQueryData(["user"], session?.user ?? null);
-      if (event === "SIGNED_OUT" || event === "SIGNED_IN")
+  const handleAuthChange = useCallback(
+    async (event: string) => {
+      if (event === "SIGNED_OUT") {
+        queryClient.setQueryData(["layout-data"], null);
+        queryClient.setQueryData(["user"], null);
         queryClient.invalidateQueries({ queryKey: ["userRole"] });
-    });
-  }, [queryClient, supabase]);
+      } else if (event === "SIGNED_IN") {
+        queryClient.invalidateQueries({ queryKey: ["userRole"] });
+      }
+    },
+    [queryClient],
+  );
 
-  // If we have layoutData (user is authenticated) but no projects, redirect to new project page
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(event => handleAuthChange(event));
+    return () => subscription.unsubscribe();
+  }, [supabase, handleAuthChange]);
+
   useEffect(() => {
     if (
       layoutData &&

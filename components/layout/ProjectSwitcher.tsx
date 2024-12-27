@@ -53,7 +53,6 @@ export function ProjectSwitcher({ projects }: ProjectSwitcherProps) {
       });
     }
   };
-  console.log(activeProject, projects);
 
   if (!activeProject) return null;
 
@@ -62,7 +61,10 @@ export function ProjectSwitcher({ projects }: ProjectSwitcherProps) {
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-auto w-full p-0">
+            <Button
+              variant="ghost"
+              className={cn("h-auto w-full rounded-lg", open && "p-3")}
+            >
               <div
                 className={cn(
                   "flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground",
