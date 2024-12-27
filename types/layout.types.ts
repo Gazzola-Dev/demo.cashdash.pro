@@ -18,6 +18,7 @@ export interface LayoutTask {
   title: string;
   status: Tables<"tasks">["status"];
   priority: Tables<"tasks">["priority"];
+  prefix: string;
   url: string;
   project: {
     slug: string;

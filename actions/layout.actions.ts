@@ -143,6 +143,7 @@ export const getLayoutDataAction = async (): Promise<{
           title: task.title,
           status: task.status,
           priority: task.priority,
+          prefix: task.project.prefix,
           url: configuration.paths.tasks.view({
             project_slug: task.project.slug,
             task_slug: task.id,

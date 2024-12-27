@@ -12,7 +12,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Separator } from "@/components/ui/separator";
 import {
   Sidebar,
   SidebarContent,
@@ -28,10 +27,16 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
+import {
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import configuration from "@/configuration";
 import { useSignOut } from "@/hooks/user.hooks";
 import { cn } from "@/lib/utils";
 import { LayoutData } from "@/types/layout.types";
+import { Tooltip } from "@radix-ui/react-tooltip";
 import {
   ArrowRight,
   Bell,
@@ -67,11 +72,17 @@ export function AppLayout({ children, layoutData }: AppLayoutProps) {
       <div className="flex min-h-screen w-full">
         <AppSidebar layoutData={layoutData} />
         <SidebarInset>
-          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+          <header className="flex h-16 shrink-0 items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1">
               <Menu className="size-4" />
             </SidebarTrigger>
-            <Separator orientation="vertical" className="mr-2 h-4" />
+            {layoutData.currentProject && (
+              <h3 className="text-sm">
+                {layoutData.currentProject.name.length > 10
+                  ? `${layoutData.currentProject.name.slice(0, 10)}...`
+                  : layoutData.currentProject.name}
+              </h3>
+            )}
             <RouteBreadcrumb layoutData={layoutData} />
           </header>
           <div className="flex flex-1 flex-col gap-4 p-4">
@@ -153,24 +164,33 @@ function AppSidebar({ layoutData }: { layoutData: LayoutData }) {
                 </Link>
               </SidebarGroupLabel>
               <SidebarMenu>
-                {layoutData.priorityTasks.map((task, i) => (
-                  <SidebarMenuItem key={task.id}>
-                    <SidebarMenuButton asChild size="sm">
-                      <Link href={task.url}>
-                        {task.priority === "high" ? (
-                          <Signal className="size-4" />
-                        ) : task.priority === "medium" ? (
-                          <SignalHigh className="size-4" />
-                        ) : task.priority === "low" ? (
-                          <SignalMedium className="size-4" />
-                        ) : task.priority === "urgent" ? (
-                          <CircleAlert className="size-4" />
-                        ) : null}
-                        <span>{open ? task.title : `Task ${i + 1}`}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+                <TooltipProvider>
+                  {layoutData.priorityTasks.map((task, i) => (
+                    <Tooltip key={task.id}>
+                      <TooltipTrigger>
+                        <SidebarMenuItem>
+                          <SidebarMenuButton asChild size="sm">
+                            <Link href={task.url}>
+                              {!open ? (
+                                task.prefix
+                              ) : task.priority === "high" ? (
+                                <Signal className="size-4" />
+                              ) : task.priority === "medium" ? (
+                                <SignalHigh className="size-4" />
+                              ) : task.priority === "low" ? (
+                                <SignalMedium className="size-4" />
+                              ) : task.priority === "urgent" ? (
+                                <CircleAlert className="size-4" />
+                              ) : null}
+                              <span>{open ? task.title : `Task ${i + 1}`}</span>
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      </TooltipTrigger>
+                      <TooltipContent>{task.title}</TooltipContent>
+                    </Tooltip>
+                  ))}
+                </TooltipProvider>
               </SidebarMenu>
             </SidebarGroup>
           </>
