@@ -57,41 +57,32 @@ export function ProjectSwitcher({ projects }: ProjectSwitcherProps) {
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className={cn("h-auto w-full rounded-lg", open && "p-3")}
-                  >
-                    <div
-                      className={cn(
-                        "flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground",
-                        !open && "ml-1.5 mt-1.5",
-                      )}
-                    >
-                      <activeProject.logo className="size-4" />
-                    </div>
-                    <div className="grid flex-1 text-left text-sm leading-tight">
-                      <span className="truncate font-semibold">
-                        {activeProject.name}
-                      </span>
-                      <span className="truncate text-xs capitalize">
-                        {activeProject.status}
-                      </span>
-                    </div>
-                    <ChevronsUpDown
-                      className={cn("ml-auto size-4", !open && "hidden")}
-                    />
-                  </Button>
-                </DropdownMenuTrigger>
-              </TooltipTrigger>
-              <TooltipContent side="right">
-                Switch between projects
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className={cn("h-auto w-full rounded-lg", open && "p-3")}
+            >
+              <div
+                className={cn(
+                  "flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground",
+                  !open && "ml-1.5 mt-1.5",
+                )}
+              >
+                <activeProject.logo className="size-4" />
+              </div>
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-semibold">
+                  {activeProject.name}
+                </span>
+                <span className="truncate text-xs capitalize">
+                  {activeProject.status}
+                </span>
+              </div>
+              <ChevronsUpDown
+                className={cn("ml-auto size-4", !open && "hidden")}
+              />
+            </Button>
+          </DropdownMenuTrigger>
 
           <DropdownMenuContent
             className="w-56 rounded-lg"

@@ -52,6 +52,8 @@ function AppShellClient({
 
   if (!layoutData) return <AuthLayout />;
 
+  console.log(layoutData);
+
   return <AppLayout layoutData={layoutData}>{children}</AppLayout>;
 }
 

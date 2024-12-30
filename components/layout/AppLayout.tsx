@@ -1,5 +1,6 @@
 import { ProjectSwitcher } from "@/components/layout/ProjectSwitcher";
 import RouteBreadcrumb from "@/components/layout/RouteBreadCrumb";
+import { SidebarButton } from "@/components/layout/SidebarComponents";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,7 +21,6 @@ import {
   SidebarGroupLabel,
   SidebarInset,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
@@ -72,24 +72,24 @@ export function AppLayout({ children, layoutData }: AppLayoutProps) {
       <div className="flex min-h-screen w-full">
         <AppSidebar layoutData={layoutData} />
         <SidebarInset>
-          <header className="flex h-12 shrink-0 items-start justify-between gap-2 px-4 pt-2">
-            <div className="flex items-center">
-              <SidebarTrigger className="-ml-1.5 mr-4">
+          <header className="flex h-12 shrink-0 items-start justify-between gap-2">
+            <div className="flex">
+              <SidebarTrigger className="p-6 hover:bg-gray-100 rounded-t-none rounded-l-none">
                 <Menu className="size-4" />
               </SidebarTrigger>
               <RouteBreadcrumb layoutData={layoutData} />
             </div>
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex items-center justify-center gap-2 h-full pr-3">
               <Image
-                className="w-20 z-10 -mr-1 pt-0.5"
-                src="/svg/brand/logo-05.svg"
+                className="w-24 z-10 -mr-1 pt-0.5"
+                src="/svg/brand/logo-05-single-color.svg"
                 width={473}
                 height={293}
                 alt="Cash Dash Pro Logo"
               />
               <Image
-                className="w-7 z-10 -mr-1"
-                src="/svg/brand/logo-03.svg"
+                className="w-8 z-10 -mr-1"
+                src="/svg/brand/logo-03-single-color.svg"
                 width={473}
                 height={293}
                 alt="Cash Dash Pro Logo"
@@ -136,16 +136,15 @@ function AppSidebar({ layoutData }: { layoutData: LayoutData }) {
                   <Tooltip>
                     <TooltipTrigger>
                       <SidebarMenuItem>
-                        <SidebarMenuButton asChild size="sm">
-                          <Link
-                            href={configuration.paths.project.overview({
-                              project_slug: currentProject.slug,
-                            })}
-                          >
-                            <LayoutDashboard className="size-4" />
-                            <span>Overview</span>
-                          </Link>
-                        </SidebarMenuButton>
+                        <SidebarButton
+                          href={configuration.paths.project.overview({
+                            project_slug: currentProject.slug,
+                          })}
+                          matchPattern={`/${currentProject.slug}$`}
+                        >
+                          <LayoutDashboard className="size-4" />
+                          <span>Overview</span>
+                        </SidebarButton>
                       </SidebarMenuItem>
                     </TooltipTrigger>
                     <TooltipContent side="right">
@@ -158,16 +157,14 @@ function AppSidebar({ layoutData }: { layoutData: LayoutData }) {
                   <Tooltip>
                     <TooltipTrigger>
                       <SidebarMenuItem>
-                        <SidebarMenuButton asChild size="sm">
-                          <Link
-                            href={configuration.paths.project.timeline({
-                              project_slug: currentProject.slug,
-                            })}
-                          >
-                            <Clock className="size-4" />
-                            <span>Timeline</span>
-                          </Link>
-                        </SidebarMenuButton>
+                        <SidebarButton
+                          href={configuration.paths.project.timeline({
+                            project_slug: currentProject.slug,
+                          })}
+                        >
+                          <Clock className="size-4" />
+                          <span>Timeline</span>
+                        </SidebarButton>
                       </SidebarMenuItem>
                     </TooltipTrigger>
                     <TooltipContent side="right">
@@ -178,16 +175,14 @@ function AppSidebar({ layoutData }: { layoutData: LayoutData }) {
                   <Tooltip>
                     <TooltipTrigger>
                       <SidebarMenuItem>
-                        <SidebarMenuButton asChild size="sm">
-                          <Link
-                            href={configuration.paths.project.kanban({
-                              project_slug: currentProject.slug,
-                            })}
-                          >
-                            <Kanban className="size-4" />
-                            <span>Kanban</span>
-                          </Link>
-                        </SidebarMenuButton>
+                        <SidebarButton
+                          href={configuration.paths.project.kanban({
+                            project_slug: currentProject.slug,
+                          })}
+                        >
+                          <Kanban className="size-4" />
+                          <span>Kanban</span>
+                        </SidebarButton>
                       </SidebarMenuItem>
                     </TooltipTrigger>
                     <TooltipContent side="right">
@@ -197,6 +192,7 @@ function AppSidebar({ layoutData }: { layoutData: LayoutData }) {
                 </TooltipProvider>
               </SidebarMenu>
             </SidebarGroup>
+
             <SidebarGroup>
               <SidebarGroupLabel className="flex items-center justify-between">
                 <h2 className="text-sm">Tasks</h2>
@@ -216,24 +212,22 @@ function AppSidebar({ layoutData }: { layoutData: LayoutData }) {
                     <Tooltip key={task.id}>
                       <TooltipTrigger>
                         <SidebarMenuItem>
-                          <SidebarMenuButton asChild size="sm">
-                            <Link href={task.url}>
-                              {task.priority === "high" ? (
-                                <Signal className="size-4" />
-                              ) : task.priority === "medium" ? (
-                                <SignalHigh className="size-4" />
-                              ) : task.priority === "low" ? (
-                                <SignalMedium className="size-4" />
-                              ) : task.priority === "urgent" ? (
-                                <CircleAlert className="size-4" />
-                              ) : null}
-                              <span
-                                className={cn(!open && "text-base font-medium")}
-                              >
-                                {task.title}
-                              </span>
-                            </Link>
-                          </SidebarMenuButton>
+                          <SidebarButton href={task.url}>
+                            {task.priority === "high" ? (
+                              <Signal className="size-4" />
+                            ) : task.priority === "medium" ? (
+                              <SignalHigh className="size-4" />
+                            ) : task.priority === "low" ? (
+                              <SignalMedium className="size-4" />
+                            ) : task.priority === "urgent" ? (
+                              <CircleAlert className="size-4" />
+                            ) : null}
+                            <span
+                              className={cn(!open && "text-base font-medium")}
+                            >
+                              {task.title}
+                            </span>
+                          </SidebarButton>
                         </SidebarMenuItem>
                       </TooltipTrigger>
                       <TooltipContent side="right">{task.title}</TooltipContent>
@@ -254,8 +248,9 @@ function AppSidebar({ layoutData }: { layoutData: LayoutData }) {
   );
 }
 
-function NavSecondary() {
+export function NavSecondary() {
   const { open } = useSidebar();
+
   return (
     <SidebarGroup className="mt-auto relative">
       <SidebarGroupContent>
@@ -264,12 +259,13 @@ function NavSecondary() {
             <Tooltip>
               <TooltipTrigger>
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild size="sm">
-                    <Link href={configuration.paths.settings.all}>
-                      <Settings2 className="size-4" />
-                      <span>Settings</span>
-                    </Link>
-                  </SidebarMenuButton>
+                  <SidebarButton
+                    href={configuration.paths.settings.all}
+                    matchPattern="^/settings"
+                  >
+                    <Settings2 className="size-4" />
+                    <span>Settings</span>
+                  </SidebarButton>
                 </SidebarMenuItem>
               </TooltipTrigger>
               <TooltipContent side="right">
@@ -280,12 +276,13 @@ function NavSecondary() {
             <Tooltip>
               <TooltipTrigger>
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild size="sm">
-                    <Link href={configuration.paths.feedback}>
-                      <Send className="size-4" />
-                      <span>Feedback</span>
-                    </Link>
-                  </SidebarMenuButton>
+                  <SidebarButton
+                    href={configuration.paths.feedback}
+                    matchPattern="^/feedback"
+                  >
+                    <Send className="size-4" />
+                    <span>Feedback</span>
+                  </SidebarButton>
                 </SidebarMenuItem>
               </TooltipTrigger>
               <TooltipContent side="right">
@@ -296,12 +293,13 @@ function NavSecondary() {
             <Tooltip>
               <TooltipTrigger>
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild size="sm">
-                    <Link href={configuration.paths.support}>
-                      <LifeBuoy className="size-4" />
-                      <span>Support</span>
-                    </Link>
-                  </SidebarMenuButton>
+                  <SidebarButton
+                    href={configuration.paths.support}
+                    matchPattern="^/support"
+                  >
+                    <LifeBuoy className="size-4" />
+                    <span>Support</span>
+                  </SidebarButton>
                 </SidebarMenuItem>
               </TooltipTrigger>
               <TooltipContent side="right">

@@ -92,9 +92,12 @@ export const getLayoutDataAction = async (): Promise<{
           status,
           priority,
           slug,
+          prefix,
+          ordinal_id,
           project:projects (
             slug,
-            name
+            name,
+            prefix
           )
         `,
         )
@@ -119,9 +122,11 @@ export const getLayoutDataAction = async (): Promise<{
           priority,
           slug,
           ordinal_id,
+          prefix,
           project:projects (
             slug,
-            name
+            name,
+            prefix
           )
         `,
         )
@@ -136,6 +141,7 @@ export const getLayoutDataAction = async (): Promise<{
         console.error("Error fetching priority tasks:", priorityError);
         throw priorityError;
       }
+
       priorityTasks = priorityTasksData;
     }
 
@@ -148,7 +154,7 @@ export const getLayoutDataAction = async (): Promise<{
           title: task.title,
           status: task.status,
           priority: task.priority,
-          prefix: task.project.prefix,
+          prefix: task.prefix,
           ordinalId: task.ordinal_id,
           url: configuration.paths.tasks.view({
             project_slug: task.project.slug,
@@ -157,6 +163,7 @@ export const getLayoutDataAction = async (): Promise<{
           project: {
             slug: task.project.slug,
             name: task.project.name,
+            prefix: task.project.prefix,
           },
         })) || [];
 
