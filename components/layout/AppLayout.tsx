@@ -1,4 +1,3 @@
-// AppLayout.tsx
 import { ProjectSwitcher } from "@/components/layout/ProjectSwitcher";
 import RouteBreadcrumb from "@/components/layout/RouteBreadCrumb";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -67,7 +66,6 @@ interface AppLayoutProps {
   children: React.ReactNode;
   layoutData: LayoutData;
 }
-
 export function AppLayout({ children, layoutData }: AppLayoutProps) {
   return (
     <SidebarProvider>
@@ -115,6 +113,7 @@ export function AppLayout({ children, layoutData }: AppLayoutProps) {
     </SidebarProvider>
   );
 }
+
 function AppSidebar({ layoutData }: { layoutData: LayoutData }) {
   const { open } = useSidebar();
   const currentProject = layoutData.currentProject;
@@ -133,42 +132,69 @@ function AppSidebar({ layoutData }: { layoutData: LayoutData }) {
           <>
             <SidebarGroup>
               <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild size="sm">
-                    <Link
-                      href={configuration.paths.project.overview({
-                        project_slug: currentProject.slug,
-                      })}
-                    >
-                      <LayoutDashboard className="size-4" />
-                      <span>Overview</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild size="sm">
-                    <Link
-                      href={configuration.paths.project.timeline({
-                        project_slug: currentProject.slug,
-                      })}
-                    >
-                      <Clock className="size-4" />
-                      <span>Timeline</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild size="sm">
-                    <Link
-                      href={configuration.paths.project.kanban({
-                        project_slug: currentProject.slug,
-                      })}
-                    >
-                      <Kanban className="size-4" />
-                      <span>Kanban</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton asChild size="sm">
+                          <Link
+                            href={configuration.paths.project.overview({
+                              project_slug: currentProject.slug,
+                            })}
+                          >
+                            <LayoutDashboard className="size-4" />
+                            <span>Overview</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      {open
+                        ? "View project dashboard and key metrics"
+                        : "Overview"}
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton asChild size="sm">
+                          <Link
+                            href={configuration.paths.project.timeline({
+                              project_slug: currentProject.slug,
+                            })}
+                          >
+                            <Clock className="size-4" />
+                            <span>Timeline</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      {open ? "View project timeline and schedule" : "Timeline"}
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton asChild size="sm">
+                          <Link
+                            href={configuration.paths.project.kanban({
+                              project_slug: currentProject.slug,
+                            })}
+                          >
+                            <Kanban className="size-4" />
+                            <span>Kanban</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      {open ? "Manage tasks in kanban board view" : "Kanban"}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </SidebarMenu>
             </SidebarGroup>
             <SidebarGroup>
@@ -187,15 +213,12 @@ function AppSidebar({ layoutData }: { layoutData: LayoutData }) {
               <SidebarMenu>
                 <TooltipProvider>
                   {layoutData.priorityTasks.map((task, i) => (
-                    <Tooltip open={open ? false : undefined} key={task.id}>
-                      {" "}
+                    <Tooltip key={task.id}>
                       <TooltipTrigger>
                         <SidebarMenuItem>
                           <SidebarMenuButton asChild size="sm">
                             <Link href={task.url}>
-                              {!open ? (
-                                task.prefix
-                              ) : task.priority === "high" ? (
+                              {task.priority === "high" ? (
                                 <Signal className="size-4" />
                               ) : task.priority === "medium" ? (
                                 <SignalHigh className="size-4" />
@@ -204,12 +227,16 @@ function AppSidebar({ layoutData }: { layoutData: LayoutData }) {
                               ) : task.priority === "urgent" ? (
                                 <CircleAlert className="size-4" />
                               ) : null}
-                              <span>{open ? task.title : `Task ${i + 1}`}</span>
+                              <span
+                                className={cn(!open && "text-base font-medium")}
+                              >
+                                {task.title}
+                              </span>
                             </Link>
                           </SidebarMenuButton>
                         </SidebarMenuItem>
                       </TooltipTrigger>
-                      <TooltipContent>{task.title}</TooltipContent>
+                      <TooltipContent side="right">{task.title}</TooltipContent>
                     </Tooltip>
                   ))}
                 </TooltipProvider>
@@ -231,54 +258,57 @@ function NavSecondary() {
   const { open } = useSidebar();
   return (
     <SidebarGroup className="mt-auto relative">
-      <Link
-        href={configuration.paths.about}
-        className="w-full flex items-center justify-center"
-      >
-        {/* {open ? (
-          <Image
-            className="w-28 z-10 mb-5"
-            src="/svg/brand/logo-01.svg"
-            width={473}
-            height={293}
-            alt="Cash Dash Pro Logo"
-          />
-        ) : (
-          <Image
-            className="w-8 z-10 mb-3"
-            src="/svg/brand/logo-03.svg"
-            width={473}
-            height={293}
-            alt="Cash Dash Pro Logo"
-          />
-        )} */}
-      </Link>
       <SidebarGroupContent>
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild size="sm">
-              <Link href={configuration.paths.settings.all}>
-                <Settings2 className="size-4" />
-                <span>Settings</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild size="sm">
-              <Link href={configuration.paths.feedback}>
-                <Send className="size-4" />
-                <span>Feedback</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild size="sm">
-              <Link href={configuration.paths.support}>
-                <LifeBuoy className="size-4" />
-                <span>Support</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild size="sm">
+                    <Link href={configuration.paths.settings.all}>
+                      <Settings2 className="size-4" />
+                      <span>Settings</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                {open ? "Configure your account and preferences" : "Settings"}
+              </TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild size="sm">
+                    <Link href={configuration.paths.feedback}>
+                      <Send className="size-4" />
+                      <span>Feedback</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                {open ? "Share your feedback with us" : "Feedback"}
+              </TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild size="sm">
+                    <Link href={configuration.paths.support}>
+                      <LifeBuoy className="size-4" />
+                      <span>Support</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                {open ? "Get help and support" : "Support"}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
@@ -345,39 +375,81 @@ function NavUser({ user }: { user: LayoutData["user"] }) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem className="cursor-pointer" asChild>
-                <Link href={configuration.paths.settings.profile}>
-                  <CircleUser className="mr-2 size-4" />
-                  Profile
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer" asChild>
-                <Link href={configuration.paths.settings.team}>
-                  <UsersRound className="mr-2 size-4" />
-                  Team
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer" asChild>
-                <Link href={configuration.paths.settings.notifications}>
-                  <Bell className="mr-2 size-4" />
-                  Notifications
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer" asChild>
-                <Link href={configuration.paths.settings.billing}>
-                  <CreditCard className="mr-2 size-4" />
-                  Billing
-                </Link>
-              </DropdownMenuItem>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuItem className="cursor-pointer" asChild>
+                      <Link href={configuration.paths.settings.profile}>
+                        <CircleUser className="mr-2 size-4" />
+                        Profile
+                      </Link>
+                    </DropdownMenuItem>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    Manage your personal profile and settings
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuItem className="cursor-pointer" asChild>
+                      <Link href={configuration.paths.settings.team}>
+                        <UsersRound className="mr-2 size-4" />
+                        Team
+                      </Link>
+                    </DropdownMenuItem>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    Manage team members and permissions
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuItem className="cursor-pointer" asChild>
+                      <Link href={configuration.paths.settings.notifications}>
+                        <Bell className="mr-2 size-4" />
+                        Notifications
+                      </Link>
+                    </DropdownMenuItem>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    Configure your notification preferences
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuItem className="cursor-pointer" asChild>
+                      <Link href={configuration.paths.settings.billing}>
+                        <CreditCard className="mr-2 size-4" />
+                        Billing
+                      </Link>
+                    </DropdownMenuItem>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    Manage your subscription and billing details
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="cursor-pointer"
-              onClick={handleSignOut}
-            >
-              <LogOut className="mr-2 size-4" />
-              Log out
-            </DropdownMenuItem>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenuItem
+                    className="cursor-pointer"
+                    onClick={handleSignOut}
+                  >
+                    <LogOut className="mr-2 size-4" />
+                    Log out
+                  </DropdownMenuItem>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  Sign out of your account
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

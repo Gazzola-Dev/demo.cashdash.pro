@@ -118,6 +118,7 @@ export const getLayoutDataAction = async (): Promise<{
           status,
           priority,
           slug,
+          ordinal_id,
           project:projects (
             slug,
             name
@@ -148,6 +149,7 @@ export const getLayoutDataAction = async (): Promise<{
           status: task.status,
           priority: task.priority,
           prefix: task.project.prefix,
+          ordinalId: task.ordinal_id,
           url: configuration.paths.tasks.view({
             project_slug: task.project.slug,
             task_slug: task.slug,
