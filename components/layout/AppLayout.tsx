@@ -79,7 +79,7 @@ export function AppLayout({ children, layoutData }: AppLayoutProps) {
               </SidebarTrigger>
               <RouteBreadcrumb layoutData={layoutData} />
             </div>
-            <div className="flex items-center justify-center gap-2 h-full pr-3">
+            <div className="flex items-center justify-center gap-2 h-full pr-[1.1rem]">
               <Image
                 className="w-24 z-10 -mr-1 pt-0.5"
                 src="/svg/brand/logo-05-single-color.svg"
