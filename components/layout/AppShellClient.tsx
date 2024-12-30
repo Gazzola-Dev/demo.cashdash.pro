@@ -1,4 +1,3 @@
-// AppShellClient.tsx
 "use client";
 import { AppLayout } from "@/components/layout/AppLayout";
 import AuthLayout from "@/components/layout/AuthLayout";
@@ -6,7 +5,7 @@ import configuration from "@/configuration";
 import { useLayoutData } from "@/hooks/layout.hooks";
 import useSupabase from "@/hooks/useSupabase";
 import { useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect } from "react";
 
 function AppShellClient({
@@ -20,6 +19,7 @@ function AppShellClient({
   const supabase = useSupabase();
   const queryClient = useQueryClient();
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleAuthChange = useCallback(
     async (event: string) => {
@@ -42,17 +42,24 @@ function AppShellClient({
   }, [supabase, handleAuthChange]);
 
   useEffect(() => {
-    if (
-      layoutData &&
-      (!layoutData.projects || layoutData.projects.length === 0)
-    ) {
+    if (!layoutData) return;
+
+    if (!layoutData.projects || layoutData.projects.length === 0) {
       router.push(configuration.paths.project.new);
+    } else if (
+      pathname === configuration.paths.appHome &&
+      layoutData.currentProject
+    ) {
+      // Redirect from home to current project overview
+      router.push(
+        configuration.paths.project.overview({
+          project_slug: layoutData.currentProject.slug,
+        }),
+      );
     }
-  }, [layoutData, router]);
+  }, [layoutData, router, pathname]);
 
   if (!layoutData) return <AuthLayout />;
-
-  console.log(layoutData);
 
   return <AppLayout layoutData={layoutData}>{children}</AppLayout>;
 }
