@@ -11,7 +11,6 @@ async function exists(path) {
   }
 }
 
-// New function to recursively delete directory contents
 async function emptyDirectory(directory) {
   if (!(await exists(directory))) {
     return;
@@ -31,14 +30,27 @@ async function emptyDirectory(directory) {
 }
 
 async function shouldIncludeFile(dirName, fileName) {
-  // Only process files from specific directories
+  // Only process files from specific directories with specific patterns
   const validDirs = ["hooks", "actions", "types", "constants"];
   if (!validDirs.includes(dirName)) {
     return false;
   }
-  // Check if the file name contains an additional period
-  const periods = fileName.split(".").length - 1;
-  return periods >= 2;
+
+  if (dirName === "hooks" && !fileName.endsWith(".hooks.ts")) {
+    return false;
+  }
+
+  if (dirName === "actions" && !fileName.endsWith(".actions.ts")) {
+    return false;
+  }
+
+  // For types and constants, maintain the original behavior
+  if (dirName === "types" || dirName === "constants") {
+    const periods = fileName.split(".").length - 1;
+    return periods >= 2;
+  }
+
+  return true;
 }
 
 async function flatCopyDir(src, dest) {
@@ -50,7 +62,7 @@ async function flatCopyDir(src, dest) {
     if (entry.isDirectory()) {
       await flatCopyDir(srcPath, dest);
     } else {
-      if (shouldIncludeFile(dirName, entry.name)) {
+      if (await shouldIncludeFile(dirName, entry.name)) {
         await fs.copyFile(srcPath, path.join(dest, entry.name));
       }
     }
