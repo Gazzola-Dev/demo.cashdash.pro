@@ -31,7 +31,7 @@ async function emptyDirectory(directory) {
 
 async function shouldIncludeFile(dirName, fileName) {
   // Only process files from specific directories with specific patterns
-  const validDirs = ["hooks", "actions", "types", "constants"];
+  const validDirs = ["hooks", "actions", "types", "constants", "stores"];
   if (!validDirs.includes(dirName)) {
     return false;
   }
@@ -41,6 +41,10 @@ async function shouldIncludeFile(dirName, fileName) {
   }
 
   if (dirName === "actions" && !fileName.endsWith(".actions.ts")) {
+    return false;
+  }
+
+  if (dirName === "stores" && !fileName.endsWith(".store.ts")) {
     return false;
   }
 
@@ -106,7 +110,7 @@ async function main() {
   await fs.mkdir(OUTPUT_DIR, { recursive: true });
 
   // Directories to copy (only process specific directories)
-  const dirsToCopy = ["actions", "hooks", "types", "constants"];
+  const dirsToCopy = ["actions", "hooks", "types", "constants", "stores"];
   for (const dir of dirsToCopy) {
     if (await exists(dir)) {
       await flatCopyDir(dir, OUTPUT_DIR);

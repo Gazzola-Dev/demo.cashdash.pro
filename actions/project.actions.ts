@@ -1,21 +1,22 @@
-// project.actions.ts
 "use server";
 
 import getSupabaseServerActionClient from "@/clients/action-client";
 import getActionResponse from "@/lib/action.util";
-import { TablesInsert, TablesUpdate } from "@/types/database.types";
+import { ActionResponse } from "@/types/action.types";
+import { Tables, TablesInsert, TablesUpdate } from "@/types/database.types";
+import { ProjectListResponse, ProjectWithDetails } from "@/types/project.types";
 
-// Create project action
+type Project = Tables<"projects">;
+
 export const createProjectAction = async (
   project: TablesInsert<"projects">,
-) => {
+): Promise<ActionResponse<ProjectWithDetails>> => {
   const supabase = await getSupabaseServerActionClient();
 
   try {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) throw new Error("User not authenticated");
 
-    // Use the create_project_with_owner function instead of separate calls
     const { data: projectData, error: projectError } = await supabase.rpc(
       "create_project_with_owner",
       {
@@ -26,8 +27,42 @@ export const createProjectAction = async (
 
     if (projectError) throw projectError;
 
-    // Update user's current project - this is already handled by a trigger
-    // but we'll keep it here for now to be explicit
+    const { data: fullProject, error: fetchError } = await supabase
+      .from("projects")
+      .select(
+        `
+        *,
+        project_members (
+          *,
+          profile:profiles!user_id(*)
+        ),
+        project_invitations (
+          *,
+          inviter:profiles!invited_by(*)
+        ),
+        tasks (*),
+        external_integrations (*),
+        project_metrics (*)
+      `,
+      )
+      .eq("id", projectData.id)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    // Transform the profile arrays into single objects
+    const transformedProject = {
+      ...fullProject,
+      project_members: fullProject.project_members?.map(member => ({
+        ...member,
+        profile: member.profile?.[0] || null,
+      })),
+      project_invitations: fullProject.project_invitations?.map(invitation => ({
+        ...invitation,
+        inviter: invitation.inviter?.[0] || null,
+      })),
+    };
+
     const { error: profileError } = await supabase
       .from("profiles")
       .update({ current_project_id: projectData.id })
@@ -35,18 +70,16 @@ export const createProjectAction = async (
 
     if (profileError) throw profileError;
 
-    return getActionResponse({ data: projectData });
+    return getActionResponse({ data: transformedProject });
   } catch (error) {
-    console.error("Project creation error:", error);
     return getActionResponse({ error });
   }
 };
 
-// Update project action
 export const updateProjectAction = async (
   projectId: string,
   updates: TablesUpdate<"projects">,
-) => {
+): Promise<ActionResponse<ProjectWithDetails>> => {
   const supabase = await getSupabaseServerActionClient();
 
   try {
@@ -54,22 +87,62 @@ export const updateProjectAction = async (
       .from("projects")
       .update(updates)
       .eq("id", projectId)
-      .select()
+      .select(
+        `
+        *,
+        project_members (
+          *,
+          profile:profiles!user_id(*)
+        ),
+        project_invitations (
+          *,
+          inviter:profiles!invited_by(*)
+        ),
+        tasks (*),
+        external_integrations (*),
+        project_metrics (*)
+      `,
+      )
       .single();
 
     if (error) throw error;
 
-    return getActionResponse({ data });
+    // Transform the profile arrays into single objects
+    const transformedProject = {
+      ...data,
+      project_members: data.project_members?.map(member => ({
+        ...member,
+        profile: member.profile?.[0] || null,
+      })),
+      project_invitations: data.project_invitations?.map(invitation => ({
+        ...invitation,
+        inviter: invitation.inviter?.[0] || null,
+      })),
+    };
+
+    return getActionResponse({ data: transformedProject });
   } catch (error) {
     return getActionResponse({ error });
   }
 };
 
-// Delete project action
-export const deleteProjectAction = async (projectId: string) => {
+export const deleteProjectAction = async (
+  projectId: string,
+): Promise<ActionResponse<null>> => {
   const supabase = await getSupabaseServerActionClient();
 
   try {
+    const { data: memberData, error: memberError } = await supabase
+      .from("project_members")
+      .select("role")
+      .eq("project_id", projectId)
+      .eq("role", "owner")
+      .single();
+
+    if (memberError || !memberData) {
+      throw new Error("Permission denied");
+    }
+
     const { error } = await supabase
       .from("projects")
       .delete()
@@ -83,8 +156,9 @@ export const deleteProjectAction = async (projectId: string) => {
   }
 };
 
-// Get project action
-export const getProjectAction = async (projectId: string) => {
+export const getProjectAction = async (
+  projectId: string,
+): Promise<ActionResponse<ProjectWithDetails>> => {
   const supabase = await getSupabaseServerActionClient();
 
   try {
@@ -94,14 +168,16 @@ export const getProjectAction = async (projectId: string) => {
         `
         *,
         project_members (
-          user_id,
-          role
+          *,
+          profile:profiles!user_id(*)
         ),
-        tasks (
-          id,
-          title,
-          status
-        )
+        project_invitations (
+          *,
+          inviter:profiles!invited_by(*)
+        ),
+        tasks (*),
+        external_integrations (*),
+        project_metrics (*)
       `,
       )
       .eq("id", projectId)
@@ -109,34 +185,49 @@ export const getProjectAction = async (projectId: string) => {
 
     if (error) throw error;
 
-    return getActionResponse({ data });
+    // Transform the profile arrays into single objects
+    const transformedProject = {
+      ...data,
+      project_members: data.project_members?.map(member => ({
+        ...member,
+        profile: member.profile?.[0] || null,
+      })),
+      project_invitations: data.project_invitations?.map(invitation => ({
+        ...invitation,
+        inviter: invitation.inviter?.[0] || null,
+      })),
+    };
+
+    return getActionResponse({ data: transformedProject });
   } catch (error) {
     return getActionResponse({ error });
   }
 };
 
-// List projects action
 export const listProjectsAction = async (filters?: {
-  status?: string;
+  status?: Project["status"];
   search?: string;
-  sort?: string;
+  sort?: keyof Project;
   order?: "asc" | "desc";
-}) => {
+}): Promise<ProjectListResponse> => {
   const supabase = await getSupabaseServerActionClient();
 
   try {
     let query = supabase.from("projects").select(`
+      *,
+      project_members (
         *,
-        project_members (
-          user_id,
-          role
-        ),
-        tasks (
-          count
-        )
-      `);
+        profile:profiles!user_id(*)
+      ),
+      project_invitations (
+        *,
+        inviter:profiles!invited_by(*)
+      ),
+      tasks (*),
+      external_integrations (*),
+      project_metrics (*)
+    `);
 
-    // Apply filters
     if (filters?.status) {
       query = query.eq("status", filters.status);
     }
@@ -145,7 +236,6 @@ export const listProjectsAction = async (filters?: {
       query = query.ilike("name", `%${filters.search}%`);
     }
 
-    // Apply sorting
     if (filters?.sort) {
       query = query.order(filters.sort, { ascending: filters.order === "asc" });
     } else {
@@ -156,7 +246,20 @@ export const listProjectsAction = async (filters?: {
 
     if (error) throw error;
 
-    return getActionResponse({ data });
+    // Transform the profile arrays into single objects for each project
+    const transformedProjects = data?.map(project => ({
+      ...project,
+      project_members: project.project_members?.map(member => ({
+        ...member,
+        profile: member.profile?.[0] || null,
+      })),
+      project_invitations: project.project_invitations?.map(invitation => ({
+        ...invitation,
+        inviter: invitation.inviter?.[0] || null,
+      })),
+    }));
+
+    return getActionResponse({ data: transformedProjects });
   } catch (error) {
     return getActionResponse({ error });
   }

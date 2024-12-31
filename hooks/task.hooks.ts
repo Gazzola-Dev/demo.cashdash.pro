@@ -11,6 +11,7 @@ import {
 } from "@/actions/task.actions";
 import { Tables, TablesInsert, TablesUpdate } from "@/types/database.types";
 import { HookOptions } from "@/types/db.types";
+import { TaskFilters } from "@/types/task.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToastQueue } from "./useToastQueue";
 
@@ -40,15 +41,7 @@ export const useGetTask = (
 };
 
 // List tasks hook
-export const useListTasks = (filters?: {
-  projectId?: string;
-  status?: string;
-  priority?: string;
-  assignee?: string;
-  search?: string;
-  sort?: string;
-  order?: "asc" | "desc";
-}) => {
+export const useListTasks = (filters?: TaskFilters) => {
   return useQuery({
     queryKey: ["tasks", filters],
     queryFn: async () => {

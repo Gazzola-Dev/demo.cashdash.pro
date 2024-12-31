@@ -3,14 +3,14 @@
 import getSupabaseServerActionClient from "@/clients/action-client";
 import configuration from "@/configuration";
 import getActionResponse from "@/lib/action.util";
-import { Tables } from "@/types/database.types";
-import { LayoutData, LayoutProject, LayoutTask } from "@/types/layout.types";
+import { ActionResponse } from "@/types/action.types";
+import { LayoutData, LayoutTask } from "@/types/layout.types";
+import { ProjectMember } from "@/types/project.types";
+import { RequiredProject, TaskWithProject } from "@/types/task.types";
 
-export const getLayoutDataAction = async (): Promise<{
-  data: LayoutData | null;
-  error: string | null;
-}> => {
-  console.log("getLayoutDataAction");
+export const getLayoutDataAction = async (): Promise<
+  ActionResponse<LayoutData>
+> => {
   const supabase = await getSupabaseServerActionClient();
 
   try {
@@ -20,22 +20,29 @@ export const getLayoutDataAction = async (): Promise<{
       error: userError,
     } = await supabase.auth.getUser();
 
-    if (!user || userError) {
-      return getActionResponse({ data: null });
-    }
+    if (!user || userError) throw userError || new Error("Not authenticated");
 
     // Get project memberships with project details
     const { data: memberships, error: membershipError } = await supabase
       .from("project_members")
       .select(
         `
+        id,
+        project_id,
+        user_id,
         role,
+        created_at,
         projects (
-          id,  
+          id,
           name,
-          slug,
+          description,
           status,
+          slug,
           prefix,
+          github_repo_url,
+          github_owner,
+          github_repo,
+          created_at,
           updated_at
         )
       `,
@@ -60,26 +67,27 @@ export const getLayoutDataAction = async (): Promise<{
       throw profileError;
     }
 
-    // Format projects data, filtering out any null projects
-    const projects: LayoutProject[] =
-      memberships
-        ?.filter(pm => pm.projects !== null)
-        .map(pm => ({
-          id: pm.projects!.id,
-          name: pm.projects!.name,
-          slug: pm.projects!.slug,
-          status: pm.projects!.status,
-          prefix: pm.projects!.prefix,
-          role: pm.role,
-          isCurrent: pm.projects!.id === profile?.current_project_id,
-        })) || [];
+    // Format projects data
+    const projects = memberships
+      ?.filter((pm): pm is ProjectMember & { projects: RequiredProject } =>
+        Boolean(pm.projects),
+      )
+      .map(pm => ({
+        id: pm.projects.id,
+        name: pm.projects.name,
+        slug: pm.projects.slug,
+        status: pm.projects.status,
+        prefix: pm.projects.prefix,
+        role: pm.role,
+        isCurrent: pm.projects.id === profile?.current_project_id,
+      }));
 
     // Get current project
-    const currentProject = projects.find(p => p.isCurrent) || projects[0];
+    const currentProject = projects?.find(p => p.isCurrent) || projects?.[0];
 
     // Only proceed with task queries if there's a current project
-    let recentTasks: Partial<Tables<"tasks">>[] = [];
-    let priorityTasks: Partial<Tables<"tasks">>[] = [];
+    let recentTasks: TaskWithProject[] = [];
+    let priorityTasks: TaskWithProject[] = [];
 
     if (currentProject) {
       // Get recent tasks
@@ -89,15 +97,26 @@ export const getLayoutDataAction = async (): Promise<{
           `
           id,
           title,
+          description,
           status,
           priority,
-          slug,
-          prefix,
           ordinal_id,
+          prefix,
+          slug,
+          created_at,
+          updated_at,
           project:projects (
-            slug,
+            id,
             name,
-            prefix
+            description,
+            status,
+            slug,
+            prefix,
+            github_repo_url,
+            github_owner,
+            github_repo,
+            created_at,
+            updated_at
           )
         `,
         )
@@ -109,7 +128,11 @@ export const getLayoutDataAction = async (): Promise<{
         console.error("Error fetching tasks:", tasksError);
         throw tasksError;
       }
-      recentTasks = recentTasksData;
+
+      // Filter out tasks with null projects
+      recentTasks = recentTasksData.filter((task): task is TaskWithProject =>
+        Boolean(task.project),
+      );
 
       // Get priority tasks ordered by urgency
       const { data: priorityTasksData, error: priorityError } = await supabase
@@ -118,15 +141,26 @@ export const getLayoutDataAction = async (): Promise<{
           `
           id,
           title,
+          description,
           status,
           priority,
-          slug,
           ordinal_id,
           prefix,
+          slug,
+          created_at,
+          updated_at,
           project:projects (
-            slug,
+            id,
             name,
-            prefix
+            description,
+            status,
+            slug,
+            prefix,
+            github_repo_url,
+            github_owner,
+            github_repo,
+            created_at,
+            updated_at
           )
         `,
         )
@@ -142,30 +176,27 @@ export const getLayoutDataAction = async (): Promise<{
         throw priorityError;
       }
 
-      priorityTasks = priorityTasksData;
+      // Filter out tasks with null projects
+      priorityTasks = priorityTasksData.filter(
+        (task): task is TaskWithProject => Boolean(task.project),
+      );
     }
 
     // Format tasks with URLs
-    const formatTasks = (tasks: any[] | null): LayoutTask[] =>
-      tasks
-        ?.filter(task => task.project !== null)
-        .map(task => ({
-          id: task.id,
-          title: task.title,
-          status: task.status,
-          priority: task.priority,
-          prefix: task.prefix,
-          ordinalId: task.ordinal_id,
-          url: configuration.paths.tasks.view({
-            project_slug: task.project.slug,
-            task_slug: task.slug,
-          }),
-          project: {
-            slug: task.project.slug,
-            name: task.project.name,
-            prefix: task.project.prefix,
-          },
-        })) || [];
+    const formatTasks = (tasks: TaskWithProject[]): LayoutTask[] =>
+      tasks.map(task => ({
+        ...task,
+        ordinalId: task.ordinal_id,
+        url: configuration.paths.tasks.view({
+          project_slug: task.project.slug,
+          task_slug: task.slug,
+        }),
+        project: {
+          slug: task.project.slug,
+          name: task.project.name,
+          prefix: task.project.prefix,
+        },
+      }));
 
     // Construct layout data
     const layoutData: LayoutData = {
@@ -176,7 +207,7 @@ export const getLayoutDataAction = async (): Promise<{
         avatar: profile?.avatar_url || "",
       },
       currentProject,
-      projects,
+      projects: projects || [],
       recentTasks: formatTasks(recentTasks),
       priorityTasks: formatTasks(priorityTasks),
       navSecondary: [
@@ -205,7 +236,9 @@ export const getLayoutDataAction = async (): Promise<{
   }
 };
 
-export const setCurrentProjectAction = async (projectId: string) => {
+export const setCurrentProjectAction = async (
+  projectId: string,
+): Promise<ActionResponse<null>> => {
   const supabase = await getSupabaseServerActionClient();
 
   try {

@@ -1,61 +1,70 @@
-// task.actions.ts
 "use server";
 
 import getSupabaseServerActionClient from "@/clients/action-client";
 import getActionResponse from "@/lib/action.util";
-import { TablesInsert, TablesUpdate } from "@/types/database.types";
-import {
-  TaskListResponse,
-  TaskResponse,
-  TaskWithProfile,
-} from "@/types/task.types";
+import { ActionResponse } from "@/types/action.types";
+import { Tables, TablesInsert, TablesUpdate } from "@/types/database.types";
+import { TaskFilters } from "@/types/task.types";
 
-// Create task action
+type Task = Tables<"tasks">;
+type Project = Tables<"projects">;
+type Profile = Tables<"profiles">;
+type Subtask = Tables<"subtasks">;
+type TaskTag = Tables<"task_tags">;
+type Tag = Tables<"tags">;
+type Comment = Tables<"comments">;
+type TaskSchedule = Tables<"task_schedule">;
+type Attachment = Tables<"attachments">;
+
+interface TaskWithDetails extends Task {
+  project: Project;
+  assignee_profile?: Profile | null;
+  subtasks?: Subtask[];
+  task_tags?: (TaskTag & { tags: Tag })[];
+  comments?: (Omit<Comment, "user"> & {
+    user: Profile[];
+  })[];
+  task_schedule?: TaskSchedule[];
+  attachments?: Attachment[];
+}
+
 export const createTaskAction = async (
   task: TablesInsert<"tasks">,
-): Promise<TaskResponse> => {
+): Promise<ActionResponse<TaskWithDetails>> => {
   const supabase = await getSupabaseServerActionClient();
 
   try {
-    // Verify project exists and user has access
     const { data: projectData, error: projectError } = await supabase
       .from("project_members")
-      .select()
+      .select("*")
       .eq("project_id", task.project_id)
       .single();
 
     if (projectError) throw new Error("Project access denied");
 
-    // Insert task - note ordinal_id is handled by trigger
     const { data, error } = await supabase
       .from("tasks")
       .insert(task)
       .select(
         `
         *,
-        project:projects (
-          id,
-          name,
-          slug
-        )
+        project:projects (*)
       `,
       )
       .single();
 
     if (error) throw error;
 
-    // Safely cast data since we know the shape matches our type
-    return getActionResponse({ data: data as unknown as TaskWithProfile });
+    return getActionResponse({ data: data as TaskWithDetails });
   } catch (error) {
-    return getActionResponse<TaskWithProfile>({ error });
+    return getActionResponse({ error });
   }
 };
 
-// Update task action
 export const updateTaskAction = async (
   taskId: string,
   updates: TablesUpdate<"tasks">,
-): Promise<TaskResponse> => {
+): Promise<ActionResponse<TaskWithDetails>> => {
   const supabase = await getSupabaseServerActionClient();
 
   try {
@@ -66,25 +75,22 @@ export const updateTaskAction = async (
       .select(
         `
         *,
-        project:projects (
-          id,
-          name,
-          slug
-        )
+        project:projects (*)
       `,
       )
       .single();
 
     if (error) throw error;
 
-    return getActionResponse({ data: data as unknown as TaskWithProfile });
+    return getActionResponse({ data: data as TaskWithDetails });
   } catch (error) {
-    return getActionResponse<TaskWithProfile>({ error });
+    return getActionResponse({ error });
   }
 };
 
-// Delete task action
-export const deleteTaskAction = async (taskId: string) => {
+export const deleteTaskAction = async (
+  taskId: string,
+): Promise<ActionResponse<null>> => {
   const supabase = await getSupabaseServerActionClient();
 
   try {
@@ -98,8 +104,9 @@ export const deleteTaskAction = async (taskId: string) => {
   }
 };
 
-// Get task action
-export const getTaskAction = async (taskId: string): Promise<TaskResponse> => {
+export const getTaskAction = async (
+  taskId: string,
+): Promise<ActionResponse<TaskWithDetails>> => {
   const supabase = await getSupabaseServerActionClient();
 
   try {
@@ -108,34 +115,18 @@ export const getTaskAction = async (taskId: string): Promise<TaskResponse> => {
       .select(
         `
         *,
-        project:projects (
-          id,
-          name,
-          slug
-        ),
-        subtasks (
-          *
-        ),
+        project:projects (*),
+        subtasks (*),
         task_tags (
-          tag_id,
-          tags (
-            *
-          )
+          *,
+          tags (*)
         ),
         comments (
           *,
-          user:profiles (
-            id,
-            display_name,
-            avatar_url
-          )
+          user:profiles (*)
         ),
-        task_schedule (
-          *
-        ),
-        attachments (
-          *
-        )
+        task_schedule (*),
+        attachments (*)
       `,
       )
       .eq("id", taskId)
@@ -143,59 +134,42 @@ export const getTaskAction = async (taskId: string): Promise<TaskResponse> => {
 
     if (error) throw error;
 
-    // Create base task with correct typing
-    const taskWithProfile = data as unknown as TaskWithProfile;
+    const taskWithDetails = { ...data } as TaskWithDetails;
 
-    // If there's an assignee, fetch their profile separately
     if (data.assignee) {
-      const { data: assigneeProfile, error: profileError } = await supabase
+      const { data: assigneeProfiles, error: profileError } = await supabase
         .from("profiles")
-        .select("id, display_name, avatar_url")
-        .eq("id", data.assignee)
-        .single();
+        .select("*")
+        .eq("id", data.assignee);
 
-      if (!profileError && assigneeProfile) {
-        taskWithProfile.assignee_profile = assigneeProfile;
+      if (!profileError && assigneeProfiles && assigneeProfiles.length > 0) {
+        taskWithDetails.assignee_profile = assigneeProfiles[0];
       }
     }
 
-    return getActionResponse({ data: taskWithProfile });
+    // No need to transform comments as we've updated the interface to expect arrays
+
+    return getActionResponse({ data: taskWithDetails });
   } catch (error) {
-    return getActionResponse<TaskWithProfile>({ error });
+    return getActionResponse({ error });
   }
 };
 
-// List tasks action
-export const listTasksAction = async (filters?: {
-  projectId?: string;
-  status?: string;
-  priority?: string;
-  assignee?: string;
-  search?: string;
-  sort?: string;
-  order?: "asc" | "desc";
-}): Promise<TaskListResponse> => {
+export const listTasksAction = async (
+  filters?: TaskFilters,
+): Promise<ActionResponse<TaskWithDetails[]>> => {
   const supabase = await getSupabaseServerActionClient();
 
   try {
     let query = supabase.from("tasks").select(`
         *,
-        project:projects (
-          id,
-          name,
-          slug
-        ),
-        subtasks (
-          count
-        ),
+        project:projects (*),
+        subtasks (count),
         task_tags (
-          tags (
-            *
-          )
+          tags (*)
         )
       `);
 
-    // Apply filters
     if (filters?.projectId) {
       query = query.eq("project_id", filters.projectId);
     }
@@ -214,7 +188,6 @@ export const listTasksAction = async (filters?: {
       );
     }
 
-    // Apply sorting
     if (filters?.sort) {
       query = query.order(filters.sort, { ascending: filters.order === "asc" });
     } else {
@@ -225,18 +198,16 @@ export const listTasksAction = async (filters?: {
 
     if (error) throw error;
 
-    // Cast the data with unknown first to safely convert to our type
-    const tasksWithProfiles = data as unknown as TaskWithProfile[];
+    const tasksWithDetails = data as unknown as TaskWithDetails[];
 
-    // Fetch assignee profiles for tasks that have assignees
-    const assigneeIds = tasksWithProfiles
+    const assigneeIds = tasksWithDetails
       .filter(task => task.assignee)
-      .map(task => task.assignee);
+      .map(task => task.assignee!);
 
     if (assigneeIds.length > 0) {
       const { data: assigneeProfiles, error: profileError } = await supabase
         .from("profiles")
-        .select("id, display_name, avatar_url")
+        .select("*")
         .in("id", assigneeIds);
 
       if (!profileError && assigneeProfiles) {
@@ -244,7 +215,7 @@ export const listTasksAction = async (filters?: {
           assigneeProfiles.map(profile => [profile.id, profile]),
         );
 
-        tasksWithProfiles.forEach(task => {
+        tasksWithDetails.forEach(task => {
           if (task.assignee) {
             task.assignee_profile = profileMap.get(task.assignee) || null;
           }
@@ -252,28 +223,26 @@ export const listTasksAction = async (filters?: {
       }
     }
 
-    return getActionResponse({ data: tasksWithProfiles });
+    return getActionResponse({ data: tasksWithDetails });
   } catch (error) {
-    return getActionResponse<TaskWithProfile[]>({ error });
+    return getActionResponse({ error });
   }
 };
 
 export const reorderTasksAction = async (
   projectId: string,
   taskIds: string[],
-) => {
+): Promise<ActionResponse<null>> => {
   const supabase = await getSupabaseServerActionClient();
 
   try {
-    // Update each task's ordinal_id based on new order
     const updates = taskIds.map((id, index) => ({
       id,
       ordinal_id: index + 1,
-      // Add required fields with their current values
       project_id: projectId,
-      prefix: "", // Will be preserved by upsert
-      slug: "", // Will be preserved by upsert
-      title: "", // Will be preserved by upsert
+      prefix: "",
+      slug: "",
+      title: "",
     }));
 
     const { error } = await supabase

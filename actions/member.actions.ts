@@ -1,21 +1,27 @@
-// member.actions.ts
 "use server";
 
 import getSupabaseServerActionClient from "@/clients/action-client";
 import getActionResponse from "@/lib/action.util";
-import { TablesInsert } from "@/types/database.types";
+import { ActionResponse } from "@/types/action.types";
+import { Tables, TablesInsert } from "@/types/database.types";
+import {
+  InvitationResponse,
+  MemberListResponse,
+  MemberResponse,
+} from "@/types/member.types";
 
-// Invite member action
+type ProjectMember = Tables<"project_members">;
+type ProjectInvitation = Tables<"project_invitations">;
+
 export const inviteMemberAction = async (
   invitation: TablesInsert<"project_invitations">,
-) => {
+): Promise<InvitationResponse> => {
   const supabase = await getSupabaseServerActionClient();
 
   try {
-    // Verify current user has permission to invite
     const { data: memberData, error: memberError } = await supabase
       .from("project_members")
-      .select("role")
+      .select("*")
       .eq("project_id", invitation.project_id)
       .single();
 
@@ -23,43 +29,57 @@ export const inviteMemberAction = async (
       throw new Error("Permission denied");
     }
 
-    // Create invitation
     const { data, error } = await supabase
       .from("project_invitations")
       .insert(invitation)
-      .select()
+      .select(
+        `
+        *,
+        inviter:profiles!invited_by(*),
+        project:projects(*)
+      `,
+      )
       .single();
 
     if (error) throw error;
+    if (!data.project) throw new Error("Project not found");
+    if (
+      !data.inviter ||
+      (Array.isArray(data.inviter) && !data.inviter.length)
+    ) {
+      throw new Error("Inviter not found");
+    }
 
-    // TODO: Send invitation email
+    const transformedData = {
+      ...data,
+      inviter: Array.isArray(data.inviter) ? data.inviter[0] : data.inviter,
+      project: data.project,
+    };
 
-    return getActionResponse({ data });
+    return getActionResponse({ data: transformedData });
   } catch (error) {
     return getActionResponse({ error });
   }
 };
 
-// Accept invitation action
-// member.actions.ts
-export const acceptInvitationAction = async (invitationId: string) => {
+export const acceptInvitationAction = async (
+  invitationId: string,
+): Promise<ActionResponse<null>> => {
   const supabase = await getSupabaseServerActionClient();
 
   try {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) throw new Error("Not authenticated");
 
-    // Get and validate invitation
     const { data: invitation, error: inviteError } = await supabase
       .from("project_invitations")
-      .select()
+      .select("*")
       .eq("id", invitationId)
       .eq("status", "pending")
       .single();
 
     if (inviteError || !invitation) throw new Error("Invalid invitation");
 
-    // Instead of RPC, let's handle this with regular transactions
     const { error: transactionError } = await supabase
       .from("project_members")
       .insert({
@@ -69,7 +89,6 @@ export const acceptInvitationAction = async (invitationId: string) => {
       });
 
     if (!transactionError) {
-      // Update invitation status
       await supabase
         .from("project_invitations")
         .update({ status: "accepted" })
@@ -84,12 +103,11 @@ export const acceptInvitationAction = async (invitationId: string) => {
   }
 };
 
-// Update member role action
 export const updateMemberRoleAction = async (
   projectId: string,
   userId: string,
   newRole: string,
-) => {
+): Promise<MemberResponse> => {
   const supabase = await getSupabaseServerActionClient();
 
   try {
@@ -98,26 +116,46 @@ export const updateMemberRoleAction = async (
       .update({ role: newRole })
       .eq("project_id", projectId)
       .eq("user_id", userId)
-      .select()
+      .select(
+        `
+        *,
+        profile:profiles!user_id(*),
+        project:projects(*)
+      `,
+      )
       .single();
 
     if (error) throw error;
+    if (!data.project) throw new Error("Project not found");
+    if (
+      !data.profile ||
+      (Array.isArray(data.profile) && !data.profile.length)
+    ) {
+      throw new Error("Profile not found");
+    }
 
-    return getActionResponse({ data });
+    const transformedData = {
+      ...data,
+      profile: Array.isArray(data.profile) ? data.profile[0] : data.profile,
+      project: data.project,
+    };
+
+    return getActionResponse({ data: transformedData });
   } catch (error) {
     return getActionResponse({ error });
   }
 };
 
-// Remove member action
-export const removeMemberAction = async (projectId: string, userId: string) => {
+export const removeMemberAction = async (
+  projectId: string,
+  userId: string,
+): Promise<ActionResponse<null>> => {
   const supabase = await getSupabaseServerActionClient();
 
   try {
-    // Verify not removing the last owner
     const { data: owners, error: ownerError } = await supabase
       .from("project_members")
-      .select()
+      .select("*")
       .eq("project_id", projectId)
       .eq("role", "owner");
 
@@ -141,8 +179,9 @@ export const removeMemberAction = async (projectId: string, userId: string) => {
   }
 };
 
-// List members action
-export const listMembersAction = async (projectId: string) => {
+export const listMembersAction = async (
+  projectId: string,
+): Promise<MemberListResponse> => {
   const supabase = await getSupabaseServerActionClient();
 
   try {
@@ -151,38 +190,61 @@ export const listMembersAction = async (projectId: string) => {
       .select(
         `
         *,
-        user:profiles (
-          id,
-          display_name,
-          avatar_url,
-          professional_title
-        )
+        profile:profiles!user_id(*),
+        project:projects(*)
       `,
       )
       .eq("project_id", projectId);
 
     if (error) throw error;
 
-    return getActionResponse({ data });
+    const transformedData = data
+      .filter(member => member.project && member.profile)
+      .map(member => ({
+        ...member,
+        profile: Array.isArray(member.profile)
+          ? member.profile[0]
+          : member.profile,
+        project: member.project!,
+      }));
+
+    return getActionResponse({ data: transformedData });
   } catch (error) {
     return getActionResponse({ error });
   }
 };
 
-// List invitations action
-export const listInvitationsAction = async (projectId: string) => {
+export const listInvitationsAction = async (
+  projectId: string,
+): Promise<ActionResponse<ProjectInvitation[]>> => {
   const supabase = await getSupabaseServerActionClient();
 
   try {
     const { data, error } = await supabase
       .from("project_invitations")
-      .select()
+      .select(
+        `
+        *,
+        inviter:profiles!invited_by(*),
+        project:projects(*)
+      `,
+      )
       .eq("project_id", projectId)
       .eq("status", "pending");
 
     if (error) throw error;
 
-    return getActionResponse({ data });
+    const transformedData = data
+      .filter(invitation => invitation.project && invitation.inviter)
+      .map(invitation => ({
+        ...invitation,
+        inviter: Array.isArray(invitation.inviter)
+          ? invitation.inviter[0]
+          : invitation.inviter,
+        project: invitation.project!,
+      }));
+
+    return getActionResponse({ data: transformedData });
   } catch (error) {
     return getActionResponse({ error });
   }
