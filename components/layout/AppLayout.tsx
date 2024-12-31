@@ -8,6 +8,7 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarHeader,
   SidebarInset,
   SidebarMenu,
   SidebarMenuItem,
@@ -122,9 +123,10 @@ function AppSidebar({ layoutData }: { layoutData: LayoutData }) {
 
   return (
     <Sidebar collapsible="icon">
-      <ProjectSwitcher projects={projectsWithLogos} />
-
-      <SidebarContent className="">
+      <SidebarContent className="border-r dark:border-blue-900">
+        <SidebarHeader>
+          <ProjectSwitcher projects={projectsWithLogos} />
+        </SidebarHeader>
         {currentProject && (
           <>
             <SidebarGroup>
@@ -202,9 +204,23 @@ function AppSidebar({ layoutData }: { layoutData: LayoutData }) {
                         matchPattern={`/${currentProject.slug}/tasks`}
                       >
                         <div className="flex w-full items-center justify-between">
-                          <h2 className="text-sm font-medium">Tasks</h2>
+                          <h2
+                            className={cn(
+                              !open && "hidden",
+                              "text-sm font-medium",
+                            )}
+                          >
+                            Tasks
+                          </h2>
                           <div className="flex items-center gap-2 text-xs">
-                            <span className="italic font-medium">View all</span>
+                            <span
+                              className={cn(
+                                !open && "hidden",
+                                "italic font-medium",
+                              )}
+                            >
+                              View all
+                            </span>
                             <ArrowRight className="size-3.5" />
                           </div>
                         </div>
@@ -212,12 +228,12 @@ function AppSidebar({ layoutData }: { layoutData: LayoutData }) {
                     </SidebarMenuItem>
                   </TooltipTrigger>
                   <TooltipContent side="right">
-                    {open ? "View and manage all tasks" : "Tasks"}
+                    {open ? "View and manage all tasks" : "All tasks"}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
 
-              <SidebarMenu>
+              <SidebarMenu className="pt-1.5">
                 <TooltipProvider>
                   {layoutData.priorityTasks.map((task, i) => (
                     <Tooltip key={task.id}>
@@ -250,11 +266,10 @@ function AppSidebar({ layoutData }: { layoutData: LayoutData }) {
           </>
         )}
         <NavSecondary />
+        <SidebarFooter>
+          <NavUser user={layoutData.user} />
+        </SidebarFooter>
       </SidebarContent>
-
-      <SidebarFooter>
-        <NavUser user={layoutData.user} />
-      </SidebarFooter>
     </Sidebar>
   );
 }
