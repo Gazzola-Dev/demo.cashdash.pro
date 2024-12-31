@@ -8,7 +8,6 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarInset,
   SidebarMenu,
   SidebarMenuItem,
@@ -192,18 +191,32 @@ function AppSidebar({ layoutData }: { layoutData: LayoutData }) {
             </SidebarGroup>
 
             <SidebarGroup>
-              <SidebarGroupLabel className="flex items-center justify-between">
-                <h2 className="text-sm">Tasks</h2>
-                <Link
-                  className="flex items-center gap-2 text-gray-500 text-xs"
-                  href={configuration.paths.tasks.all({
-                    project_slug: currentProject.slug,
-                  })}
-                >
-                  <span className="italic font-mediu">View all</span>
-                  <ArrowRight className="size-3.5" />
-                </Link>
-              </SidebarGroupLabel>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <SidebarMenuItem>
+                      <SidebarButton
+                        href={configuration.paths.tasks.all({
+                          project_slug: currentProject.slug,
+                        })}
+                        matchPattern={`/${currentProject.slug}/tasks`}
+                      >
+                        <div className="flex w-full items-center justify-between">
+                          <h2 className="text-sm font-medium">Tasks</h2>
+                          <div className="flex items-center gap-2 text-xs">
+                            <span className="italic font-medium">View all</span>
+                            <ArrowRight className="size-3.5" />
+                          </div>
+                        </div>
+                      </SidebarButton>
+                    </SidebarMenuItem>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    {open ? "View and manage all tasks" : "Tasks"}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
               <SidebarMenu>
                 <TooltipProvider>
                   {layoutData.priorityTasks.map((task, i) => (
