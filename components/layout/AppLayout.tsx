@@ -66,6 +66,7 @@ interface AppLayoutProps {
   children: React.ReactNode;
   layoutData: LayoutData;
 }
+
 export function AppLayout({ children, layoutData }: AppLayoutProps) {
   return (
     <SidebarProvider>
@@ -81,15 +82,29 @@ export function AppLayout({ children, layoutData }: AppLayoutProps) {
             </div>
             <div className="flex items-center justify-center gap-2 h-full pr-[1.1rem]">
               <Image
-                className="w-24 z-10 -mr-1 pt-0.5"
-                src="/svg/brand/logo-05-single-color.svg"
+                className="w-24 z-10 -mr-1 pt-0.5 dark:hidden"
+                src="/svg/brand/logo-with-text-light.svg"
                 width={473}
                 height={293}
                 alt="Cash Dash Pro Logo"
               />
               <Image
-                className="w-8 z-10 -mr-1"
-                src="/svg/brand/logo-03-single-color.svg"
+                className="w-24 z-10 -mr-1 pt-0.5 hidden dark:block"
+                src="/svg/brand/logo-with-text-dark.svg"
+                width={473}
+                height={293}
+                alt="Cash Dash Pro Logo"
+              />
+              <Image
+                className="w-8 z-10 -mr-1 dark:hidden"
+                src="/svg/brand/logo-light.svg"
+                width={473}
+                height={293}
+                alt="Cash Dash Pro Logo"
+              />
+              <Image
+                className="w-8 z-10 -mr-1 hidden dark:block"
+                src="/svg/brand/logo-dark.svg"
                 width={473}
                 height={293}
                 alt="Cash Dash Pro Logo"

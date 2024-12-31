@@ -3,7 +3,9 @@ import csrffMiddleware from "@/middleware/csrfMiddleware";
 import { NextRequest, NextResponse } from "next/server";
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    "/((?!api|_next/static|_next/image|favicon.ico|favicon-light\\.svg|favicon-dark\\.svg).*)",
+  ],
 };
 
 export async function middleware(request: NextRequest) {
