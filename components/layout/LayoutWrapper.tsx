@@ -1,3 +1,4 @@
+"use client";
 import useSupabase from "@/hooks/useSupabase";
 import { useLayoutSync } from "@/stores/layout.store";
 import { LayoutData } from "@/types/layout.types";

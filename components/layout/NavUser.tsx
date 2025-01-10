@@ -62,7 +62,7 @@ export function NavUser({ user }: NavUserProps) {
               )}
             >
               <Avatar className="size-8 rounded-lg">
-                <AvatarImage src={user.avatar} alt={user.name} />
+                <AvatarImage src={user.avatar ?? ""} alt={user.name} />
                 <AvatarFallback className="rounded-lg dark:bg-gray-700 dark:text-gray-100">
                   {user.name.charAt(0)}
                 </AvatarFallback>
@@ -92,7 +92,7 @@ export function NavUser({ user }: NavUserProps) {
                 className="flex items-center gap-2 p-1 cursor-pointer dark:hover:bg-gray-800 rounded-md"
               >
                 <Avatar className="size-8 rounded-lg">
-                  <AvatarImage src={user.avatar} alt={user.name} />
+                  <AvatarImage src={user.avatar || ""} alt={user.name} />
                   <AvatarFallback className="rounded-lg dark:bg-gray-700 dark:text-gray-100">
                     {user.name.charAt(0)}
                   </AvatarFallback>

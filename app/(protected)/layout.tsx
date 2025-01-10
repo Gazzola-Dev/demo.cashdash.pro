@@ -1,3 +1,4 @@
+// app/(protected)/layout.tsx
 import { getLayoutDataAction } from "@/actions/layout.actions";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { LayoutWrapper } from "@/components/layout/LayoutWrapper";
@@ -11,14 +12,13 @@ export default async function ProtectedLayout({
 }) {
   const { data: layoutData, error } = await getLayoutDataAction();
 
-  if (!layoutData || error) {
-    redirect("/auth");
-  }
+  if (!layoutData || error) return redirect(configuration.paths.auth);
 
-  if (!layoutData.projects || layoutData.projects.length === 0) {
-    redirect(configuration.paths.project.new);
-  }
+  // Redirect to new project page if no projects exist
+  if (!layoutData.projects || layoutData.projects.length === 0)
+    return redirect(configuration.paths.project.new);
 
+  // Return the layout with initial data
   return (
     <LayoutWrapper initialData={layoutData}>
       <AppLayout layoutData={layoutData}>{children}</AppLayout>

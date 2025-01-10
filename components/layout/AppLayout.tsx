@@ -1,3 +1,4 @@
+"use client";
 import NavUser from "@/components/layout/NavUser";
 import { ProjectSwitcher } from "@/components/layout/ProjectSwitcher";
 import RouteBreadcrumb from "@/components/layout/RouteBreadCrumb";

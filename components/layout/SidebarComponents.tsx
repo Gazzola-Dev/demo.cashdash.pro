@@ -1,4 +1,4 @@
-// components/layout/SidebarButton.tsx
+"use client";
 import {
   SidebarGroup,
   SidebarGroupContent,
