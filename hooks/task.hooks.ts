@@ -1,6 +1,3 @@
-// task.hooks.ts
-"use client";
-
 import {
   createTaskAction,
   deleteTaskAction,
@@ -9,13 +6,11 @@ import {
   reorderTasksAction,
   updateTaskAction,
 } from "@/actions/task.actions";
-import { Tables, TablesInsert, TablesUpdate } from "@/types/database.types";
+import { TablesInsert, TablesUpdate } from "@/types/database.types";
 import { HookOptions } from "@/types/db.types";
-import { TaskFilters } from "@/types/task.types";
+import { TaskFilters, TaskWithDetails } from "@/types/task.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToastQueue } from "./useToastQueue";
-
-type Task = Tables<"tasks">;
 
 enum SuccessMessages {
   CREATE = "Task created successfully",
@@ -24,10 +19,10 @@ enum SuccessMessages {
   REORDER = "Tasks reordered successfully",
 }
 
-// Get task hook
+// Get task hook - now properly typed with TaskWithDetails
 export const useGetTask = (
   taskId: string,
-  { initialData }: HookOptions<Task> = {},
+  { initialData }: { initialData?: TaskWithDetails } = {},
 ) => {
   return useQuery({
     queryKey: ["task", taskId],
@@ -55,7 +50,7 @@ export const useListTasks = (filters?: TaskFilters) => {
 export const useCreateTask = ({
   errorMessage,
   successMessage,
-}: HookOptions<Task> = {}) => {
+}: HookOptions<TaskWithDetails> = {}) => {
   const queryClient = useQueryClient();
   const { toast } = useToastQueue();
 
@@ -83,7 +78,7 @@ export const useCreateTask = ({
 export const useUpdateTask = ({
   errorMessage,
   successMessage,
-}: HookOptions<Task> = {}) => {
+}: HookOptions<TaskWithDetails> = {}) => {
   const queryClient = useQueryClient();
   const { toast } = useToastQueue();
 
@@ -118,7 +113,7 @@ export const useUpdateTask = ({
 export const useDeleteTask = ({
   errorMessage,
   successMessage,
-}: HookOptions<Task> = {}) => {
+}: HookOptions<TaskWithDetails> = {}) => {
   const queryClient = useQueryClient();
   const { toast } = useToastQueue();
 
@@ -146,7 +141,7 @@ export const useDeleteTask = ({
 export const useReorderTasks = ({
   errorMessage,
   successMessage,
-}: HookOptions<Task> = {}) => {
+}: HookOptions<TaskWithDetails> = {}) => {
   const queryClient = useQueryClient();
   const { toast } = useToastQueue();
 

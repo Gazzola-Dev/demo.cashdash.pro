@@ -57,7 +57,6 @@ export const listTasksAction = async (
     return getActionResponse({ error });
   }
 };
-
 export const getTaskAction = async (
   taskId: string,
 ): Promise<ActionResponse<TaskWithDetails>> => {
@@ -69,24 +68,48 @@ export const getTaskAction = async (
       .select(
         `
         *,
-        project:projects (*),
-        subtasks (*),
-        task_tags (
-          tags (*)
+        project:projects!inner(*),
+        subtasks(*),
+        task_tags!inner(
+          tag_id,
+          task_id,
+          tags!inner(*)
         ),
-        task_schedule (*),
-        comments (
+        task_schedule(*),
+        comments:comments!content_id(
           *,
-          user:profiles(*)
+          user:profiles!user_id(*)
         )
       `,
       )
       .eq("id", taskId)
+      .eq("comments.content_type", "task")
       .single();
 
     if (error) throw error;
+    if (!data) throw new Error("Task not found");
 
-    const taskWithDetails = data as unknown as TaskWithDetails;
+    // Transform the data to match TaskWithDetails type
+    const taskWithDetails: TaskWithDetails = {
+      ...data,
+      project: data.project,
+      subtasks: data.subtasks || [],
+      task_tags: data.task_tags
+        .filter(
+          (tt): tt is typeof tt & { tags: NonNullable<typeof tt.tags> } =>
+            tt.tags !== null,
+        )
+        .map(tt => ({
+          tag_id: tt.tag_id,
+          task_id: tt.task_id,
+          tags: tt.tags,
+        })),
+      task_schedule: data.task_schedule || [],
+      comments: (data.comments || []).map(comment => ({
+        ...comment,
+        user: Array.isArray(comment.user) ? comment.user[0] : comment.user,
+      })),
+    };
 
     return getActionResponse({ data: taskWithDetails });
   } catch (error) {

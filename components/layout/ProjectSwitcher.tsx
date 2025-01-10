@@ -61,7 +61,7 @@ export function ProjectSwitcher({ projects }: ProjectSwitcherProps) {
             <Button
               variant="ghost"
               className={cn(
-                "h-auto flex items-center justify-between w-full",
+                "h-auto flex items-start justify-between w-full",
                 "hover:bg-gray-100 dark:hover:bg-gray-800",
                 open ? "px-1 py-2" : "p-0",
               )}
