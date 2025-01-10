@@ -1,10 +1,9 @@
 import { useListTasks, useUpdateTask } from "@/hooks/task.hooks";
-import { TaskWithDetails } from "@/types/task.types";
 import {
+  ColumnDef,
   ColumnFiltersState,
   SortingState,
   VisibilityState,
-  createColumnHelper,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -12,10 +11,11 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, GitBranch } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React from "react";
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -24,6 +24,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -35,61 +42,13 @@ import {
 import configuration from "@/configuration";
 import { useListMembers } from "@/hooks/member.hooks";
 import { useToastQueue } from "@/hooks/useToastQueue";
-import { Json, Tables } from "@/types/database.types";
-
-// Define the base user type
-type UserProfile = {
-  avatar_url: string | null;
-  bio: string | null;
-  created_at: string;
-  current_project_id: string | null;
-  display_name: string | null;
-  github_username: string | null;
-  id: string;
-  notification_preferences: Json;
-  updated_at: string;
-  username: string;
-  website: string | null;
-};
-
-// Define the normalized task data type
-type NormalizedTaskData = Omit<TaskWithDetails, "comments"> & {
-  comments:
-    | Array<{
-        content: Json;
-        content_id: string;
-        content_type: "project" | "task" | "subtask" | "comment";
-        created_at: string;
-        id: string;
-        is_edited: boolean;
-        parent_id: string | null;
-        thread_id: string | null;
-        updated_at: string;
-        user_id: string;
-        user: UserProfile;
-      }>
-    | undefined;
-};
-
-const STATUS_OPTIONS: Tables<"tasks">["status"][] = [
-  "backlog",
-  "todo",
-  "in_progress",
-  "in_review",
-  "completed",
-];
-
-const PRIORITY_OPTIONS: Tables<"tasks">["priority"][] = [
-  "low",
-  "medium",
-  "high",
-  "urgent",
-];
-
-interface TaskTableProps {
-  projectId: string;
-  projectSlug: string;
-}
+import { Tables } from "@/types/database.types";
+import {
+  NormalizedTaskData,
+  PRIORITY_OPTIONS,
+  STATUS_OPTIONS,
+  TaskTableProps,
+} from "@/types/task.types";
 
 export default function TaskTable({ projectId, projectSlug }: TaskTableProps) {
   const router = useRouter();
@@ -115,7 +74,6 @@ export default function TaskTable({ projectId, projectSlug }: TaskTableProps) {
   const { data: rawTasks = [] } = useListTasks(filters);
   const { data: members = [] } = useListMembers(projectId);
 
-  // Normalize the tasks data to match our expected type
   const tasks: NormalizedTaskData[] = React.useMemo(() => {
     return rawTasks.map(task => ({
       ...task,
@@ -128,7 +86,7 @@ export default function TaskTable({ projectId, projectSlug }: TaskTableProps) {
         }
         return {
           ...comment,
-          user: userProfile as UserProfile,
+          user: userProfile,
         };
       }),
     }));
@@ -152,8 +110,6 @@ export default function TaskTable({ projectId, projectSlug }: TaskTableProps) {
     [router, projectSlug],
   );
 
-  const columnHelper = createColumnHelper<NormalizedTaskData>();
-
   const copyBranchName = React.useCallback(
     (task: NormalizedTaskData) => {
       const branchName = `${task.project.prefix}-${task.ordinal_id}-${task.slug}`;
@@ -166,24 +122,191 @@ export default function TaskTable({ projectId, projectSlug }: TaskTableProps) {
     [toast],
   );
 
-  const columns = [
-    columnHelper.accessor("title", {
-      id: "title",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Title
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      ),
-      cell: ({ row }) => (
-        <span className="font-normal">{row.getValue("title")}</span>
-      ),
-    }),
-    // ... rest of the columns remain the same
-  ];
+  type Column = ColumnDef<NormalizedTaskData>;
+
+  const columns = React.useMemo<Column[]>(
+    () => [
+      {
+        id: "title",
+        accessorFn: row => row.title,
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+            >
+              Title
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          );
+        },
+        cell: ({ row }) => (
+          <span className="font-normal">{row.getValue("title")}</span>
+        ),
+      },
+      {
+        id: "status",
+        accessorFn: row => row.status,
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Status
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <Select
+            value={row.getValue("status")}
+            onValueChange={value => {
+              updateTask({
+                id: row.original.id,
+                updates: { status: value as Tables<"tasks">["status"] },
+              });
+            }}
+          >
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_OPTIONS.map(status => (
+                <SelectItem key={status} value={status}>
+                  {status.toLowerCase().replace("_", " ")}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ),
+      },
+      {
+        id: "priority",
+        accessorFn: row => row.priority,
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Priority
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <Select
+            value={row.getValue("priority")}
+            onValueChange={value => {
+              updateTask({
+                id: row.original.id,
+                updates: { priority: value as Tables<"tasks">["priority"] },
+              });
+            }}
+          >
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PRIORITY_OPTIONS.map(priority => (
+                <SelectItem key={priority} value={priority}>
+                  {priority}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ),
+      },
+      {
+        id: "assignee",
+        accessorFn: row => row.assignee_profile?.display_name ?? "",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Assignee
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <Select
+            value={row.original.assignee || "unassigned"}
+            onValueChange={value => {
+              updateTask({
+                id: row.original.id,
+                updates: { assignee: value === "unassigned" ? null : value },
+              });
+            }}
+          >
+            <SelectTrigger className="w-48">
+              <SelectValue>
+                {row.original.assignee_profile ? (
+                  <div className="flex items-center gap-2">
+                    <Avatar className="h-6 w-6">
+                      <AvatarImage
+                        src={
+                          row.original.assignee_profile.avatar_url || undefined
+                        }
+                      />
+                      <AvatarFallback>
+                        {row.original.assignee_profile.display_name?.charAt(
+                          0,
+                        ) || "?"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span>
+                      {row.original.assignee_profile.display_name ||
+                        "Unnamed User"}
+                    </span>
+                  </div>
+                ) : (
+                  "Unassigned"
+                )}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="unassigned">Unassigned</SelectItem>
+              {members.map(member => (
+                <SelectItem key={member.user_id} value={member.user_id}>
+                  <div className="flex items-center gap-2">
+                    <Avatar className="h-6 w-6">
+                      <AvatarImage
+                        src={member.profile?.avatar_url || undefined}
+                      />
+                      <AvatarFallback>
+                        {member.profile?.display_name?.charAt(0) || "?"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span>
+                      {member.profile?.display_name || "Unnamed User"}
+                    </span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ),
+      },
+      {
+        id: "branch",
+        accessorFn: () => null,
+        cell: ({ row }) => (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={e => {
+              e.stopPropagation();
+              copyBranchName(row.original);
+            }}
+            className="h-8 w-8"
+          >
+            <GitBranch className="h-4 w-4" />
+          </Button>
+        ),
+      },
+    ],
+    [updateTask, members, copyBranchName],
+  );
 
   const table = useReactTable({
     data: tasks,

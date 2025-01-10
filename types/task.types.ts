@@ -1,5 +1,5 @@
 import { ActionResponse } from "@/types/action.types";
-import { Tables } from "@/types/database.types";
+import { Json, Tables } from "@/types/database.types";
 
 // Base types from database
 type Project = Tables<"projects">;
@@ -72,4 +72,58 @@ export interface TaskInput {
 
 export interface TaskUpdate extends Partial<TaskInput> {
   id: string;
+}
+
+// Define the base user type
+export type UserProfile = {
+  avatar_url: string | null;
+  bio: string | null;
+  created_at: string;
+  current_project_id: string | null;
+  display_name: string | null;
+  github_username: string | null;
+  id: string;
+  notification_preferences: Json;
+  updated_at: string;
+  username: string;
+  website: string | null;
+};
+
+// Define the normalized task data type
+export type NormalizedTaskData = Omit<TaskWithDetails, "comments"> & {
+  comments:
+    | Array<{
+        content: Json;
+        content_id: string;
+        content_type: "project" | "task" | "subtask" | "comment";
+        created_at: string;
+        id: string;
+        is_edited: boolean;
+        parent_id: string | null;
+        thread_id: string | null;
+        updated_at: string;
+        user_id: string;
+        user: UserProfile;
+      }>
+    | undefined;
+};
+
+export const STATUS_OPTIONS: Tables<"tasks">["status"][] = [
+  "backlog",
+  "todo",
+  "in_progress",
+  "in_review",
+  "completed",
+];
+
+export const PRIORITY_OPTIONS: Tables<"tasks">["priority"][] = [
+  "low",
+  "medium",
+  "high",
+  "urgent",
+];
+
+export interface TaskTableProps {
+  projectId: string;
+  projectSlug: string;
 }
