@@ -32,7 +32,7 @@ export function ThemeSwitcher() {
         <Switch
           checked={isDarkMode}
           onCheckedChange={toggleDarkMode}
-          className={cn(!open && "rotate-90 my-4")}
+          className={cn(!open && "rotate-90 my-4", "bg-blue-800")}
           onClick={e => e.stopPropagation()}
         />
         <Sun
