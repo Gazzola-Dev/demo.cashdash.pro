@@ -29,46 +29,39 @@ async function emptyDirectory(directory) {
   }
 }
 
-async function shouldIncludeFile(dirName, fileName) {
-  // Only process files from specific directories with specific patterns
-  const validDirs = ["hooks", "actions", "types", "constants", "stores"];
-  if (!validDirs.includes(dirName)) {
-    return false;
-  }
+async function processDirectory(src, dest, prefix = "") {
+  const entries = await fs.readdir(src, { withFileTypes: true });
 
-  if (dirName === "hooks" && !fileName.endsWith(".hooks.ts")) {
-    return false;
-  }
+  for (const entry of entries) {
+    const srcPath = path.join(src, entry.name);
+    const dirName = path.basename(src);
 
-  if (dirName === "actions" && !fileName.endsWith(".actions.ts")) {
-    return false;
+    if (entry.isDirectory()) {
+      const newPrefix = prefix ? `${prefix}.${entry.name}` : entry.name;
+      await processDirectory(srcPath, dest, newPrefix);
+    } else {
+      if (entry.name.match(/\.(ts|tsx|js|jsx)$/)) {
+        const newFileName = prefix
+          ? `${prefix}.${entry.name}`
+          : `${dirName}.${entry.name}`;
+        await fs.copyFile(srcPath, path.join(dest, newFileName));
+      }
+    }
   }
-
-  if (dirName === "stores" && !fileName.endsWith(".store.ts")) {
-    return false;
-  }
-
-  // For types and constants, maintain the original behavior
-  if (dirName === "types" || dirName === "constants") {
-    const periods = fileName.split(".").length - 1;
-    return periods >= 2;
-  }
-
-  return true;
 }
 
 async function flatCopyDir(src, dest) {
   await fs.mkdir(dest, { recursive: true });
   const entries = await fs.readdir(src, { withFileTypes: true });
+  const dirName = path.basename(src);
+
   for (const entry of entries) {
     const srcPath = path.join(src, entry.name);
-    const dirName = path.basename(src);
     if (entry.isDirectory()) {
       await flatCopyDir(srcPath, dest);
     } else {
-      if (await shouldIncludeFile(dirName, entry.name)) {
-        await fs.copyFile(srcPath, path.join(dest, entry.name));
-      }
+      const newFileName = `${dirName}.${entry.name}`;
+      await fs.copyFile(srcPath, path.join(dest, newFileName));
     }
   }
 }
@@ -78,8 +71,6 @@ async function combineTypesFiles(typesDir, outputPath) {
   let combined = "";
   for (const file of files) {
     if (file === "database.types.ts") continue;
-    // Only include files with additional period in their name
-    if (file.split(".").length < 3) continue;
     const content = await fs.readFile(path.join(typesDir, file), "utf-8");
     combined += `// From ${file}\n${content}\n\n`;
   }
@@ -109,7 +100,15 @@ async function main() {
   // Create fresh output directory
   await fs.mkdir(OUTPUT_DIR, { recursive: true });
 
-  // Directories to copy (only process specific directories)
+  // Process app and components directories with flattened structure
+  if (await exists("app")) {
+    await processDirectory("app", OUTPUT_DIR);
+  }
+  if (await exists("components")) {
+    await processDirectory("components", OUTPUT_DIR);
+  }
+
+  // Directories to copy (process all files in these directories)
   const dirsToCopy = ["actions", "hooks", "types", "constants", "stores"];
   for (const dir of dirsToCopy) {
     if (await exists(dir)) {
@@ -117,11 +116,11 @@ async function main() {
     }
   }
 
-  // Handle database types separately since they're special
+  // Handle database types separately
   if (await exists("types/database.types.ts")) {
     await fs.copyFile(
       "types/database.types.ts",
-      path.join(OUTPUT_DIR, "database.types.ts"),
+      path.join(OUTPUT_DIR, "types.database.types.ts"),
     );
   }
 
@@ -129,7 +128,7 @@ async function main() {
   if (await exists("supabase/database.types.ts")) {
     await fs.copyFile(
       "supabase/database.types.ts",
-      path.join(OUTPUT_DIR, "database.types.ts"),
+      path.join(OUTPUT_DIR, "supabase.database.types.ts"),
     );
   }
 
@@ -164,6 +163,8 @@ async function main() {
       await fs.copyFile(file, destPath);
     }
   }
+
+  console.log("Data collection complete!");
 }
 
 main().catch(console.error);
