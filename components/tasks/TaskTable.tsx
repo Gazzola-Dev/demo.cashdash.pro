@@ -163,7 +163,7 @@ export default function TaskTable({ projectId, projectSlug }: TaskTableProps) {
             value={row.getValue("status")}
             onValueChange={value => {
               updateTask({
-                id: row.original.id,
+                slug: row.original.slug,
                 updates: { status: value as Tables<"tasks">["status"] },
               });
             }}
@@ -198,7 +198,7 @@ export default function TaskTable({ projectId, projectSlug }: TaskTableProps) {
             value={row.getValue("priority")}
             onValueChange={value => {
               updateTask({
-                id: row.original.id,
+                slug: row.original.slug,
                 updates: { priority: value as Tables<"tasks">["priority"] },
               });
             }}
@@ -233,7 +233,7 @@ export default function TaskTable({ projectId, projectSlug }: TaskTableProps) {
             value={row.original.assignee || "unassigned"}
             onValueChange={value => {
               updateTask({
-                id: row.original.id,
+                slug: row.original.slug,
                 updates: { assignee: value === "unassigned" ? null : value },
               });
             }}

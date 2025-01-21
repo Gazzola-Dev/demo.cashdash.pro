@@ -36,7 +36,7 @@ const TaskPage = ({ projectSlug, taskSlug, initialData }: TaskPageProps) => {
 
   const handleStatusChange = (checked: boolean) => {
     updateTask({
-      id: task.id,
+      slug: task.slug,
       updates: {
         status: checked ? "completed" : "todo",
       },

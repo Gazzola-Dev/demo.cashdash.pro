@@ -1,5 +1,3 @@
-"use server";
-
 import getSupabaseServerActionClient from "@/clients/action-client";
 import getActionResponse from "@/lib/action.util";
 import { ActionResponse } from "@/types/action.types";
@@ -57,8 +55,9 @@ export const listTasksAction = async (
     return getActionResponse({ error });
   }
 };
+
 export const getTaskAction = async (
-  taskId: string,
+  taskSlug: string,
 ): Promise<ActionResponse<TaskWithDetails>> => {
   const supabase = await getSupabaseServerActionClient();
 
@@ -82,7 +81,7 @@ export const getTaskAction = async (
         )
       `,
       )
-      .eq("id", taskId)
+      .eq("slug", taskSlug)
       .eq("comments.content_type", "task")
       .single();
 
@@ -156,7 +155,7 @@ export const createTaskAction = async (
 };
 
 export const updateTaskAction = async (
-  taskId: string,
+  taskSlug: string,
   updates: TablesUpdate<"tasks">,
 ): Promise<ActionResponse<TaskWithDetails>> => {
   const supabase = await getSupabaseServerActionClient();
@@ -165,7 +164,7 @@ export const updateTaskAction = async (
     const { data, error } = await supabase
       .from("tasks")
       .update(updates)
-      .eq("id", taskId)
+      .eq("slug", taskSlug)
       .select(
         `
         *,
@@ -188,12 +187,15 @@ export const updateTaskAction = async (
 };
 
 export const deleteTaskAction = async (
-  taskId: string,
+  taskSlug: string,
 ): Promise<ActionResponse<null>> => {
   const supabase = await getSupabaseServerActionClient();
 
   try {
-    const { error } = await supabase.from("tasks").delete().eq("id", taskId);
+    const { error } = await supabase
+      .from("tasks")
+      .delete()
+      .eq("slug", taskSlug);
 
     if (error) throw error;
 

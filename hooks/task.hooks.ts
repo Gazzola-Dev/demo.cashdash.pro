@@ -19,15 +19,15 @@ enum SuccessMessages {
   REORDER = "Tasks reordered successfully",
 }
 
-// Get task hook - now properly typed with TaskWithDetails
+// Get task hook - now using slug instead of ID
 export const useGetTask = (
-  taskId: string,
+  taskSlug: string,
   { initialData }: { initialData?: TaskWithDetails } = {},
 ) => {
   return useQuery({
-    queryKey: ["task", taskId],
+    queryKey: ["task", taskSlug],
     queryFn: async () => {
-      const { data } = await getTaskAction(taskId);
+      const { data } = await getTaskAction(taskSlug);
       if (!data) throw new Error("Task not found");
       return data;
     },
@@ -74,7 +74,7 @@ export const useCreateTask = ({
   });
 };
 
-// Update task hook
+// Update task hook - now using slug instead of ID
 export const useUpdateTask = ({
   errorMessage,
   successMessage,
@@ -84,18 +84,18 @@ export const useUpdateTask = ({
 
   return useMutation({
     mutationFn: async ({
-      id,
+      slug,
       updates,
     }: {
-      id: string;
+      slug: string;
       updates: TablesUpdate<"tasks">;
     }) => {
-      const { data } = await updateTaskAction(id, updates);
+      const { data } = await updateTaskAction(slug, updates);
       return data;
     },
     onSuccess: data => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      queryClient.invalidateQueries({ queryKey: ["task", data?.id] });
+      queryClient.invalidateQueries({ queryKey: ["task", data?.slug] });
       toast({
         title: successMessage || SuccessMessages.UPDATE,
       });
@@ -109,7 +109,7 @@ export const useUpdateTask = ({
   });
 };
 
-// Delete task hook
+// Delete task hook - now using slug instead of ID
 export const useDeleteTask = ({
   errorMessage,
   successMessage,
@@ -118,8 +118,8 @@ export const useDeleteTask = ({
   const { toast } = useToastQueue();
 
   return useMutation({
-    mutationFn: async (taskId: string) => {
-      const { data } = await deleteTaskAction(taskId);
+    mutationFn: async (taskSlug: string) => {
+      const { data } = await deleteTaskAction(taskSlug);
       return data;
     },
     onSuccess: () => {
