@@ -33,6 +33,8 @@ async function processDirectory(src, dest, prefix = "") {
   const entries = await fs.readdir(src, { withFileTypes: true });
 
   for (const entry of entries) {
+    if (entry.name === ".DS_Store") continue;
+
     const srcPath = path.join(src, entry.name);
     const baseName = entry.name.replace(/\.(ts|tsx|js|jsx)$/, "");
 
@@ -56,6 +58,8 @@ async function flatCopyDir(src, dest) {
   const dirName = path.basename(src);
 
   for (const entry of entries) {
+    if (entry.name === ".DS_Store") continue;
+
     const srcPath = path.join(src, entry.name);
     if (entry.isDirectory()) {
       await flatCopyDir(srcPath, dest);
@@ -72,7 +76,7 @@ async function combineTypesFiles(typesDir, outputPath) {
   const files = await fs.readdir(typesDir);
   let combined = "";
   for (const file of files) {
-    if (file === "database.types.ts") continue;
+    if (file === "database.types.ts" || file === ".DS_Store") continue;
     const content = await fs.readFile(path.join(typesDir, file), "utf-8");
     combined += `// From ${file}\n${content}\n\n`;
   }
@@ -85,10 +89,13 @@ async function combineMigrations(migrationsDir, outputPath) {
   const files = (await fs.readdir(migrationsDir)).sort();
   let combined = "";
   for (const file of files) {
+    if (file === ".DS_Store") continue;
     const content = await fs.readFile(path.join(migrationsDir, file), "utf-8");
     combined += `-- From ${file}\n${content}\n\n`;
   }
-  const timestamp = files[files.length - 1].split("_")[0];
+  const timestamp = files
+    .filter(f => f !== ".DS_Store")
+    [files.length - 1].split("_")[0];
   await fs.writeFile(
     path.join(OUTPUT_DIR, `${timestamp}combined_migrations.sql`),
     combined,

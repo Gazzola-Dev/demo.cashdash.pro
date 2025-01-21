@@ -35,8 +35,6 @@ const TaskPage = ({ projectSlug, taskSlug, initialData }: TaskPageProps) => {
     return <div className="p-8">Loading...</div>;
   }
 
-  console.log(task);
-
   const handleStatusChange = (checked: boolean) => {
     updateTask({
       slug: task.slug,
