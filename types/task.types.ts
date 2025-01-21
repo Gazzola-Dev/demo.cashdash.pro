@@ -1,54 +1,36 @@
 import { ActionResponse } from "@/types/action.types";
-import { Json, Tables } from "@/types/database.types";
+import { Tables } from "@/types/database.types";
 
 // Base types from database
 type Project = Tables<"projects">;
 type Task = Tables<"tasks">;
 type Profile = Tables<"profiles">;
 type Subtask = Tables<"subtasks">;
-type TaskTag = Tables<"task_tags">;
-type Tag = Tables<"tags">;
-type Comment = Tables<"comments">;
+type BaseComment = Tables<"comments">;
 type TaskSchedule = Tables<"task_schedule">;
 
-// Define strict project type without nullable fields
-export interface RequiredProject {
-  id: Project["id"];
-  name: Project["name"];
-  description: Project["description"];
-  status: Project["status"];
-  slug: Project["slug"];
-  prefix: Project["prefix"];
-  github_repo_url: Project["github_repo_url"];
-  github_owner: Project["github_owner"];
-  github_repo: Project["github_repo"];
-  created_at: Project["created_at"];
-  updated_at: Project["updated_at"];
+// Extended Comment type that includes user profile
+interface Comment extends BaseComment {
+  user: Profile;
 }
 
-// Task with non-nullable Project
-export interface TaskWithProject extends Task {
-  project: RequiredProject;
-}
-
-// Task with all relationships
-export interface TaskWithDetails extends TaskWithProject {
-  assignee_profile?: Profile | null;
-  subtasks?: Subtask[];
-  task_tags?: (TaskTag & { tags: Tag })[];
-  comments?: (Comment & {
-    user: Profile;
-  })[];
-  task_schedule?: TaskSchedule[];
+// Task with base data and all relationships
+export interface TaskResult {
+  task: Task;
+  subtasks: Subtask[];
+  comments?: Comment[] | null;
+  task_schedule: TaskSchedule[];
+  assignee_profile: Profile | null;
+  project: Project | null;
 }
 
 // Response types
-export interface TaskResponse extends ActionResponse<TaskWithDetails> {}
-export interface TaskListResponse extends ActionResponse<TaskWithDetails[]> {}
+export interface TaskResponse extends ActionResponse<TaskResult> {}
+export interface TaskListResponse extends ActionResponse<TaskResult[]> {}
 
 // Filter types for listing tasks
 export interface TaskFilters {
-  projectId?: string;
+  projectSlug?: string;
   status?: Task["status"];
   priority?: Task["priority"];
   assignee?: string;
@@ -57,7 +39,7 @@ export interface TaskFilters {
   order?: "asc" | "desc";
 }
 
-// Task creation/update types
+// Task input types for creation/updates
 export interface TaskInput {
   project_id: Task["project_id"];
   title: Task["title"];
@@ -73,40 +55,6 @@ export interface TaskInput {
 export interface TaskUpdate extends Partial<TaskInput> {
   id: string;
 }
-
-// Define the base user type
-export type UserProfile = {
-  avatar_url: string | null;
-  bio: string | null;
-  created_at: string;
-  current_project_id: string | null;
-  display_name: string | null;
-  github_username: string | null;
-  id: string;
-  notification_preferences: Json;
-  updated_at: string;
-  username: string;
-  website: string | null;
-};
-
-// Define the normalized task data type
-export type NormalizedTaskData = Omit<TaskWithDetails, "comments"> & {
-  comments:
-    | Array<{
-        content: Json;
-        content_id: string;
-        content_type: "project" | "task" | "subtask" | "comment";
-        created_at: string;
-        id: string;
-        is_edited: boolean;
-        parent_id: string | null;
-        thread_id: string | null;
-        updated_at: string;
-        user_id: string;
-        user: UserProfile;
-      }>
-    | undefined;
-};
 
 export const STATUS_OPTIONS: Tables<"tasks">["status"][] = [
   "backlog",

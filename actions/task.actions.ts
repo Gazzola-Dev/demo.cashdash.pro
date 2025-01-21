@@ -2,145 +2,71 @@
 import getSupabaseServerActionClient from "@/clients/action-client";
 import getActionResponse from "@/lib/action.util";
 import { ActionResponse } from "@/types/action.types";
-import { Tables, TablesInsert, TablesUpdate } from "@/types/database.types";
-import { TaskFilters, TaskWithDetails } from "@/types/task.types";
+import { TablesInsert, TablesUpdate } from "@/types/database.types";
+import { TaskFilters, TaskResult } from "@/types/task.types";
 
 export const listTasksAction = async (
   filters?: TaskFilters,
-): Promise<ActionResponse<TaskWithDetails[]>> => {
+): Promise<ActionResponse<TaskResult[]>> => {
   const supabase = await getSupabaseServerActionClient();
 
+  if (!filters?.projectSlug) throw new Error("Project slug is required");
+
   try {
-    let query = supabase.from("tasks").select(`
-      *,
-      project:projects (*),
-      subtasks (*),
-      task_tags (
-        tags (*)
-      ),
-      task_schedule (*)
-    `);
+    // TODO: implement filtering, sorting, and pagination
+    const { data, error } = await supabase.rpc("list_project_tasks", {
+      project_slug: filters?.projectSlug,
+    });
 
-    if (filters?.projectId) {
-      query = query.eq("project_id", filters.projectId);
-    }
-    if (filters?.status) {
-      query = query.eq("status", filters.status);
-    }
-    if (filters?.priority) {
-      query = query.eq("priority", filters.priority);
-    }
-    if (filters?.assignee) {
-      query = query.eq("assignee", filters.assignee);
-    }
-    if (filters?.search) {
-      query = query.or(
-        `title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`,
-      );
+    if (error) {
+      console.error("Error fetching tasks:", error);
+      throw error;
     }
 
-    if (filters?.sort) {
-      query = query.order(filters.sort, { ascending: filters.order === "asc" });
-    } else {
-      query = query.order("created_at", { ascending: false });
+    if (!data) {
+      console.error("No data returned for project tasks");
+      throw new Error("Tasks not found");
     }
 
-    const { data, error } = await query;
-
-    if (error) throw error;
-
-    const tasksWithDetails = data as unknown as TaskWithDetails[];
-
-    return getActionResponse({ data: tasksWithDetails });
+    return getActionResponse({ data: data as any as TaskResult[] });
   } catch (error) {
+    console.error("Error in listTasksAction:", error);
     return getActionResponse({ error });
   }
 };
 
 export const getTaskAction = async (
   taskSlug: string,
-): Promise<ActionResponse<TaskWithDetails>> => {
+): Promise<ActionResponse<TaskResult>> => {
   const supabase = await getSupabaseServerActionClient();
 
   try {
-    // Get task with direct relations
-    const { data: taskData, error: taskError } = await supabase
-      .from("tasks")
-      .select(
-        `
-        *,
-        project:projects!inner(*),
-        subtasks(*),
-        task_tags!inner(
-          tag_id,
-          task_id,
-          tags!inner(*)
-        ),
-        task_schedule(*)
-      `,
-      )
-      .eq("slug", taskSlug)
-      .single();
+    const { data, error } = await supabase.rpc("get_task_data", {
+      task_slug: taskSlug,
+    });
 
-    if (taskError || !taskData) throw taskError || new Error("Task not found");
-
-    // Get comments separately without trying to join profiles
-    const { data: commentsData, error: commentsError } = await supabase
-      .from("comments")
-      .select("*")
-      .eq("content_type", "task")
-      .eq("content_id", taskData.id);
-
-    if (commentsError) throw commentsError;
-
-    // If we have comments, get the user profiles separately
-    const userProfiles: Record<string, Tables<"profiles">> = {};
-
-    if (commentsData && commentsData.length > 0) {
-      const userIds = commentsData.map(comment => comment.user_id);
-      const { data: profilesData } = await supabase
-        .from("profiles")
-        .select("*")
-        .in("id", userIds);
-
-      if (profilesData) {
-        profilesData.forEach(profile => {
-          userProfiles[profile.id] = profile;
-        });
-      }
+    if (error) {
+      console.error("Error fetching task:", error);
+      throw error;
     }
 
-    // Transform the data to match TaskWithDetails type
-    const taskWithDetails: TaskWithDetails = {
-      ...taskData,
-      project: taskData.project,
-      subtasks: taskData.subtasks || [],
-      task_tags: taskData.task_tags
-        .filter(
-          (tt): tt is typeof tt & { tags: NonNullable<typeof tt.tags> } =>
-            tt.tags !== null,
-        )
-        .map(tt => ({
-          tag_id: tt.tag_id,
-          task_id: tt.task_id,
-          tags: tt.tags,
-        })),
-      task_schedule: taskData.task_schedule || [],
-      comments: (commentsData || []).map(comment => ({
-        ...comment,
-        user: userProfiles[comment.user_id] || null,
-      })),
-    };
+    if (!data) {
+      console.error("No data returned for task slug:", taskSlug);
+      throw new Error("Task not found");
+    }
 
-    return getActionResponse({ data: taskWithDetails });
+    console.log("Task data:", data);
+
+    // The RPC function returns data exactly matching TaskResult shape
+    return getActionResponse({ data: data as any as TaskResult });
   } catch (error) {
+    console.error("Error in getTaskAction:", error);
     return getActionResponse({ error });
   }
 };
-
 export const createTaskAction = async (
   task: TablesInsert<"tasks">,
-): Promise<ActionResponse<TaskWithDetails>> => {
+): Promise<ActionResponse<TaskResult>> => {
   const supabase = await getSupabaseServerActionClient();
 
   try {
@@ -160,17 +86,32 @@ export const createTaskAction = async (
         *,
         project:projects (*),
         subtasks (*),
-        task_tags (
-          tags (*)
+        task_schedule (*),
+        comments (
+          *,
+          user:profiles!inner(*)
         ),
-        task_schedule (*)
+        assignee_profile:profiles (*)
       `,
       )
       .single();
 
     if (error) throw error;
 
-    return getActionResponse({ data: data as TaskWithDetails });
+    const taskResult: TaskResult = {
+      task: data,
+      assignee_profile: data.assignee_profile?.[0] ?? null,
+      comments:
+        data.comments?.map(comment => ({
+          ...comment,
+          user: Array.isArray(comment.user) ? comment.user[0] : comment.user,
+        })) ?? [],
+      subtasks: data.subtasks ?? [],
+      task_schedule: data.task_schedule,
+      project: data.project,
+    };
+
+    return getActionResponse({ data: taskResult });
   } catch (error) {
     return getActionResponse({ error });
   }
@@ -179,7 +120,7 @@ export const createTaskAction = async (
 export const updateTaskAction = async (
   taskSlug: string,
   updates: TablesUpdate<"tasks">,
-): Promise<ActionResponse<TaskWithDetails>> => {
+): Promise<ActionResponse<TaskResult>> => {
   const supabase = await getSupabaseServerActionClient();
 
   try {
@@ -192,17 +133,32 @@ export const updateTaskAction = async (
         *,
         project:projects (*),
         subtasks (*),
-        task_tags (
-          tags (*)
+        task_schedule (*),
+        comments (
+          *,
+          user:profiles!inner(*)
         ),
-        task_schedule (*)
+        assignee_profile:profiles (*)
       `,
       )
       .single();
 
     if (error) throw error;
 
-    return getActionResponse({ data: data as TaskWithDetails });
+    const taskResult: TaskResult = {
+      task: data,
+      assignee_profile: data.assignee_profile?.[0] ?? null,
+      comments:
+        data.comments?.map(comment => ({
+          ...comment,
+          user: Array.isArray(comment.user) ? comment.user[0] : comment.user,
+        })) ?? [],
+      subtasks: data.subtasks ?? [],
+      task_schedule: data.task_schedule,
+      project: data.project,
+    };
+
+    return getActionResponse({ data: taskResult });
   } catch (error) {
     return getActionResponse({ error });
   }
@@ -234,7 +190,6 @@ export const reorderTasksAction = async (
   const supabase = await getSupabaseServerActionClient();
 
   try {
-    // First get the existing tasks to preserve their data
     const { data: existingTasks, error: fetchError } = await supabase
       .from("tasks")
       .select("id, prefix, slug, title")
@@ -244,7 +199,6 @@ export const reorderTasksAction = async (
 
     if (!existingTasks) throw new Error("Could not fetch existing tasks");
 
-    // Create updates array with all required fields
     const updates = taskIds.map((id, index) => {
       const existingTask = existingTasks.find(task => task.id === id);
       if (!existingTask) {

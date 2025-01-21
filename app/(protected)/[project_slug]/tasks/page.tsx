@@ -19,7 +19,7 @@ export default function TasksPage({
   params: { project_id, project_slug },
 }: TasksPageProps) {
   const router = useRouter();
-  const { data: tasks } = useListTasks({ projectId: project_id });
+  const { data: tasks } = useListTasks({ projectSlug: project_slug });
   const { data: project } = useGetProject(project_id);
 
   return (

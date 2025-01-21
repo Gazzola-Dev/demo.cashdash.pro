@@ -9,7 +9,7 @@ import {
 } from "@/actions/task.actions";
 import { TablesInsert, TablesUpdate } from "@/types/database.types";
 import { HookOptions } from "@/types/db.types";
-import { TaskFilters, TaskWithDetails } from "@/types/task.types";
+import { TaskFilters, TaskResult } from "@/types/task.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToastQueue } from "./useToastQueue";
 
@@ -20,10 +20,10 @@ enum SuccessMessages {
   REORDER = "Tasks reordered successfully",
 }
 
-// Get task hook - now using slug instead of ID
+// Get task hook
 export const useGetTask = (
   taskSlug: string,
-  { initialData }: { initialData?: TaskWithDetails } = {},
+  { initialData }: { initialData?: TaskResult } = {},
 ) => {
   return useQuery({
     queryKey: ["task", taskSlug],
@@ -51,7 +51,7 @@ export const useListTasks = (filters?: TaskFilters) => {
 export const useCreateTask = ({
   errorMessage,
   successMessage,
-}: HookOptions<TaskWithDetails> = {}) => {
+}: HookOptions<TaskResult> = {}) => {
   const queryClient = useQueryClient();
   const { toast } = useToastQueue();
 
@@ -75,11 +75,11 @@ export const useCreateTask = ({
   });
 };
 
-// Update task hook - now using slug instead of ID
+// Update task hook
 export const useUpdateTask = ({
   errorMessage,
   successMessage,
-}: HookOptions<TaskWithDetails> = {}) => {
+}: HookOptions<TaskResult> = {}) => {
   const queryClient = useQueryClient();
   const { toast } = useToastQueue();
 
@@ -96,7 +96,9 @@ export const useUpdateTask = ({
     },
     onSuccess: data => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      queryClient.invalidateQueries({ queryKey: ["task", data?.slug] });
+      if (data) {
+        queryClient.invalidateQueries({ queryKey: ["task", data.task.slug] });
+      }
       toast({
         title: successMessage || SuccessMessages.UPDATE,
       });
@@ -110,11 +112,11 @@ export const useUpdateTask = ({
   });
 };
 
-// Delete task hook - now using slug instead of ID
+// Delete task hook
 export const useDeleteTask = ({
   errorMessage,
   successMessage,
-}: HookOptions<TaskWithDetails> = {}) => {
+}: HookOptions<TaskResult> = {}) => {
   const queryClient = useQueryClient();
   const { toast } = useToastQueue();
 
@@ -142,7 +144,7 @@ export const useDeleteTask = ({
 export const useReorderTasks = ({
   errorMessage,
   successMessage,
-}: HookOptions<TaskWithDetails> = {}) => {
+}: HookOptions<TaskResult> = {}) => {
   const queryClient = useQueryClient();
   const { toast } = useToastQueue();
 

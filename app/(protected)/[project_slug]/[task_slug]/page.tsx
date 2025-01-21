@@ -14,6 +14,13 @@ export default async function TaskPageRoute({ params }: TaskPageProps) {
     const { data: task, error } = await getTaskAction(params.task_slug);
 
     if (error || !task) {
+      console.error("Error fetching task:", error);
+      return notFound();
+    }
+
+    // Verify that the task belongs to the correct project by checking slug
+    if (task.project?.slug !== params.project_slug) {
+      console.error("Task does not belong to this project");
       return notFound();
     }
 
@@ -25,6 +32,7 @@ export default async function TaskPageRoute({ params }: TaskPageProps) {
       />
     );
   } catch (error) {
+    console.error("Error in TaskPageRoute:", error);
     return notFound();
   }
 }

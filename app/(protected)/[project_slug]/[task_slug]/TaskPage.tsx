@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { useGetTask, useUpdateTask } from "@/hooks/task.hooks";
-import { TaskWithDetails } from "@/types/task.types";
+import { TaskResult } from "@/types/task.types";
 import { format } from "date-fns";
 import {
   Calendar,
@@ -24,16 +24,20 @@ import {
 interface TaskPageProps {
   projectSlug: string;
   taskSlug: string;
-  initialData: TaskWithDetails;
+  initialData: TaskResult;
 }
 
 const TaskPage = ({ projectSlug, taskSlug, initialData }: TaskPageProps) => {
-  const { data: task } = useGetTask(taskSlug, { initialData });
+  const { data: taskData } = useGetTask(taskSlug, { initialData });
+
   const { mutate: updateTask } = useUpdateTask();
 
-  if (!task) {
+  if (!taskData) {
     return <div className="p-8">Loading...</div>;
   }
+
+  const { task, subtasks, comments, task_schedule, assignee_profile, project } =
+    taskData;
 
   const handleStatusChange = (checked: boolean) => {
     updateTask({
@@ -77,7 +81,7 @@ const TaskPage = ({ projectSlug, taskSlug, initialData }: TaskPageProps) => {
                 <div className="flex items-center gap-2">
                   <MessageSquare className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm text-muted-foreground">
-                    {task.comments?.length || 0} comments
+                    {comments?.length || 0} comments
                   </span>
                 </div>
               </div>
@@ -107,7 +111,7 @@ const TaskPage = ({ projectSlug, taskSlug, initialData }: TaskPageProps) => {
                 <CardTitle>Comments</CardTitle>
               </CardHeader>
               <CardContent>
-                {task.comments?.map(comment => (
+                {comments?.map(comment => (
                   <div key={comment.id} className="mb-4">
                     <div className="flex items-start gap-3">
                       <Avatar className="h-8 w-8">
@@ -192,15 +196,15 @@ const TaskPage = ({ projectSlug, taskSlug, initialData }: TaskPageProps) => {
                       Set due date
                     </Button>
                   </div>
-                  {task.task_schedule?.[0] && (
+                  {task_schedule?.[0] && (
                     <div>
                       <div className="flex justify-between text-sm">
                         <span>Estimated hours</span>
-                        <span>{task.task_schedule[0].estimated_hours}</span>
+                        <span>{task_schedule[0].estimated_hours}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span>Actual hours</span>
-                        <span>{task.task_schedule[0].actual_hours}</span>
+                        <span>{task_schedule[0].actual_hours}</span>
                       </div>
                     </div>
                   )}
@@ -209,14 +213,14 @@ const TaskPage = ({ projectSlug, taskSlug, initialData }: TaskPageProps) => {
             </Card>
 
             {/* Subtasks Card */}
-            {task.subtasks && task.subtasks.length > 0 && (
+            {subtasks && subtasks.length && (
               <Card>
                 <CardHeader>
                   <CardTitle>Subtasks</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {task.subtasks.map(subtask => (
+                    {subtasks.map(subtask => (
                       <div key={subtask.id} className="flex items-center gap-2">
                         <Checkbox checked={subtask.status === "completed"} />
                         <span>{subtask.title}</span>

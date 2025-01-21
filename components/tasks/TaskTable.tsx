@@ -44,13 +44,13 @@ import { useListMembers } from "@/hooks/member.hooks";
 import { useToastQueue } from "@/hooks/useToastQueue";
 import { Tables } from "@/types/database.types";
 import {
-  NormalizedTaskData,
   PRIORITY_OPTIONS,
   STATUS_OPTIONS,
+  TaskResult,
   TaskTableProps,
 } from "@/types/task.types";
 
-export default function TaskTable({ projectId, projectSlug }: TaskTableProps) {
+const TaskTable = ({ projectId, projectSlug }: TaskTableProps) => {
   const router = useRouter();
   const { toast } = useToastQueue();
   const { mutate: updateTask } = useUpdateTask();
@@ -64,46 +64,25 @@ export default function TaskTable({ projectId, projectSlug }: TaskTableProps) {
 
   const filters = React.useMemo(
     () => ({
-      projectId,
+      projectSlug,
       sort: sorting[0]?.id as keyof Tables<"tasks"> | undefined,
       order: (sorting[0]?.desc ? "desc" : "asc") as "desc" | "asc" | undefined,
     }),
-    [projectId, sorting],
+    [projectSlug, sorting],
   );
 
-  const { data: rawTasks = [] } = useListTasks(filters);
+  const { data: tasks = [] } = useListTasks(filters);
   const { data: members = [] } = useListMembers(projectId);
 
-  const tasks: NormalizedTaskData[] = React.useMemo(() => {
-    return rawTasks.map(task => ({
-      ...task,
-      comments: task.comments?.map(comment => {
-        const userProfile = Array.isArray(comment.user)
-          ? comment.user[0]
-          : comment.user;
-        if (!userProfile || !("username" in userProfile)) {
-          throw new Error("Invalid user profile format");
-        }
-        return {
-          ...comment,
-          user: userProfile,
-        };
-      }),
-    }));
-  }, [rawTasks]);
-
   const handleRowClick = React.useCallback(
-    (
-      task: NormalizedTaskData,
-      event: React.MouseEvent<HTMLTableRowElement>,
-    ) => {
+    (task: TaskResult, event: React.MouseEvent<HTMLTableRowElement>) => {
       if ((event.target as HTMLElement).closest("button, select")) {
         return;
       }
       router.push(
         configuration.paths.tasks.view({
           project_slug: projectSlug,
-          task_slug: task.slug,
+          task_slug: task.task.slug,
         }),
       );
     },
@@ -111,8 +90,8 @@ export default function TaskTable({ projectId, projectSlug }: TaskTableProps) {
   );
 
   const copyBranchName = React.useCallback(
-    (task: NormalizedTaskData) => {
-      const branchName = `${task.project.prefix}-${task.ordinal_id}-${task.slug}`;
+    (task: TaskResult) => {
+      const branchName = `${task.project?.prefix}-${task.task.ordinal_id}-${task.task.slug}`;
       navigator.clipboard.writeText(branchName);
       toast({
         title: "Branch name copied to clipboard",
@@ -122,33 +101,29 @@ export default function TaskTable({ projectId, projectSlug }: TaskTableProps) {
     [toast],
   );
 
-  type Column = ColumnDef<NormalizedTaskData>;
+  type Column = ColumnDef<TaskResult>;
 
   const columns = React.useMemo<Column[]>(
     () => [
       {
         id: "title",
-        accessorFn: row => row.title,
-        header: ({ column }) => {
-          return (
-            <Button
-              variant="ghost"
-              onClick={() =>
-                column.toggleSorting(column.getIsSorted() === "asc")
-              }
-            >
-              Title
-              <ArrowUpDown className="ml-2 h-4 w-4" />
-            </Button>
-          );
-        },
+        accessorFn: row => row.task.title,
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Title
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
         cell: ({ row }) => (
           <span className="font-normal">{row.getValue("title")}</span>
         ),
       },
       {
         id: "status",
-        accessorFn: row => row.status,
+        accessorFn: row => row.task.status,
         header: ({ column }) => (
           <Button
             variant="ghost"
@@ -163,7 +138,7 @@ export default function TaskTable({ projectId, projectSlug }: TaskTableProps) {
             value={row.getValue("status")}
             onValueChange={value => {
               updateTask({
-                slug: row.original.slug,
+                slug: row.original.task.slug,
                 updates: { status: value as Tables<"tasks">["status"] },
               });
             }}
@@ -183,7 +158,7 @@ export default function TaskTable({ projectId, projectSlug }: TaskTableProps) {
       },
       {
         id: "priority",
-        accessorFn: row => row.priority,
+        accessorFn: row => row.task.priority,
         header: ({ column }) => (
           <Button
             variant="ghost"
@@ -198,7 +173,7 @@ export default function TaskTable({ projectId, projectSlug }: TaskTableProps) {
             value={row.getValue("priority")}
             onValueChange={value => {
               updateTask({
-                slug: row.original.slug,
+                slug: row.original.task.slug,
                 updates: { priority: value as Tables<"tasks">["priority"] },
               });
             }}
@@ -230,10 +205,10 @@ export default function TaskTable({ projectId, projectSlug }: TaskTableProps) {
         ),
         cell: ({ row }) => (
           <Select
-            value={row.original.assignee || "unassigned"}
+            value={row.original.task.assignee || "unassigned"}
             onValueChange={value => {
               updateTask({
-                slug: row.original.slug,
+                slug: row.original.task.slug,
                 updates: { assignee: value === "unassigned" ? null : value },
               });
             }}
@@ -433,4 +408,6 @@ export default function TaskTable({ projectId, projectSlug }: TaskTableProps) {
       </div>
     </div>
   );
-}
+};
+
+export default TaskTable;
