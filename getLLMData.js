@@ -34,16 +34,16 @@ async function processDirectory(src, dest, prefix = "") {
 
   for (const entry of entries) {
     const srcPath = path.join(src, entry.name);
-    const dirName = path.basename(src);
+    const baseName = entry.name.replace(/\.(ts|tsx|js|jsx)$/, "");
 
     if (entry.isDirectory()) {
-      const newPrefix = prefix ? `${prefix}.${entry.name}` : entry.name;
+      const newPrefix = prefix ? `${prefix}_${entry.name}` : entry.name;
       await processDirectory(srcPath, dest, newPrefix);
     } else {
       if (entry.name.match(/\.(ts|tsx|js|jsx)$/)) {
-        const newFileName = prefix
-          ? `${prefix}.${entry.name}`
-          : `${dirName}.${entry.name}`;
+        const fileName = prefix ? `${prefix}_${baseName}` : baseName;
+        const extension = path.extname(entry.name);
+        const newFileName = fileName + extension;
         await fs.copyFile(srcPath, path.join(dest, newFileName));
       }
     }
@@ -60,7 +60,9 @@ async function flatCopyDir(src, dest) {
     if (entry.isDirectory()) {
       await flatCopyDir(srcPath, dest);
     } else {
-      const newFileName = `${dirName}.${entry.name}`;
+      const baseName = entry.name.replace(/\.(ts|tsx|js|jsx)$/, "");
+      const extension = path.extname(entry.name);
+      const newFileName = `${dirName}_${baseName}${extension}`;
       await fs.copyFile(srcPath, path.join(dest, newFileName));
     }
   }
@@ -120,7 +122,7 @@ async function main() {
   if (await exists("types/database.types.ts")) {
     await fs.copyFile(
       "types/database.types.ts",
-      path.join(OUTPUT_DIR, "types.database.types.ts"),
+      path.join(OUTPUT_DIR, "types_database.types.ts"),
     );
   }
 
@@ -128,7 +130,7 @@ async function main() {
   if (await exists("supabase/database.types.ts")) {
     await fs.copyFile(
       "supabase/database.types.ts",
-      path.join(OUTPUT_DIR, "supabase.database.types.ts"),
+      path.join(OUTPUT_DIR, "supabase_database.types.ts"),
     );
   }
 

@@ -1,7 +1,8 @@
+"use server";
 import getSupabaseServerActionClient from "@/clients/action-client";
 import getActionResponse from "@/lib/action.util";
 import { ActionResponse } from "@/types/action.types";
-import { TablesInsert, TablesUpdate } from "@/types/database.types";
+import { Tables, TablesInsert, TablesUpdate } from "@/types/database.types";
 import { TaskFilters, TaskWithDetails } from "@/types/task.types";
 
 export const listTasksAction = async (
@@ -62,7 +63,8 @@ export const getTaskAction = async (
   const supabase = await getSupabaseServerActionClient();
 
   try {
-    const { data, error } = await supabase
+    // Get task with direct relations
+    const { data: taskData, error: taskError } = await supabase
       .from("tasks")
       .select(
         `
@@ -74,26 +76,46 @@ export const getTaskAction = async (
           task_id,
           tags!inner(*)
         ),
-        task_schedule(*),
-        comments:comments!content_id(
-          *,
-          user:profiles!user_id(*)
-        )
+        task_schedule(*)
       `,
       )
       .eq("slug", taskSlug)
-      .eq("comments.content_type", "task")
       .single();
 
-    if (error) throw error;
-    if (!data) throw new Error("Task not found");
+    if (taskError || !taskData) throw taskError || new Error("Task not found");
+
+    // Get comments separately without trying to join profiles
+    const { data: commentsData, error: commentsError } = await supabase
+      .from("comments")
+      .select("*")
+      .eq("content_type", "task")
+      .eq("content_id", taskData.id);
+
+    if (commentsError) throw commentsError;
+
+    // If we have comments, get the user profiles separately
+    const userProfiles: Record<string, Tables<"profiles">> = {};
+
+    if (commentsData && commentsData.length > 0) {
+      const userIds = commentsData.map(comment => comment.user_id);
+      const { data: profilesData } = await supabase
+        .from("profiles")
+        .select("*")
+        .in("id", userIds);
+
+      if (profilesData) {
+        profilesData.forEach(profile => {
+          userProfiles[profile.id] = profile;
+        });
+      }
+    }
 
     // Transform the data to match TaskWithDetails type
     const taskWithDetails: TaskWithDetails = {
-      ...data,
-      project: data.project,
-      subtasks: data.subtasks || [],
-      task_tags: data.task_tags
+      ...taskData,
+      project: taskData.project,
+      subtasks: taskData.subtasks || [],
+      task_tags: taskData.task_tags
         .filter(
           (tt): tt is typeof tt & { tags: NonNullable<typeof tt.tags> } =>
             tt.tags !== null,
@@ -103,10 +125,10 @@ export const getTaskAction = async (
           task_id: tt.task_id,
           tags: tt.tags,
         })),
-      task_schedule: data.task_schedule || [],
-      comments: (data.comments || []).map(comment => ({
+      task_schedule: taskData.task_schedule || [],
+      comments: (commentsData || []).map(comment => ({
         ...comment,
-        user: Array.isArray(comment.user) ? comment.user[0] : comment.user,
+        user: userProfiles[comment.user_id] || null,
       })),
     };
 

@@ -1,3 +1,4 @@
+"use client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,6 +34,8 @@ const TaskPage = ({ projectSlug, taskSlug, initialData }: TaskPageProps) => {
   if (!task) {
     return <div className="p-8">Loading...</div>;
   }
+
+  console.log(task);
 
   const handleStatusChange = (checked: boolean) => {
     updateTask({
