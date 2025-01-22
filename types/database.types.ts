@@ -678,6 +678,13 @@ export type Database = {
         }
         Returns: Json
       }
+      update_task_data: {
+        Args: {
+          task_slug: string
+          task_updates: Json
+        }
+        Returns: Json
+      }
     }
     Enums: {
       app_permission:

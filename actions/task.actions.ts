@@ -12,25 +12,20 @@ export const listTasksAction = async (
   if (!filters?.projectSlug) throw new Error("Project slug is required");
 
   try {
-    // Get all tasks for the project
     const { data: rawData, error } = await supabase.rpc("list_project_tasks", {
       project_slug: filters.projectSlug,
     });
 
     if (error) {
-      console.error("Error fetching tasks:", error);
       throw error;
     }
 
     if (!rawData) {
-      console.error("No data returned for project tasks");
       throw new Error("Tasks not found");
     }
 
-    // First cast to unknown, then to TaskResult[]
     let filteredData = rawData as unknown as TaskResult[];
 
-    // Apply filters in memory
     if (filters.status) {
       filteredData = filteredData.filter(
         task => task.task.status === filters.status,
@@ -61,25 +56,21 @@ export const listTasksAction = async (
       );
     }
 
-    // Apply sorting
     if (filters.sort) {
       filteredData.sort((a, b) => {
         const aValue = a.task[filters.sort!];
         const bValue = b.task[filters.sort!];
         const multiplier = filters.order === "asc" ? 1 : -1;
 
-        // Handle null values in sorting
         if (aValue === null && bValue === null) return 0;
         if (aValue === null) return 1 * multiplier;
         if (bValue === null) return -1 * multiplier;
 
-        // Safe comparison after null checks
         if (aValue < bValue) return -1 * multiplier;
         if (aValue > bValue) return 1 * multiplier;
         return 0;
       });
     } else {
-      // Default sort by created_at desc
       filteredData.sort(
         (a, b) =>
           new Date(b.task.created_at).getTime() -
@@ -89,7 +80,6 @@ export const listTasksAction = async (
 
     return getActionResponse({ data: filteredData });
   } catch (error) {
-    console.error("Error in listTasksAction:", error);
     return getActionResponse({ error });
   }
 };
@@ -105,24 +95,19 @@ export const getTaskAction = async (
     });
 
     if (error) {
-      console.error("Error fetching task:", error);
       throw error;
     }
 
     if (!data) {
-      console.error("No data returned for task slug:", taskSlug);
       throw new Error("Task not found");
     }
 
-    console.log("Task data:", data);
-
-    // The RPC function returns data exactly matching TaskResult shape
     return getActionResponse({ data: data as any as TaskResult });
   } catch (error) {
-    console.error("Error in getTaskAction:", error);
     return getActionResponse({ error });
   }
 };
+
 export const createTaskAction = async (
   task: TablesInsert<"tasks">,
 ): Promise<ActionResponse<TaskResult>> => {
@@ -183,41 +168,20 @@ export const updateTaskAction = async (
   const supabase = await getSupabaseServerActionClient();
 
   try {
-    const { data, error } = await supabase
-      .from("tasks")
-      .update(updates)
-      .eq("slug", taskSlug)
-      .select(
-        `
-        *,
-        project:projects (*),
-        subtasks (*),
-        task_schedule (*),
-        comments (
-          *,
-          user:profiles!inner(*)
-        ),
-        assignee_profile:profiles (*)
-      `,
-      )
-      .single();
+    const { data, error } = await supabase.rpc("update_task_data", {
+      task_slug: taskSlug,
+      task_updates: updates,
+    });
 
-    if (error) throw error;
+    if (error) {
+      throw error;
+    }
 
-    const taskResult: TaskResult = {
-      task: data,
-      assignee_profile: data.assignee_profile?.[0] ?? null,
-      comments:
-        data.comments?.map(comment => ({
-          ...comment,
-          user: Array.isArray(comment.user) ? comment.user[0] : comment.user,
-        })) ?? [],
-      subtasks: data.subtasks ?? [],
-      task_schedule: data.task_schedule,
-      project: data.project,
-    };
+    if (!data) {
+      throw new Error("Task update failed");
+    }
 
-    return getActionResponse({ data: taskResult });
+    return getActionResponse({ data: data as any as TaskResult });
   } catch (error) {
     return getActionResponse({ error });
   }
