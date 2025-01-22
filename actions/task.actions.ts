@@ -9,13 +9,12 @@ export const listTasksAction = async (
   filters?: TaskFilters,
 ): Promise<ActionResponse<TaskResult[]>> => {
   const supabase = await getSupabaseServerActionClient();
-
   if (!filters?.projectSlug) throw new Error("Project slug is required");
 
   try {
-    // TODO: implement filtering, sorting, and pagination
-    const { data, error } = await supabase.rpc("list_project_tasks", {
-      project_slug: filters?.projectSlug,
+    // Get all tasks for the project
+    const { data: rawData, error } = await supabase.rpc("list_project_tasks", {
+      project_slug: filters.projectSlug,
     });
 
     if (error) {
@@ -23,12 +22,72 @@ export const listTasksAction = async (
       throw error;
     }
 
-    if (!data) {
+    if (!rawData) {
       console.error("No data returned for project tasks");
       throw new Error("Tasks not found");
     }
 
-    return getActionResponse({ data: data as any as TaskResult[] });
+    // First cast to unknown, then to TaskResult[]
+    let filteredData = rawData as unknown as TaskResult[];
+
+    // Apply filters in memory
+    if (filters.status) {
+      filteredData = filteredData.filter(
+        task => task.task.status === filters.status,
+      );
+    }
+
+    if (filters.priority) {
+      filteredData = filteredData.filter(
+        task => task.task.priority === filters.priority,
+      );
+    }
+
+    if (filters.assignee) {
+      filteredData = filteredData.filter(
+        task => task.task.assignee === filters.assignee,
+      );
+    }
+
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      filteredData = filteredData.filter(
+        task =>
+          task.task.title.toLowerCase().includes(searchLower) ||
+          (task.task.description &&
+            JSON.stringify(task.task.description)
+              .toLowerCase()
+              .includes(searchLower)),
+      );
+    }
+
+    // Apply sorting
+    if (filters.sort) {
+      filteredData.sort((a, b) => {
+        const aValue = a.task[filters.sort!];
+        const bValue = b.task[filters.sort!];
+        const multiplier = filters.order === "asc" ? 1 : -1;
+
+        // Handle null values in sorting
+        if (aValue === null && bValue === null) return 0;
+        if (aValue === null) return 1 * multiplier;
+        if (bValue === null) return -1 * multiplier;
+
+        // Safe comparison after null checks
+        if (aValue < bValue) return -1 * multiplier;
+        if (aValue > bValue) return 1 * multiplier;
+        return 0;
+      });
+    } else {
+      // Default sort by created_at desc
+      filteredData.sort(
+        (a, b) =>
+          new Date(b.task.created_at).getTime() -
+          new Date(a.task.created_at).getTime(),
+      );
+    }
+
+    return getActionResponse({ data: filteredData });
   } catch (error) {
     console.error("Error in listTasksAction:", error);
     return getActionResponse({ error });

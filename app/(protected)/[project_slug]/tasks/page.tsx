@@ -43,7 +43,7 @@ export default function TasksPage({
         </Button>
       </div>
 
-      <div className="rounded-lg border bg-card">
+      <div className="rounded-lg bg-card">
         <DataTable projectId={project_id} projectSlug={project_slug} />
       </div>
     </div>

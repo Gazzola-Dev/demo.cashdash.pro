@@ -30,12 +30,12 @@ export interface TaskListResponse extends ActionResponse<TaskResult[]> {}
 
 // Filter types for listing tasks
 export interface TaskFilters {
-  projectSlug?: string;
-  status?: Task["status"];
-  priority?: Task["priority"];
+  projectSlug: string;
+  status?: Tables<"tasks">["status"];
+  priority?: Tables<"tasks">["priority"];
   assignee?: string;
   search?: string;
-  sort?: keyof Task;
+  sort?: keyof Tables<"tasks">;
   order?: "asc" | "desc";
 }
 
