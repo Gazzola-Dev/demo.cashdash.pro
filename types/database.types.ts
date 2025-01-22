@@ -106,7 +106,7 @@ export type Database = {
       }
       comments: {
         Row: {
-          content: Json
+          content: string | null
           content_id: string
           content_type: Database["public"]["Enums"]["content_type"]
           created_at: string
@@ -118,7 +118,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          content: Json
+          content?: string | null
           content_id: string
           content_type: Database["public"]["Enums"]["content_type"]
           created_at?: string
@@ -130,7 +130,7 @@ export type Database = {
           user_id: string
         }
         Update: {
-          content?: Json
+          content?: string | null
           content_id?: string
           content_type?: Database["public"]["Enums"]["content_type"]
           created_at?: string
@@ -418,7 +418,7 @@ export type Database = {
         Row: {
           budget_cents: number | null
           created_at: string
-          description: Json | null
+          description: string | null
           id: string
           ordinal_id: number
           status: Database["public"]["Enums"]["task_status"]
@@ -429,7 +429,7 @@ export type Database = {
         Insert: {
           budget_cents?: number | null
           created_at?: string
-          description?: Json | null
+          description?: string | null
           id?: string
           ordinal_id: number
           status?: Database["public"]["Enums"]["task_status"]
@@ -440,7 +440,7 @@ export type Database = {
         Update: {
           budget_cents?: number | null
           created_at?: string
-          description?: Json | null
+          description?: string | null
           id?: string
           ordinal_id?: number
           status?: Database["public"]["Enums"]["task_status"]
@@ -549,7 +549,7 @@ export type Database = {
           assignee: string | null
           budget_cents: number | null
           created_at: string
-          description: Json | null
+          description: string | null
           id: string
           ordinal_id: number
           prefix: string
@@ -564,7 +564,7 @@ export type Database = {
           assignee?: string | null
           budget_cents?: number | null
           created_at?: string
-          description?: Json | null
+          description?: string | null
           id?: string
           ordinal_id: number
           prefix: string
@@ -579,7 +579,7 @@ export type Database = {
           assignee?: string | null
           budget_cents?: number | null
           created_at?: string
-          description?: Json | null
+          description?: string | null
           id?: string
           ordinal_id?: number
           prefix?: string
@@ -660,25 +660,12 @@ export type Database = {
         }
         Returns: Json
       }
-      list_project_tasks:
-        | {
-            Args: {
-              project_slug: string
-            }
-            Returns: Json
-          }
-        | {
-            Args: {
-              project_slug: string
-              status_filter?: Database["public"]["Enums"]["task_status"]
-              priority_filter?: Database["public"]["Enums"]["task_priority"]
-              assignee_filter?: string
-              search_term?: string
-              sort_field?: string
-              sort_direction?: string
-            }
-            Returns: Json[]
-          }
+      list_project_tasks: {
+        Args: {
+          project_slug: string
+        }
+        Returns: Json[]
+      }
       list_tasks: {
         Args: {
           p_project_id?: string
