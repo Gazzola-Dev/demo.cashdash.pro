@@ -1,3 +1,4 @@
+"use client";
 import { useListTasks, useUpdateTask } from "@/hooks/task.hooks";
 import {
   ColumnDef,
@@ -11,9 +12,10 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, GitBranch } from "lucide-react";
+import { ArrowUpDown, GitBranch, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React from "react";
+import { useDebounce } from "use-debounce";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -62,7 +64,8 @@ const TaskTable = ({ projectId, projectSlug }: TaskTableProps) => {
     React.useState<VisibilityState>({});
   const [titleFilter, setTitleFilter] = React.useState("");
 
-  const filters = React.useMemo(
+  // Create raw filters object
+  const rawFilters = React.useMemo(
     () => ({
       projectSlug,
       sort: sorting[0]?.id as keyof Tables<"tasks"> | undefined,
@@ -71,7 +74,10 @@ const TaskTable = ({ projectId, projectSlug }: TaskTableProps) => {
     [projectSlug, sorting],
   );
 
-  const { data: tasks = [] } = useListTasks(filters);
+  // Debounce the filters
+  const [debouncedFilters] = useDebounce(rawFilters, 300);
+
+  const { data: tasks = [] } = useListTasks(debouncedFilters);
   const { data: members = [] } = useListMembers(projectId);
 
   const handleRowClick = React.useCallback(
@@ -101,22 +107,28 @@ const TaskTable = ({ projectId, projectSlug }: TaskTableProps) => {
     [toast],
   );
 
-  type Column = ColumnDef<TaskResult>;
-
-  const columns = React.useMemo<Column[]>(
+  const columns = React.useMemo<ColumnDef<TaskResult>[]>(
     () => [
       {
         id: "title",
         accessorFn: row => row.task.title,
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Title
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        ),
+        header: ({ column }) => {
+          const isSorted = column.getIsSorted();
+          return (
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+              className={isSorted ? "text-blue-600" : ""}
+            >
+              Title
+              <ArrowUpDown
+                className={`ml-2 h-4 w-4 ${isSorted ? "text-blue-600" : ""}`}
+              />
+            </Button>
+          );
+        },
         cell: ({ row }) => (
           <span className="font-normal">{row.getValue("title")}</span>
         ),
@@ -124,15 +136,23 @@ const TaskTable = ({ projectId, projectSlug }: TaskTableProps) => {
       {
         id: "status",
         accessorFn: row => row.task.status,
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Status
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        ),
+        header: ({ column }) => {
+          const isSorted = column.getIsSorted();
+          return (
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+              className={isSorted ? "text-blue-600" : ""}
+            >
+              Status
+              <ArrowUpDown
+                className={`ml-2 h-4 w-4 ${isSorted ? "text-blue-600" : ""}`}
+              />
+            </Button>
+          );
+        },
         cell: ({ row }) => (
           <Select
             value={row.getValue("status")}
@@ -159,15 +179,23 @@ const TaskTable = ({ projectId, projectSlug }: TaskTableProps) => {
       {
         id: "priority",
         accessorFn: row => row.task.priority,
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Priority
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        ),
+        header: ({ column }) => {
+          const isSorted = column.getIsSorted();
+          return (
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+              className={isSorted ? "text-blue-600" : ""}
+            >
+              Priority
+              <ArrowUpDown
+                className={`ml-2 h-4 w-4 ${isSorted ? "text-blue-600" : ""}`}
+              />
+            </Button>
+          );
+        },
         cell: ({ row }) => (
           <Select
             value={row.getValue("priority")}
@@ -194,15 +222,23 @@ const TaskTable = ({ projectId, projectSlug }: TaskTableProps) => {
       {
         id: "assignee",
         accessorFn: row => row.assignee_profile?.display_name ?? "",
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Assignee
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        ),
+        header: ({ column }) => {
+          const isSorted = column.getIsSorted();
+          return (
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+              className={isSorted ? "text-blue-600" : ""}
+            >
+              Assignee
+              <ArrowUpDown
+                className={`ml-2 h-4 w-4 ${isSorted ? "text-blue-600" : ""}`}
+              />
+            </Button>
+          );
+        },
         cell: ({ row }) => (
           <Select
             value={row.original.task.assignee || "unassigned"}
@@ -310,34 +346,47 @@ const TaskTable = ({ projectId, projectSlug }: TaskTableProps) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-4">
-        <Input
-          placeholder="Filter tasks..."
-          value={titleFilter}
-          onChange={e => handleTitleFilterChange(e.target.value)}
-          className="max-w-sm"
-        />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline">Columns</Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {table
-              .getAllColumns()
-              .filter(column => column.getCanHide())
-              .map(column => (
-                <DropdownMenuCheckboxItem
-                  key={column.id}
-                  className="capitalize"
-                  checked={column.getIsVisible()}
-                  onCheckedChange={value => column.toggleVisibility(!!value)}
-                >
-                  {column.id}
-                </DropdownMenuCheckboxItem>
-              ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Input
+            placeholder="Filter tasks..."
+            value={titleFilter}
+            onChange={e => handleTitleFilterChange(e.target.value)}
+            className="max-w-sm"
+          />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">Columns</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {table
+                .getAllColumns()
+                .filter(column => column.getCanHide())
+                .map(column => (
+                  <DropdownMenuCheckboxItem
+                    key={column.id}
+                    className="capitalize"
+                    checked={column.getIsVisible()}
+                    onCheckedChange={value => column.toggleVisibility(!!value)}
+                  >
+                    {column.id}
+                  </DropdownMenuCheckboxItem>
+                ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        <Button
+          onClick={() =>
+            router.push(
+              configuration.paths.tasks.new({ project_slug: projectSlug }),
+            )
+          }
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Create Task
+        </Button>
       </div>
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
