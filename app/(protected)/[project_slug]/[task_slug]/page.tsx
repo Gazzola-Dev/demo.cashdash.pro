@@ -1,5 +1,5 @@
 import { getTaskAction } from "@/actions/task.actions";
-import TaskPage from "@/components/tasks/TaskPage";
+import TaskPage from "@/components/tasks/TaskPage/TaskPage";
 import { notFound } from "next/navigation";
 
 interface TaskPageProps {
