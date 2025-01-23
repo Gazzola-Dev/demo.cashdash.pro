@@ -1,41 +1,102 @@
+-- First drop the existing function
+DROP FUNCTION IF EXISTS public.update_task_data(text,jsonb);
+
 -- Create update_task_data function
 CREATE OR REPLACE FUNCTION public.update_task_data(
   task_slug TEXT,
   task_updates JSONB
 )
-RETURNS json
+RETURNS TABLE (
+  data json,
+  logs jsonb
+)
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
   result json;
+  function_logs jsonb = '[]';
   found_task tasks;
   updated_task tasks;
 BEGIN
+  -- Log input parameters
+  function_logs = function_logs || jsonb_build_object(
+    'timestamp', CURRENT_TIMESTAMP,
+    'step', 'input',
+    'task_slug', task_slug,
+    'task_updates', task_updates
+  );
+
   -- First verify the task exists and get its project_id
   SELECT * INTO found_task
   FROM tasks
   WHERE slug = task_slug;
 
   IF found_task IS NULL THEN
+    function_logs = function_logs || jsonb_build_object(
+      'timestamp', CURRENT_TIMESTAMP,
+      'step', 'validation',
+      'error', format('Task not found with slug %s', task_slug)
+    );
     RAISE EXCEPTION 'Task not found with slug %', task_slug;
   END IF;
+
+  -- Log found task
+  function_logs = function_logs || jsonb_build_object(
+    'timestamp', CURRENT_TIMESTAMP,
+    'step', 'found_task',
+    'task_id', found_task.id
+  );
 
   -- Update the task
   UPDATE tasks
   SET
-    title = COALESCE((task_updates->>'title')::text, title),
-    description = COALESCE((task_updates->>'description')::text, description),
-    status = COALESCE((task_updates->>'status')::task_status, status),
-    priority = COALESCE((task_updates->>'priority')::task_priority, priority),
-    assignee = COALESCE((task_updates->>'assignee')::uuid, assignee),
+    title = CASE 
+      WHEN task_updates ? 'title' THEN (task_updates->>'title')::text
+      ELSE title
+    END,
+    description = CASE 
+      WHEN task_updates ? 'description' THEN (task_updates->>'description')::text
+      ELSE description
+    END,
+    status = CASE 
+      WHEN task_updates ? 'status' THEN (task_updates->>'status')::task_status
+      ELSE status
+    END,
+    priority = CASE 
+      WHEN task_updates ? 'priority' THEN (task_updates->>'priority')::task_priority
+      ELSE priority
+    END,
+    assignee = CASE 
+      WHEN task_updates ? 'assignee' THEN (task_updates->>'assignee')::uuid
+      ELSE assignee
+    END,
     updated_at = CURRENT_TIMESTAMP
   WHERE slug = task_slug
   RETURNING * INTO updated_task;
 
+  -- Log updated task
+  function_logs = function_logs || jsonb_build_object(
+    'timestamp', CURRENT_TIMESTAMP,
+    'step', 'task_updated',
+    'updated_task_id', updated_task.id,
+    'updated_fields', jsonb_build_object(
+      'title', updated_task.title,
+      'status', updated_task.status,
+      'priority', updated_task.priority,
+      'assignee', updated_task.assignee
+    )
+  );
+
   -- Handle task_schedule updates if present
   IF task_updates ? 'task_schedule' THEN
+    function_logs = function_logs || jsonb_build_object(
+      'timestamp', CURRENT_TIMESTAMP,
+      'step', 'schedule_update_started',
+      'has_schedule_data', jsonb_array_length(task_updates->'task_schedule') > 0
+    );
+
     IF jsonb_array_length(task_updates->'task_schedule') > 0 THEN
       -- Get the first schedule item
       WITH schedule_data AS (
@@ -70,6 +131,11 @@ BEGIN
         start_date = EXCLUDED.start_date,
         estimated_hours = EXCLUDED.estimated_hours,
         actual_hours = EXCLUDED.actual_hours;
+
+      function_logs = function_logs || jsonb_build_object(
+        'timestamp', CURRENT_TIMESTAMP,
+        'step', 'schedule_updated'
+      );
     END IF;
   END IF;
 
@@ -115,7 +181,14 @@ BEGIN
   WHERE t.slug = task_slug
   GROUP BY t.id, p.id, prof.id;
 
-  RETURN result;
+  -- Log final result
+  function_logs = function_logs || jsonb_build_object(
+    'timestamp', CURRENT_TIMESTAMP,
+    'step', 'complete',
+    'success', true
+  );
+
+  RETURN QUERY SELECT result::json AS data, function_logs AS logs;
 END;
 $$;
 
