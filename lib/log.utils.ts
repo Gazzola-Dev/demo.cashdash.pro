@@ -1,5 +1,9 @@
-export const conditionalLog = (name: string, data: any) => {
-  if (process.env.NEXT_PUBLIC_CLIENT_DEBUG === "true") {
+export const conditionalLog = (name: string, data: any, isServer = true) => {
+  const serverShouldLog = process.env.SERVER_DEBUG === "true" && isServer;
+  const clientShouldLog =
+    process.env.NEXT_PUBLIC_CLIENT_DEBUG === "true" && !isServer;
+
+  if (serverShouldLog || clientShouldLog) {
     const formattedData = Object.entries(data)
       .map(([key, value]) => {
         const valueStr =
@@ -9,7 +13,10 @@ export const conditionalLog = (name: string, data: any) => {
         return `${key}:${valueStr}`;
       })
       .join(", ");
-    console.log(`[${name}]`, formattedData);
+    console.log(
+      `[${name}]${isServer ? "[SERVER]" : "[CLIENT]"}`,
+      formattedData,
+    );
   }
 };
 
@@ -28,4 +35,12 @@ export const minifyForLog = (error: any) => {
   return Object.entries(error)
     .map(([key, value]) => `${key}:${value}`)
     .join(", ");
+};
+
+export const getErrorMessage = (
+  minifiedError: string | { message: string },
+) => {
+  return typeof minifiedError === "string"
+    ? minifiedError
+    : minifiedError.message;
 };

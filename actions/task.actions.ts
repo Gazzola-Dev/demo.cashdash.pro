@@ -6,6 +6,8 @@ import { ActionResponse } from "@/types/action.types";
 import { TablesInsert, TablesUpdate } from "@/types/database.types";
 import { TaskFilters, TaskResult } from "@/types/task.types";
 
+// TODO: Fix any types
+
 export const listTasksAction = async (
   filters?: TaskFilters,
 ): Promise<ActionResponse<TaskResult[]>> => {

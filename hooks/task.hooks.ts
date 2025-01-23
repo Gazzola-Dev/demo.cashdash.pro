@@ -7,7 +7,7 @@ import {
   reorderTasksAction,
   updateTaskAction,
 } from "@/actions/task.actions";
-import { conditionalLog, minifyForLog } from "@/lib/log.utils";
+import { conditionalLog, getErrorMessage, minifyForLog } from "@/lib/log.utils";
 import { TablesInsert, TablesUpdate } from "@/types/database.types";
 import { HookOptions } from "@/types/db.types";
 import { TaskFilters, TaskResult } from "@/types/task.types";
@@ -70,6 +70,7 @@ export const useCreateTask = ({
       return data;
     },
     onSuccess: data => {
+      conditionalLog(hookName, { success: data });
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       toast({
         title: successMessage || SuccessMessages.CREATE,
@@ -77,8 +78,9 @@ export const useCreateTask = ({
     },
     onError: (error: Error) => {
       const minifiedError = minifyForLog(error);
+      conditionalLog(hookName, { error: minifiedError });
       toast({
-        title: errorMessage || minifiedError.message,
+        title: errorMessage || getErrorMessage(minifiedError),
         description: "Failed to create task",
         variant: "destructive",
       });
@@ -108,6 +110,7 @@ export const useUpdateTask = ({
       return data;
     },
     onSuccess: data => {
+      conditionalLog(hookName, { success: data });
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       if (data) {
         queryClient.invalidateQueries({ queryKey: ["task", data.task.slug] });
@@ -118,8 +121,9 @@ export const useUpdateTask = ({
     },
     onError: (error: Error) => {
       const minifiedError = minifyForLog(error);
+      conditionalLog(hookName, { error: minifiedError });
       toast({
-        title: errorMessage || minifiedError.message,
+        title: errorMessage || getErrorMessage(minifiedError),
         description: "Failed to update task",
         variant: "destructive",
       });
@@ -142,7 +146,8 @@ export const useDeleteTask = ({
       conditionalLog(hookName, { data, error });
       return data;
     },
-    onSuccess: () => {
+    onSuccess: data => {
+      conditionalLog(hookName, { success: data });
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       toast({
         title: successMessage || SuccessMessages.DELETE,
@@ -150,8 +155,9 @@ export const useDeleteTask = ({
     },
     onError: (error: Error) => {
       const minifiedError = minifyForLog(error);
+      conditionalLog(hookName, { error: minifiedError });
       toast({
-        title: errorMessage || minifiedError.message,
+        title: errorMessage || getErrorMessage(minifiedError),
         description: "Failed to delete task",
         variant: "destructive",
       });
@@ -180,7 +186,8 @@ export const useReorderTasks = ({
       conditionalLog(hookName, { data, error });
       return data;
     },
-    onSuccess: () => {
+    onSuccess: data => {
+      conditionalLog(hookName, { success: data });
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       toast({
         title: successMessage || SuccessMessages.REORDER,
@@ -188,8 +195,9 @@ export const useReorderTasks = ({
     },
     onError: (error: Error) => {
       const minifiedError = minifyForLog(error);
+      conditionalLog(hookName, { error: minifiedError });
       toast({
-        title: errorMessage || minifiedError.message,
+        title: errorMessage || getErrorMessage(minifiedError),
         description: "Failed to reorder tasks",
         variant: "destructive",
       });
