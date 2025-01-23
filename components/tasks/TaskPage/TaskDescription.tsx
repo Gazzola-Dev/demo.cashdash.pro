@@ -44,7 +44,7 @@ export function TaskDescription({ description, onSave }: TaskDescriptionProps) {
             className="min-h-[100px]"
           />
         ) : (
-          <div className="prose dark:prose-invert">
+          <div className="prose dark:prose-invert whitespace-pre-line">
             {description || "No description provided"}
           </div>
         )}
