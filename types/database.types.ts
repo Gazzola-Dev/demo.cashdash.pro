@@ -683,10 +683,7 @@ export type Database = {
           task_slug: string
           task_updates: Json
         }
-        Returns: {
-          data: Json
-          logs: Json
-        }[]
+        Returns: Json
       }
     }
     Enums: {
