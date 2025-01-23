@@ -1,6 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import * as React from "react";
 import type { ToastActionElement } from "@/components/ui/toast";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import * as React from "react";
 
 const TOAST_QUERY_KEY = ["toasts"];
 const TOAST_LIMIT = 3;
@@ -11,6 +11,7 @@ type ToasterToast = {
   description?: React.ReactNode;
   action?: ToastActionElement;
   open?: boolean;
+  variant?: "default" | "destructive";
   onOpenChange?: (open: boolean) => void;
 };
 

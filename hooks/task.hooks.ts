@@ -7,6 +7,7 @@ import {
   reorderTasksAction,
   updateTaskAction,
 } from "@/actions/task.actions";
+import { conditionalLog, minifyForLog } from "@/lib/log.utils";
 import { TablesInsert, TablesUpdate } from "@/types/database.types";
 import { HookOptions } from "@/types/db.types";
 import { TaskFilters, TaskResult } from "@/types/task.types";
@@ -25,10 +26,13 @@ export const useGetTask = (
   taskSlug: string,
   { initialData }: { initialData?: TaskResult } = {},
 ) => {
+  const hookName = "useGetTask";
+
   return useQuery({
     queryKey: ["task", taskSlug],
     queryFn: async () => {
-      const { data } = await getTaskAction(taskSlug);
+      const { data, error } = await getTaskAction(taskSlug);
+      conditionalLog(hookName, { data, error });
       if (!data) throw new Error("Task not found");
       return data;
     },
@@ -38,10 +42,13 @@ export const useGetTask = (
 
 // List tasks hook
 export const useListTasks = (filters?: TaskFilters) => {
+  const hookName = "useListTasks";
+
   return useQuery({
     queryKey: ["tasks", filters],
     queryFn: async () => {
-      const { data } = await listTasksAction(filters);
+      const { data, error } = await listTasksAction(filters);
+      conditionalLog(hookName, { data, error });
       return data || [];
     },
   });
@@ -52,12 +59,14 @@ export const useCreateTask = ({
   errorMessage,
   successMessage,
 }: HookOptions<TaskResult> = {}) => {
+  const hookName = "useCreateTask";
   const queryClient = useQueryClient();
   const { toast } = useToastQueue();
 
   return useMutation({
     mutationFn: async (task: TablesInsert<"tasks">) => {
-      const { data } = await createTaskAction(task);
+      const { data, error } = await createTaskAction(task);
+      conditionalLog(hookName, { data, error });
       return data;
     },
     onSuccess: data => {
@@ -67,9 +76,11 @@ export const useCreateTask = ({
       });
     },
     onError: (error: Error) => {
+      const minifiedError = minifyForLog(error);
       toast({
-        title: errorMessage || error.message,
+        title: errorMessage || minifiedError.message,
         description: "Failed to create task",
+        variant: "destructive",
       });
     },
   });
@@ -80,6 +91,7 @@ export const useUpdateTask = ({
   errorMessage,
   successMessage,
 }: HookOptions<TaskResult> = {}) => {
+  const hookName = "useUpdateTask";
   const queryClient = useQueryClient();
   const { toast } = useToastQueue();
 
@@ -91,7 +103,8 @@ export const useUpdateTask = ({
       slug: string;
       updates: TablesUpdate<"tasks">;
     }) => {
-      const { data } = await updateTaskAction(slug, updates);
+      const { data, error } = await updateTaskAction(slug, updates);
+      conditionalLog(hookName, { data, error });
       return data;
     },
     onSuccess: data => {
@@ -104,9 +117,11 @@ export const useUpdateTask = ({
       });
     },
     onError: (error: Error) => {
+      const minifiedError = minifyForLog(error);
       toast({
-        title: errorMessage || error.message,
+        title: errorMessage || minifiedError.message,
         description: "Failed to update task",
+        variant: "destructive",
       });
     },
   });
@@ -117,12 +132,14 @@ export const useDeleteTask = ({
   errorMessage,
   successMessage,
 }: HookOptions<TaskResult> = {}) => {
+  const hookName = "useDeleteTask";
   const queryClient = useQueryClient();
   const { toast } = useToastQueue();
 
   return useMutation({
     mutationFn: async (taskSlug: string) => {
-      const { data } = await deleteTaskAction(taskSlug);
+      const { data, error } = await deleteTaskAction(taskSlug);
+      conditionalLog(hookName, { data, error });
       return data;
     },
     onSuccess: () => {
@@ -132,9 +149,11 @@ export const useDeleteTask = ({
       });
     },
     onError: (error: Error) => {
+      const minifiedError = minifyForLog(error);
       toast({
-        title: errorMessage || error.message,
+        title: errorMessage || minifiedError.message,
         description: "Failed to delete task",
+        variant: "destructive",
       });
     },
   });
@@ -145,6 +164,7 @@ export const useReorderTasks = ({
   errorMessage,
   successMessage,
 }: HookOptions<TaskResult> = {}) => {
+  const hookName = "useReorderTasks";
   const queryClient = useQueryClient();
   const { toast } = useToastQueue();
 
@@ -156,7 +176,8 @@ export const useReorderTasks = ({
       projectId: string;
       taskIds: string[];
     }) => {
-      const { data } = await reorderTasksAction(projectId, taskIds);
+      const { data, error } = await reorderTasksAction(projectId, taskIds);
+      conditionalLog(hookName, { data, error });
       return data;
     },
     onSuccess: () => {
@@ -166,9 +187,11 @@ export const useReorderTasks = ({
       });
     },
     onError: (error: Error) => {
+      const minifiedError = minifyForLog(error);
       toast({
-        title: errorMessage || error.message,
+        title: errorMessage || minifiedError.message,
         description: "Failed to reorder tasks",
+        variant: "destructive",
       });
     },
   });

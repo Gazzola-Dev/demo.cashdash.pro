@@ -161,8 +161,8 @@ const TaskPage = ({ projectSlug, taskSlug, initialData }: TaskPageProps) => {
                 </form>
 
                 {/* Comment List */}
-                {comments?.reverse().map(comment => (
-                  <div key={comment.id} className="mb-4">
+                {comments?.reverse().map((comment, index) => (
+                  <div key={`${comment.id}-${index}`} className="mb-4">
                     <div className="flex items-start gap-3">
                       <Avatar className="h-8 w-8">
                         <AvatarImage src={comment.user.avatar_url || ""} />
@@ -234,10 +234,12 @@ const TaskPage = ({ projectSlug, taskSlug, initialData }: TaskPageProps) => {
                         </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="unassigned">Unassigned</SelectItem>
-                        {members.map(member => (
+                        <SelectItem key="unassigned" value="unassigned">
+                          Unassigned
+                        </SelectItem>
+                        {members.map((member, index) => (
                           <SelectItem
-                            key={member.user_id}
+                            key={`${member.user_id}-${index}`}
                             value={member.user_id}
                           >
                             <div className="flex items-center gap-2">
@@ -273,11 +275,21 @@ const TaskPage = ({ projectSlug, taskSlug, initialData }: TaskPageProps) => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="backlog">Backlog</SelectItem>
-                        <SelectItem value="todo">To Do</SelectItem>
-                        <SelectItem value="in_progress">In Progress</SelectItem>
-                        <SelectItem value="in_review">In Review</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem key="backlog" value="backlog">
+                          Backlog
+                        </SelectItem>
+                        <SelectItem key="todo" value="todo">
+                          To Do
+                        </SelectItem>
+                        <SelectItem key="in_progress" value="in_progress">
+                          In Progress
+                        </SelectItem>
+                        <SelectItem key="in_review" value="in_review">
+                          In Review
+                        </SelectItem>
+                        <SelectItem key="completed" value="completed">
+                          Completed
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -295,10 +307,18 @@ const TaskPage = ({ projectSlug, taskSlug, initialData }: TaskPageProps) => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="low">Low</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="high">High</SelectItem>
-                        <SelectItem value="urgent">Urgent</SelectItem>
+                        <SelectItem key="low" value="low">
+                          Low
+                        </SelectItem>
+                        <SelectItem key="medium" value="medium">
+                          Medium
+                        </SelectItem>
+                        <SelectItem key="high" value="high">
+                          High
+                        </SelectItem>
+                        <SelectItem key="urgent" value="urgent">
+                          Urgent
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

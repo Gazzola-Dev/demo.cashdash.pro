@@ -1,3 +1,4 @@
+// log.utils.ts
 export const minifyForLog = (data: any): any => {
   if (data === null || data === undefined) {
     return data;
@@ -56,4 +57,25 @@ export const formatLogOutput = (prefix: string, data: any) => {
     prefix,
     data: minifyForLog(data),
   };
+};
+
+// Helper function to conditionally log data based on environment flags
+export const conditionalLog = (
+  prefix: string,
+  { data, error }: { data?: any; error?: any } = {},
+) => {
+  const isClient = typeof window !== "undefined";
+  const shouldLog = isClient
+    ? process.env.NEXT_PUBLIC_CLIENT_DEBUG === "true"
+    : process.env.SERVER_DEBUG === "true";
+
+  if (!shouldLog) return;
+
+  const output = formatLogOutput(prefix, {
+    data: data ? minifyForLog(data) : undefined,
+    error: error ? minifyForLog(error) : undefined,
+  });
+
+  // Using console.debug for better visibility in dev tools
+  console.debug(JSON.stringify(output, null, 2));
 };

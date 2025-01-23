@@ -1,6 +1,7 @@
 "use server";
 import getSupabaseServerActionClient from "@/clients/action-client";
 import getActionResponse from "@/lib/action.util";
+import { conditionalLog } from "@/lib/log.utils";
 import { ActionResponse } from "@/types/action.types";
 import { TablesInsert, TablesUpdate } from "@/types/database.types";
 import { TaskFilters, TaskResult } from "@/types/task.types";
@@ -8,6 +9,7 @@ import { TaskFilters, TaskResult } from "@/types/task.types";
 export const listTasksAction = async (
   filters?: TaskFilters,
 ): Promise<ActionResponse<TaskResult[]>> => {
+  const actionName = "listTasksAction";
   const supabase = await getSupabaseServerActionClient();
   if (!filters?.projectSlug) throw new Error("Project slug is required");
 
@@ -15,6 +17,8 @@ export const listTasksAction = async (
     const { data: rawData, error } = await supabase.rpc("list_project_tasks", {
       project_slug: filters.projectSlug,
     });
+
+    conditionalLog(actionName, { data: rawData, error });
 
     if (error) {
       throw error;
@@ -50,9 +54,7 @@ export const listTasksAction = async (
         task =>
           task.task.title.toLowerCase().includes(searchLower) ||
           (task.task.description &&
-            JSON.stringify(task.task.description)
-              .toLowerCase()
-              .includes(searchLower)),
+            task.task.description.toLowerCase().includes(searchLower)),
       );
     }
 
@@ -80,6 +82,7 @@ export const listTasksAction = async (
 
     return getActionResponse({ data: filteredData });
   } catch (error) {
+    conditionalLog(actionName, { error });
     return getActionResponse({ error });
   }
 };
@@ -87,12 +90,15 @@ export const listTasksAction = async (
 export const getTaskAction = async (
   taskSlug: string,
 ): Promise<ActionResponse<TaskResult>> => {
+  const actionName = "getTaskAction";
   const supabase = await getSupabaseServerActionClient();
 
   try {
     const { data, error } = await supabase.rpc("get_task_data", {
       task_slug: taskSlug,
     });
+
+    conditionalLog(actionName, { data, error });
 
     if (error) {
       throw error;
@@ -104,6 +110,7 @@ export const getTaskAction = async (
 
     return getActionResponse({ data: data as any as TaskResult });
   } catch (error) {
+    conditionalLog(actionName, { error });
     return getActionResponse({ error });
   }
 };
@@ -111,6 +118,7 @@ export const getTaskAction = async (
 export const createTaskAction = async (
   task: TablesInsert<"tasks">,
 ): Promise<ActionResponse<TaskResult>> => {
+  const actionName = "createTaskAction";
   const supabase = await getSupabaseServerActionClient();
 
   try {
@@ -140,6 +148,8 @@ export const createTaskAction = async (
       )
       .single();
 
+    conditionalLog(actionName, { data, error });
+
     if (error) throw error;
 
     const taskResult: TaskResult = {
@@ -157,6 +167,7 @@ export const createTaskAction = async (
 
     return getActionResponse({ data: taskResult });
   } catch (error) {
+    conditionalLog(actionName, { error });
     return getActionResponse({ error });
   }
 };
@@ -165,6 +176,7 @@ export const updateTaskAction = async (
   taskSlug: string,
   updates: TablesUpdate<"tasks">,
 ): Promise<ActionResponse<TaskResult>> => {
+  const actionName = "updateTaskAction";
   const supabase = await getSupabaseServerActionClient();
 
   try {
@@ -172,6 +184,8 @@ export const updateTaskAction = async (
       task_slug: taskSlug,
       task_updates: updates,
     });
+
+    conditionalLog(actionName, { data, error });
 
     if (error) {
       throw error;
@@ -183,6 +197,7 @@ export const updateTaskAction = async (
 
     return getActionResponse({ data: data as any as TaskResult });
   } catch (error) {
+    conditionalLog(actionName, { error });
     return getActionResponse({ error });
   }
 };
@@ -190,6 +205,7 @@ export const updateTaskAction = async (
 export const deleteTaskAction = async (
   taskSlug: string,
 ): Promise<ActionResponse<null>> => {
+  const actionName = "deleteTaskAction";
   const supabase = await getSupabaseServerActionClient();
 
   try {
@@ -198,10 +214,13 @@ export const deleteTaskAction = async (
       .delete()
       .eq("slug", taskSlug);
 
+    conditionalLog(actionName, { error });
+
     if (error) throw error;
 
     return getActionResponse({ data: null });
   } catch (error) {
+    conditionalLog(actionName, { error });
     return getActionResponse({ error });
   }
 };
@@ -210,6 +229,7 @@ export const reorderTasksAction = async (
   projectId: string,
   taskIds: string[],
 ): Promise<ActionResponse<null>> => {
+  const actionName = "reorderTasksAction";
   const supabase = await getSupabaseServerActionClient();
 
   try {
@@ -217,6 +237,8 @@ export const reorderTasksAction = async (
       .from("tasks")
       .select("id, prefix, slug, title")
       .in("id", taskIds);
+
+    conditionalLog(actionName, { data: existingTasks, error: fetchError });
 
     if (fetchError) throw fetchError;
 
@@ -240,10 +262,13 @@ export const reorderTasksAction = async (
 
     const { error } = await supabase.from("tasks").upsert(updates);
 
+    conditionalLog(actionName, { error });
+
     if (error) throw error;
 
     return getActionResponse({ data: null });
   } catch (error) {
+    conditionalLog(actionName, { error });
     return getActionResponse({ error });
   }
 };
