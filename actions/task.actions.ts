@@ -6,8 +6,6 @@ import { ActionResponse } from "@/types/action.types";
 import { TablesInsert, TablesUpdate } from "@/types/database.types";
 import { TaskFilters, TaskResult } from "@/types/task.types";
 
-// TODO: Fix any types
-
 export const listTasksAction = async (
   filters?: TaskFilters,
 ): Promise<ActionResponse<TaskResult[]>> => {
@@ -163,7 +161,7 @@ export const createTaskAction = async (
           user: Array.isArray(comment.user) ? comment.user[0] : comment.user,
         })) ?? [],
       subtasks: data.subtasks ?? [],
-      task_schedule: data.task_schedule,
+      task_schedule: data.task_schedule ?? null,
       project: data.project,
     };
 
@@ -187,7 +185,7 @@ export const updateTaskAction = async (
       task_updates: updates,
     });
 
-    conditionalLog(actionName, { data, error });
+    conditionalLog(actionName, { data, error }, true, null);
 
     if (error) {
       throw error;
@@ -199,7 +197,7 @@ export const updateTaskAction = async (
 
     return getActionResponse({ data: data as any as TaskResult });
   } catch (error) {
-    conditionalLog(actionName, { error });
+    conditionalLog(actionName, { error }, true, null);
     return getActionResponse({ error });
   }
 };

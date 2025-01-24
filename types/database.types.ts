@@ -508,7 +508,7 @@ export type Database = {
           {
             foreignKeyName: "task_schedule_task_id_fkey"
             columns: ["task_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "tasks"
             referencedColumns: ["id"]
           },
@@ -690,6 +690,13 @@ export type Database = {
           task_updates: Json
         }
         Returns: Json
+      }
+      validate_task_dates: {
+        Args: {
+          start_date: string
+          due_date: string
+        }
+        Returns: boolean
       }
     }
     Enums: {

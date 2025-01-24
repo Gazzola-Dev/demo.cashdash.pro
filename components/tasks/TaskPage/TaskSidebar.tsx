@@ -14,16 +14,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useToastQueue } from "@/hooks/useToastQueue";
 import { cn } from "@/lib/utils";
 import { TaskResult } from "@/types/task.types";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
+import { useMemo } from "react";
 
 interface TaskSidebarProps {
   task: TaskResult["task"];
   members: any[];
   assigneeProfile: TaskResult["assignee_profile"];
-  taskSchedule: TaskResult["task_schedule"];
+  taskSchedule: TaskResult["task_schedule"] | null;
   onUpdateTask: (updates: any) => void;
 }
 
@@ -34,19 +36,86 @@ export function TaskSidebar({
   taskSchedule,
   onUpdateTask,
 }: TaskSidebarProps) {
-  const handleDueDateChange = (date: Date | undefined) => {
+  console.log(taskSchedule);
+  const hookName = "TaskSidebar";
+  const { toast } = useToastQueue();
+
+  // Inside the handleDateChange function in TaskSidebar.tsx
+  const handleDateChange = (
+    date: Date | undefined,
+    type: "start_date" | "due_date",
+  ) => {
     if (!date) return;
 
-    const schedule = taskSchedule?.[0] || {};
-    onUpdateTask({
-      task_schedule: [
-        {
-          ...schedule,
-          due_date: date.toISOString(),
-        },
-      ],
-    });
+    // Set time to noon UTC to avoid timezone issues
+    const utcDate = new Date(
+      Date.UTC(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+        12,
+        0,
+        0,
+        0,
+      ),
+    );
+
+    const scheduleUpdate = {
+      task_schedule: {
+        start_date:
+          type === "start_date"
+            ? utcDate.toISOString()
+            : taskSchedule?.start_date,
+        due_date:
+          type === "due_date" ? utcDate.toISOString() : taskSchedule?.due_date,
+      },
+    };
+
+    // Validate date range
+    const startDate =
+      type === "start_date"
+        ? utcDate
+        : taskSchedule?.start_date
+          ? new Date(taskSchedule.start_date)
+          : null;
+    const dueDate =
+      type === "due_date"
+        ? utcDate
+        : taskSchedule?.due_date
+          ? new Date(taskSchedule.due_date)
+          : null;
+
+    if (startDate && dueDate && startDate > dueDate) {
+      toast({
+        title: "Invalid date range",
+        description:
+          type === "start_date"
+            ? "Start date must be before or equal to due date"
+            : "Due date must be after or equal to start date",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    onUpdateTask(scheduleUpdate);
   };
+
+  const currentStartDate = useMemo(() => {
+    if (!taskSchedule?.start_date) return undefined;
+    const date = new Date(taskSchedule.start_date);
+    return isNaN(date.getTime()) ? undefined : date;
+  }, [taskSchedule?.start_date]);
+
+  const currentDueDate = useMemo(() => {
+    if (!taskSchedule?.due_date) return undefined;
+    const date = new Date(taskSchedule.due_date);
+    return isNaN(date.getTime()) ? undefined : date;
+  }, [taskSchedule?.due_date]);
+
+  // Disable past dates
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const disableBefore = today;
 
   return (
     <Card>
@@ -123,21 +192,11 @@ export function TaskSidebar({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem key="backlog" value="backlog">
-                  Backlog
-                </SelectItem>
-                <SelectItem key="todo" value="todo">
-                  To Do
-                </SelectItem>
-                <SelectItem key="in_progress" value="in_progress">
-                  In Progress
-                </SelectItem>
-                <SelectItem key="in_review" value="in_review">
-                  In Review
-                </SelectItem>
-                <SelectItem key="completed" value="completed">
-                  Completed
-                </SelectItem>
+                <SelectItem value="backlog">Backlog</SelectItem>
+                <SelectItem value="todo">To Do</SelectItem>
+                <SelectItem value="in_progress">In Progress</SelectItem>
+                <SelectItem value="in_review">In Review</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -153,20 +212,51 @@ export function TaskSidebar({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem key="low" value="low">
-                  Low
-                </SelectItem>
-                <SelectItem key="medium" value="medium">
-                  Medium
-                </SelectItem>
-                <SelectItem key="high" value="high">
-                  High
-                </SelectItem>
-                <SelectItem key="urgent" value="urgent">
-                  Urgent
-                </SelectItem>
+                <SelectItem value="low">Low</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="urgent">Urgent</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Created */}
+          <div className="pt-2">
+            <div className="text-sm text-muted-foreground">
+              Created {format(new Date(task.created_at), "MMM d, yyyy")}
+            </div>
+          </div>
+
+          {/* Start Date */}
+          <div>
+            <label className="text-sm font-medium">Start Date</label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !currentStartDate && "text-muted-foreground",
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {currentStartDate ? (
+                    format(currentStartDate, "PPP")
+                  ) : (
+                    <span>Set start date</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={currentStartDate}
+                  onSelect={date => handleDateChange(date, "start_date")}
+                  disabled={date => date < disableBefore}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* Due Date */}
@@ -178,12 +268,12 @@ export function TaskSidebar({
                   variant="outline"
                   className={cn(
                     "w-full justify-start text-left font-normal",
-                    !taskSchedule?.[0]?.due_date && "text-muted-foreground",
+                    !currentDueDate && "text-muted-foreground",
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {taskSchedule?.[0]?.due_date ? (
-                    format(new Date(taskSchedule[0].due_date), "PPP")
+                  {currentDueDate ? (
+                    format(currentDueDate, "PPP")
                   ) : (
                     <span>Set due date</span>
                   )}
@@ -192,12 +282,9 @@ export function TaskSidebar({
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
-                  selected={
-                    taskSchedule?.[0]?.due_date
-                      ? new Date(taskSchedule[0].due_date)
-                      : undefined
-                  }
-                  onSelect={handleDueDateChange}
+                  selected={currentDueDate}
+                  onSelect={date => handleDateChange(date, "due_date")}
+                  disabled={date => date < disableBefore}
                   initialFocus
                 />
               </PopoverContent>
@@ -208,3 +295,5 @@ export function TaskSidebar({
     </Card>
   );
 }
+
+export default TaskSidebar;

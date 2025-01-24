@@ -1,3 +1,4 @@
+// types/task.types.ts
 import { ActionResponse } from "@/types/action.types";
 import { Tables } from "@/types/database.types";
 
@@ -35,12 +36,19 @@ interface Comment extends BaseComment {
   user: Profile;
 }
 
+// Updated TaskSchedule type to explicitly handle timestamps
+export interface TaskScheduleWithTimestamps
+  extends Omit<TaskSchedule, "start_date" | "due_date"> {
+  start_date: string | null; // ISO timestamp string
+  due_date: string | null; // ISO timestamp string
+}
+
 // Task with base data and all relationships
 export interface TaskResult {
   task: Task;
   subtasks: Subtask[];
   comments?: Comment[] | null;
-  task_schedule: TaskSchedule[];
+  task_schedule: TaskScheduleWithTimestamps | null;
   assignee_profile: Profile | null;
   project: Project | null;
 }
