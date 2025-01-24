@@ -1,7 +1,7 @@
 export const conditionalLog = (
   name: string,
   data: any,
-  isServer = true,
+  isServer = false,
   sliceCount: number | null = 10,
 ) => {
   const serverShouldLog = process.env.SERVER_DEBUG === "true" && isServer;
