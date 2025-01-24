@@ -4,16 +4,20 @@ import {
   getLayoutDataAction,
   setCurrentProjectAction,
 } from "@/actions/layout.actions";
+import { conditionalLog } from "@/lib/log.utils";
 import { useLayoutStore } from "@/stores/layout.store";
 import { LayoutData } from "@/types/layout.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToastQueue } from "./useToastQueue";
 
 export const useLayoutData = (initialData?: LayoutData) => {
+  const hookName = "useLayoutData";
+
   return useQuery<LayoutData | null>({
     queryKey: ["layout-data"],
     queryFn: async () => {
-      const { data } = await getLayoutDataAction();
+      const { data, error } = await getLayoutDataAction();
+      conditionalLog(hookName, { data, error }, false);
       return data;
     },
     initialData,
@@ -22,6 +26,7 @@ export const useLayoutData = (initialData?: LayoutData) => {
 };
 
 export const useSetCurrentProject = () => {
+  const hookName = "useSetCurrentProject";
   const queryClient = useQueryClient();
   const { toast } = useToastQueue();
   const setCurrentProject = useLayoutStore(state => state.setCurrentProject);
@@ -29,6 +34,7 @@ export const useSetCurrentProject = () => {
   return useMutation({
     mutationFn: async (projectSlug: string) => {
       const { data, error } = await setCurrentProjectAction(projectSlug);
+      conditionalLog(hookName, { data, error }, false);
       if (error) throw new Error(error);
       return data;
     },
@@ -43,6 +49,7 @@ export const useSetCurrentProject = () => {
       queryClient.invalidateQueries({ queryKey: ["layout-data"] });
     },
     onError: (error: Error) => {
+      conditionalLog(hookName, { error }, false);
       toast({
         title: "Error",
         description: error.message || "Failed to switch project",

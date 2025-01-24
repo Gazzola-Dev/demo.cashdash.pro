@@ -7,6 +7,7 @@ import {
   listProjectsAction,
   updateProjectAction,
 } from "@/actions/project.actions";
+import { conditionalLog } from "@/lib/log.utils";
 import { Tables, TablesInsert, TablesUpdate } from "@/types/database.types";
 import { HookOptions } from "@/types/db.types";
 import { ProjectWithDetails } from "@/types/project.types";
@@ -28,10 +29,13 @@ export const useListProjects = (filters?: {
   sort?: keyof Project;
   order?: "asc" | "desc";
 }) => {
+  const hookName = "useListProjects";
+
   return useQuery({
     queryKey: ["projects", filters],
     queryFn: async () => {
-      const { data } = await listProjectsAction(filters);
+      const { data, error } = await listProjectsAction(filters);
+      conditionalLog(hookName, { data, error }, false);
       return data || [];
     },
   });
@@ -39,10 +43,13 @@ export const useListProjects = (filters?: {
 
 // Get single project hook
 export const useGetProject = (projectId: string) => {
+  const hookName = "useGetProject";
+
   return useQuery({
     queryKey: ["project", projectId],
     queryFn: async () => {
-      const { data } = await getProjectAction(projectId);
+      const { data, error } = await getProjectAction(projectId);
+      conditionalLog(hookName, { data, error }, false);
       return data;
     },
     enabled: !!projectId,
@@ -54,21 +61,25 @@ export const useCreateProject = ({
   errorMessage,
   successMessage,
 }: HookOptions<ProjectWithDetails> = {}) => {
+  const hookName = "useCreateProject";
   const queryClient = useQueryClient();
   const { toast } = useToastQueue();
 
   return useMutation({
     mutationFn: async (project: TablesInsert<"projects">) => {
-      const { data } = await createProjectAction(project);
+      const { data, error } = await createProjectAction(project);
+      conditionalLog(hookName, { data, error }, false);
       return data;
     },
     onSuccess: data => {
+      conditionalLog(hookName, { success: data }, false);
       queryClient.invalidateQueries({ queryKey: ["projects"] });
       toast({
         title: successMessage || SuccessMessages.CREATE,
       });
     },
     onError: (error: Error) => {
+      conditionalLog(hookName, { error }, false);
       toast({
         title: errorMessage || error.message,
         description: "Failed to create project",
@@ -82,6 +93,7 @@ export const useUpdateProject = ({
   errorMessage,
   successMessage,
 }: HookOptions<ProjectWithDetails> = {}) => {
+  const hookName = "useUpdateProject";
   const queryClient = useQueryClient();
   const { toast } = useToastQueue();
 
@@ -93,10 +105,12 @@ export const useUpdateProject = ({
       projectId: string;
       updates: TablesUpdate<"projects">;
     }) => {
-      const { data } = await updateProjectAction(projectId, updates);
+      const { data, error } = await updateProjectAction(projectId, updates);
+      conditionalLog(hookName, { data, error }, false);
       return data;
     },
     onSuccess: data => {
+      conditionalLog(hookName, { success: data }, false);
       queryClient.invalidateQueries({ queryKey: ["projects"] });
       queryClient.invalidateQueries({ queryKey: ["project", data?.id] });
       toast({
@@ -104,6 +118,7 @@ export const useUpdateProject = ({
       });
     },
     onError: (error: Error) => {
+      conditionalLog(hookName, { error }, false);
       toast({
         title: errorMessage || error.message,
         description: "Failed to update project",
@@ -117,12 +132,14 @@ export const useDeleteProject = ({
   errorMessage,
   successMessage,
 }: HookOptions<Project> = {}) => {
+  const hookName = "useDeleteProject";
   const queryClient = useQueryClient();
   const { toast } = useToastQueue();
 
   return useMutation({
     mutationFn: async (projectId: string) => {
-      const { data } = await deleteProjectAction(projectId);
+      const { data, error } = await deleteProjectAction(projectId);
+      conditionalLog(hookName, { data, error }, false);
       return data;
     },
     onSuccess: () => {
@@ -132,6 +149,7 @@ export const useDeleteProject = ({
       });
     },
     onError: (error: Error) => {
+      conditionalLog(hookName, { error }, false);
       toast({
         title: errorMessage || error.message,
         description: "Failed to delete project",

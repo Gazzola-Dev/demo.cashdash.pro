@@ -2,6 +2,7 @@
 
 import getSupabaseServerActionClient from "@/clients/action-client";
 import getActionResponse from "@/lib/action.util";
+import { conditionalLog } from "@/lib/log.utils";
 import { ActionResponse } from "@/types/action.types";
 import { Tables, TablesInsert } from "@/types/database.types";
 import {
@@ -16,6 +17,7 @@ type ProjectInvitation = Tables<"project_invitations">;
 export const inviteMemberAction = async (
   invitation: TablesInsert<"project_invitations">,
 ): Promise<InvitationResponse> => {
+  const actionName = "inviteMemberAction";
   const supabase = await getSupabaseServerActionClient();
 
   try {
@@ -24,6 +26,8 @@ export const inviteMemberAction = async (
       .select("*")
       .eq("project_id", invitation.project_id)
       .single();
+
+    conditionalLog(actionName, { memberData, memberError }, true);
 
     if (memberError || !["owner", "admin"].includes(memberData.role)) {
       throw new Error("Permission denied");
@@ -40,6 +44,8 @@ export const inviteMemberAction = async (
       `,
       )
       .single();
+
+    conditionalLog(actionName, { data, error }, true);
 
     if (error) throw error;
     if (!data.project) throw new Error("Project not found");
@@ -58,6 +64,7 @@ export const inviteMemberAction = async (
 
     return getActionResponse({ data: transformedData });
   } catch (error) {
+    conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });
   }
 };
@@ -65,10 +72,13 @@ export const inviteMemberAction = async (
 export const acceptInvitationAction = async (
   invitationId: string,
 ): Promise<ActionResponse<null>> => {
+  const actionName = "acceptInvitationAction";
   const supabase = await getSupabaseServerActionClient();
 
   try {
-    const { data: userData } = await supabase.auth.getUser();
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    conditionalLog(actionName, { userData, userError }, true);
+
     if (!userData.user) throw new Error("Not authenticated");
 
     const { data: invitation, error: inviteError } = await supabase
@@ -77,6 +87,8 @@ export const acceptInvitationAction = async (
       .eq("id", invitationId)
       .eq("status", "pending")
       .single();
+
+    conditionalLog(actionName, { invitation, inviteError }, true);
 
     if (inviteError || !invitation) throw new Error("Invalid invitation");
 
@@ -88,17 +100,22 @@ export const acceptInvitationAction = async (
         role: invitation.role,
       });
 
+    conditionalLog(actionName, { transactionError }, true);
+
     if (!transactionError) {
-      await supabase
+      const { error: updateError } = await supabase
         .from("project_invitations")
         .update({ status: "accepted" })
         .eq("id", invitationId);
+
+      conditionalLog(actionName, { updateError }, true);
     }
 
     if (transactionError) throw transactionError;
 
     return getActionResponse({ data: null });
   } catch (error) {
+    conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });
   }
 };
@@ -108,6 +125,7 @@ export const updateMemberRoleAction = async (
   userId: string,
   newRole: string,
 ): Promise<MemberResponse> => {
+  const actionName = "updateMemberRoleAction";
   const supabase = await getSupabaseServerActionClient();
 
   try {
@@ -124,6 +142,8 @@ export const updateMemberRoleAction = async (
       `,
       )
       .single();
+
+    conditionalLog(actionName, { data, error }, true);
 
     if (error) throw error;
     if (!data.project) throw new Error("Project not found");
@@ -142,6 +162,7 @@ export const updateMemberRoleAction = async (
 
     return getActionResponse({ data: transformedData });
   } catch (error) {
+    conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });
   }
 };
@@ -150,6 +171,7 @@ export const removeMemberAction = async (
   projectId: string,
   userId: string,
 ): Promise<ActionResponse<null>> => {
+  const actionName = "removeMemberAction";
   const supabase = await getSupabaseServerActionClient();
 
   try {
@@ -158,6 +180,8 @@ export const removeMemberAction = async (
       .select("*")
       .eq("project_id", projectId)
       .eq("role", "owner");
+
+    conditionalLog(actionName, { owners, ownerError }, true);
 
     if (ownerError) throw ownerError;
 
@@ -171,10 +195,13 @@ export const removeMemberAction = async (
       .eq("project_id", projectId)
       .eq("user_id", userId);
 
+    conditionalLog(actionName, { error }, true);
+
     if (error) throw error;
 
     return getActionResponse({ data: null });
   } catch (error) {
+    conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });
   }
 };
@@ -182,6 +209,7 @@ export const removeMemberAction = async (
 export const listMembersAction = async (
   projectId: string,
 ): Promise<MemberListResponse> => {
+  const actionName = "listMembersAction";
   const supabase = await getSupabaseServerActionClient();
 
   try {
@@ -195,6 +223,8 @@ export const listMembersAction = async (
       `,
       )
       .eq("project_id", projectId);
+
+    conditionalLog(actionName, { data, error }, true);
 
     if (error) throw error;
 
@@ -210,6 +240,7 @@ export const listMembersAction = async (
 
     return getActionResponse({ data: transformedData });
   } catch (error) {
+    conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });
   }
 };
@@ -217,6 +248,7 @@ export const listMembersAction = async (
 export const listInvitationsAction = async (
   projectId: string,
 ): Promise<ActionResponse<ProjectInvitation[]>> => {
+  const actionName = "listInvitationsAction";
   const supabase = await getSupabaseServerActionClient();
 
   try {
@@ -232,6 +264,8 @@ export const listInvitationsAction = async (
       .eq("project_id", projectId)
       .eq("status", "pending");
 
+    conditionalLog(actionName, { data, error }, true);
+
     if (error) throw error;
 
     const transformedData = data
@@ -246,6 +280,7 @@ export const listInvitationsAction = async (
 
     return getActionResponse({ data: transformedData });
   } catch (error) {
+    conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });
   }
 };

@@ -1,4 +1,9 @@
-export const conditionalLog = (name: string, data: any, isServer = true) => {
+export const conditionalLog = (
+  name: string,
+  data: any,
+  isServer = true,
+  sliceCount: number | null = 10,
+) => {
   const serverShouldLog = process.env.SERVER_DEBUG === "true" && isServer;
   const clientShouldLog =
     process.env.NEXT_PUBLIC_CLIENT_DEBUG === "true" && !isServer;
@@ -6,13 +11,19 @@ export const conditionalLog = (name: string, data: any, isServer = true) => {
   if (serverShouldLog || clientShouldLog) {
     const formattedData = Object.entries(data)
       .map(([key, value]) => {
-        const valueStr =
+        let valueStr =
           typeof value === "object"
             ? JSON.stringify(value, null, 0).replace(/[{}\[\]]/g, "")
-            : value;
+            : String(value);
+
+        if (sliceCount !== null) {
+          valueStr = valueStr.slice(0, sliceCount);
+        }
+
         return `${key}:${valueStr}`;
       })
       .join(", ");
+
     console.log(
       `[${name}]${isServer ? "[SERVER]" : "[CLIENT]"}`,
       formattedData,

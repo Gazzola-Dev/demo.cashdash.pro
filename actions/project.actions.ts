@@ -2,6 +2,7 @@
 
 import getSupabaseServerActionClient from "@/clients/action-client";
 import getActionResponse from "@/lib/action.util";
+import { conditionalLog } from "@/lib/log.utils";
 import { ActionResponse } from "@/types/action.types";
 import { Tables, TablesInsert, TablesUpdate } from "@/types/database.types";
 import { ProjectListResponse, ProjectWithDetails } from "@/types/project.types";
@@ -11,10 +12,13 @@ type Project = Tables<"projects">;
 export const createProjectAction = async (
   project: TablesInsert<"projects">,
 ): Promise<ActionResponse<ProjectWithDetails>> => {
+  const actionName = "createProjectAction";
   const supabase = await getSupabaseServerActionClient();
 
   try {
-    const { data: userData } = await supabase.auth.getUser();
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    conditionalLog(actionName, { userData, userError }, true);
+
     if (!userData.user) throw new Error("User not authenticated");
 
     const { data: projectData, error: projectError } = await supabase.rpc(
@@ -25,6 +29,7 @@ export const createProjectAction = async (
       },
     );
 
+    conditionalLog(actionName, { projectData, projectError }, true);
     if (projectError) throw projectError;
 
     const { data: fullProject, error: fetchError } = await supabase
@@ -48,6 +53,7 @@ export const createProjectAction = async (
       .eq("id", projectData.id)
       .single();
 
+    conditionalLog(actionName, { fullProject, fetchError }, true);
     if (fetchError) throw fetchError;
 
     // Transform the profile arrays into single objects
@@ -68,10 +74,12 @@ export const createProjectAction = async (
       .update({ current_project_id: projectData.id })
       .eq("id", userData.user.id);
 
+    conditionalLog(actionName, { profileError }, true);
     if (profileError) throw profileError;
 
     return getActionResponse({ data: transformedProject });
   } catch (error) {
+    conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });
   }
 };
@@ -80,6 +88,7 @@ export const updateProjectAction = async (
   projectId: string,
   updates: TablesUpdate<"projects">,
 ): Promise<ActionResponse<ProjectWithDetails>> => {
+  const actionName = "updateProjectAction";
   const supabase = await getSupabaseServerActionClient();
 
   try {
@@ -105,6 +114,8 @@ export const updateProjectAction = async (
       )
       .single();
 
+    conditionalLog(actionName, { data, error }, true);
+
     if (error) throw error;
 
     // Transform the profile arrays into single objects
@@ -122,6 +133,7 @@ export const updateProjectAction = async (
 
     return getActionResponse({ data: transformedProject });
   } catch (error) {
+    conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });
   }
 };
@@ -129,6 +141,7 @@ export const updateProjectAction = async (
 export const deleteProjectAction = async (
   projectId: string,
 ): Promise<ActionResponse<null>> => {
+  const actionName = "deleteProjectAction";
   const supabase = await getSupabaseServerActionClient();
 
   try {
@@ -139,6 +152,8 @@ export const deleteProjectAction = async (
       .eq("role", "owner")
       .single();
 
+    conditionalLog(actionName, { memberData, memberError }, true);
+
     if (memberError || !memberData) {
       throw new Error("Permission denied");
     }
@@ -148,10 +163,13 @@ export const deleteProjectAction = async (
       .delete()
       .eq("id", projectId);
 
+    conditionalLog(actionName, { error }, true);
+
     if (error) throw error;
 
     return getActionResponse({ data: null });
   } catch (error) {
+    conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });
   }
 };
@@ -159,6 +177,7 @@ export const deleteProjectAction = async (
 export const getProjectAction = async (
   projectId: string,
 ): Promise<ActionResponse<ProjectWithDetails>> => {
+  const actionName = "getProjectAction";
   const supabase = await getSupabaseServerActionClient();
 
   try {
@@ -183,6 +202,8 @@ export const getProjectAction = async (
       .eq("id", projectId)
       .single();
 
+    conditionalLog(actionName, { data, error }, true);
+
     if (error) throw error;
 
     // Transform the profile arrays into single objects
@@ -200,6 +221,7 @@ export const getProjectAction = async (
 
     return getActionResponse({ data: transformedProject });
   } catch (error) {
+    conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });
   }
 };
@@ -210,6 +232,7 @@ export const listProjectsAction = async (filters?: {
   sort?: keyof Project;
   order?: "asc" | "desc";
 }): Promise<ProjectListResponse> => {
+  const actionName = "listProjectsAction";
   const supabase = await getSupabaseServerActionClient();
 
   try {
@@ -244,6 +267,8 @@ export const listProjectsAction = async (filters?: {
 
     const { data, error } = await query;
 
+    conditionalLog(actionName, { data, error }, true);
+
     if (error) throw error;
 
     // Transform the profile arrays into single objects for each project
@@ -261,6 +286,7 @@ export const listProjectsAction = async (filters?: {
 
     return getActionResponse({ data: transformedProjects });
   } catch (error) {
+    conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });
   }
 };

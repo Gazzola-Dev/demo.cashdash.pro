@@ -2,6 +2,7 @@
 
 import getSupabaseServerActionClient from "@/clients/action-client";
 import getActionResponse from "@/lib/action.util";
+import { conditionalLog } from "@/lib/log.utils";
 import { ActionResponse } from "@/types/action.types";
 import { AuthFormType } from "@/types/auth.types";
 import { UserResponse, UserWithProfile } from "@/types/user.types";
@@ -13,6 +14,7 @@ export const signInWithEmailAction = async ({
   email: string;
   password: string;
 }): Promise<UserResponse> => {
+  const actionName = "signInWithEmailAction";
   const supabase = await getSupabaseServerActionClient();
 
   try {
@@ -21,8 +23,9 @@ export const signInWithEmailAction = async ({
       password,
     });
 
-    if (error) throw error;
+    conditionalLog(actionName, { data, error }, true);
 
+    if (error) throw error;
     if (!data.user) throw new Error("No user returned from sign in");
 
     // Get user profile
@@ -32,6 +35,7 @@ export const signInWithEmailAction = async ({
       .eq("id", data.user.id)
       .single();
 
+    conditionalLog(actionName, { profile, profileError }, true);
     if (profileError) throw profileError;
 
     const userWithProfile: UserWithProfile = {
@@ -41,6 +45,7 @@ export const signInWithEmailAction = async ({
 
     return getActionResponse({ data: userWithProfile });
   } catch (error) {
+    conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });
   }
 };
@@ -52,6 +57,7 @@ export const signUpWithEmailAction = async ({
   email: string;
   password: string;
 }): Promise<UserResponse> => {
+  const actionName = "signUpWithEmailAction";
   const supabase = await getSupabaseServerActionClient();
 
   try {
@@ -63,8 +69,9 @@ export const signUpWithEmailAction = async ({
       },
     });
 
-    if (error) throw error;
+    conditionalLog(actionName, { data, error }, true);
 
+    if (error) throw error;
     if (!data.user) throw new Error("No user returned from sign up");
 
     // Profile creation is handled by database trigger
@@ -74,6 +81,7 @@ export const signUpWithEmailAction = async ({
       .eq("id", data.user.id)
       .single();
 
+    conditionalLog(actionName, { profile, profileError }, true);
     if (profileError) throw profileError;
 
     const userWithProfile: UserWithProfile = {
@@ -83,6 +91,7 @@ export const signUpWithEmailAction = async ({
 
     return getActionResponse({ data: userWithProfile });
   } catch (error) {
+    conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });
   }
 };
@@ -90,6 +99,7 @@ export const signUpWithEmailAction = async ({
 export const forgotPasswordAction = async (
   email: string,
 ): Promise<ActionResponse<null>> => {
+  const actionName = "forgotPasswordAction";
   const supabase = await getSupabaseServerActionClient();
 
   try {
@@ -97,10 +107,12 @@ export const forgotPasswordAction = async (
       redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/${AuthFormType.ResetPassword}`,
     });
 
+    conditionalLog(actionName, { error }, true);
     if (error) throw error;
 
     return getActionResponse({ data: null });
   } catch (error) {
+    conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });
   }
 };
@@ -108,6 +120,7 @@ export const forgotPasswordAction = async (
 export const resetPasswordAction = async (
   password: string,
 ): Promise<ActionResponse<null>> => {
+  const actionName = "resetPasswordAction";
   const supabase = await getSupabaseServerActionClient();
 
   try {
@@ -115,10 +128,12 @@ export const resetPasswordAction = async (
       password,
     });
 
+    conditionalLog(actionName, { error }, true);
     if (error) throw error;
 
     return getActionResponse({ data: null });
   } catch (error) {
+    conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });
   }
 };
@@ -126,6 +141,7 @@ export const resetPasswordAction = async (
 export const verifyEmailAction = async (
   token: string,
 ): Promise<ActionResponse<null>> => {
+  const actionName = "verifyEmailAction";
   const supabase = await getSupabaseServerActionClient();
 
   try {
@@ -134,10 +150,12 @@ export const verifyEmailAction = async (
       type: "email",
     });
 
+    conditionalLog(actionName, { error }, true);
     if (error) throw error;
 
     return getActionResponse({ data: null });
   } catch (error) {
+    conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });
   }
 };

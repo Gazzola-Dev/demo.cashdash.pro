@@ -9,6 +9,27 @@ type Subtask = Tables<"subtasks">;
 type BaseComment = Tables<"comments">;
 type TaskSchedule = Tables<"task_schedule">;
 
+// Required project type ensures all project fields are non-null
+export interface RequiredProject extends Project {
+  id: NonNullable<Project["id"]>;
+  name: NonNullable<Project["name"]>;
+  description: Project["description"];
+  status: NonNullable<Project["status"]>;
+  slug: NonNullable<Project["slug"]>;
+  prefix: NonNullable<Project["prefix"]>;
+  github_repo_url: Project["github_repo_url"];
+  github_owner: Project["github_owner"];
+  github_repo: Project["github_repo"];
+  created_at: NonNullable<Project["created_at"]>;
+  updated_at: NonNullable<Project["updated_at"]>;
+}
+
+// Task with project relationship
+export interface TaskWithProject extends Task {
+  project: RequiredProject;
+  ordinal_id: NonNullable<Task["ordinal_id"]>;
+}
+
 // Extended Comment type that includes user profile
 interface Comment extends BaseComment {
   user: Profile;

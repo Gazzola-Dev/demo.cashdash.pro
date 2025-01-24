@@ -3,6 +3,7 @@
 import getSupabaseServerActionClient from "@/clients/action-client";
 import configuration from "@/configuration";
 import getActionResponse from "@/lib/action.util";
+import { conditionalLog } from "@/lib/log.utils";
 import { ActionResponse } from "@/types/action.types";
 import { LayoutData, LayoutTask } from "@/types/layout.types";
 import { ProjectMember } from "@/types/project.types";
@@ -11,6 +12,7 @@ import { RequiredProject, TaskWithProject } from "@/types/task.types";
 export const getLayoutDataAction = async (): Promise<
   ActionResponse<LayoutData>
 > => {
+  const actionName = "getLayoutDataAction";
   const supabase = await getSupabaseServerActionClient();
 
   try {
@@ -19,6 +21,8 @@ export const getLayoutDataAction = async (): Promise<
       data: { user },
       error: userError,
     } = await supabase.auth.getUser();
+
+    conditionalLog(actionName, { user, userError }, true);
 
     if (!user || userError) throw userError || new Error("Not authenticated");
 
@@ -50,8 +54,9 @@ export const getLayoutDataAction = async (): Promise<
       .eq("user_id", user.id)
       .order("projects(updated_at)", { ascending: false });
 
+    conditionalLog(actionName, { memberships, membershipError }, true);
+
     if (membershipError) {
-      console.error("Error fetching memberships:", membershipError);
       throw membershipError;
     }
 
@@ -62,8 +67,9 @@ export const getLayoutDataAction = async (): Promise<
       .eq("id", user.id)
       .single();
 
+    conditionalLog(actionName, { profile, profileError }, true);
+
     if (profileError) {
-      console.error("Error fetching profile:", profileError);
       throw profileError;
     }
 
@@ -124,8 +130,9 @@ export const getLayoutDataAction = async (): Promise<
         .order("updated_at", { ascending: false })
         .limit(5);
 
+      conditionalLog(actionName, { recentTasksData, tasksError }, true);
+
       if (tasksError) {
-        console.error("Error fetching tasks:", tasksError);
         throw tasksError;
       }
 
@@ -171,8 +178,9 @@ export const getLayoutDataAction = async (): Promise<
         .order("created_at", { ascending: false })
         .limit(5);
 
+      conditionalLog(actionName, { priorityTasksData, priorityError }, true);
+
       if (priorityError) {
-        console.error("Error fetching priority tasks:", priorityError);
         throw priorityError;
       }
 
@@ -231,7 +239,7 @@ export const getLayoutDataAction = async (): Promise<
 
     return getActionResponse({ data: layoutData });
   } catch (error) {
-    console.error("Error in getLayoutDataAction:", error);
+    conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });
   }
 };
@@ -239,10 +247,14 @@ export const getLayoutDataAction = async (): Promise<
 export const setCurrentProjectAction = async (
   projectId: string,
 ): Promise<ActionResponse<null>> => {
+  const actionName = "setCurrentProjectAction";
   const supabase = await getSupabaseServerActionClient();
 
   try {
-    const { data: userData } = await supabase.auth.getUser();
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+
+    conditionalLog(actionName, { userData, userError }, true);
+
     if (!userData.user) {
       throw new Error("Not authenticated");
     }
@@ -252,14 +264,15 @@ export const setCurrentProjectAction = async (
       .update({ current_project_id: projectId })
       .eq("id", userData.user.id);
 
+    conditionalLog(actionName, { error }, true);
+
     if (error) {
-      console.error("Error updating current project:", error);
       throw error;
     }
 
     return getActionResponse({ data: null });
   } catch (error) {
-    console.error("Error in setCurrentProjectAction:", error);
+    conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });
   }
 };

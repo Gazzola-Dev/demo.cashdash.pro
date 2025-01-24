@@ -1,4 +1,3 @@
-// member.hooks.ts
 "use client";
 
 import {
@@ -9,6 +8,7 @@ import {
   removeMemberAction,
   updateMemberRoleAction,
 } from "@/actions/member.actions";
+import { conditionalLog } from "@/lib/log.utils";
 import { Tables, TablesInsert } from "@/types/database.types";
 import { HookOptions } from "@/types/db.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -26,10 +26,13 @@ enum SuccessMessages {
 
 // List members hook
 export const useListMembers = (projectId: string) => {
+  const hookName = "useListMembers";
+
   return useQuery({
     queryKey: ["project-members", projectId],
     queryFn: async () => {
-      const { data } = await listMembersAction(projectId);
+      const { data, error } = await listMembersAction(projectId);
+      conditionalLog(hookName, { data, error }, false);
       return data || [];
     },
   });
@@ -37,10 +40,13 @@ export const useListMembers = (projectId: string) => {
 
 // List invitations hook
 export const useListInvitations = (projectId: string) => {
+  const hookName = "useListInvitations";
+
   return useQuery({
     queryKey: ["project-invitations", projectId],
     queryFn: async () => {
-      const { data } = await listInvitationsAction(projectId);
+      const { data, error } = await listInvitationsAction(projectId);
+      conditionalLog(hookName, { data, error }, false);
       return data || [];
     },
   });
@@ -51,21 +57,25 @@ export const useInviteMember = ({
   errorMessage,
   successMessage,
 }: HookOptions<ProjectInvitation> = {}) => {
+  const hookName = "useInviteMember";
   const queryClient = useQueryClient();
   const { toast } = useToastQueue();
 
   return useMutation({
     mutationFn: async (invitation: TablesInsert<"project_invitations">) => {
-      const { data } = await inviteMemberAction(invitation);
+      const { data, error } = await inviteMemberAction(invitation);
+      conditionalLog(hookName, { data, error }, false);
       return data;
     },
     onSuccess: data => {
+      conditionalLog(hookName, { success: data }, false);
       queryClient.invalidateQueries({ queryKey: ["project-invitations"] });
       toast({
         title: successMessage || SuccessMessages.INVITE,
       });
     },
     onError: (error: Error) => {
+      conditionalLog(hookName, { error }, false);
       toast({
         title: errorMessage || error.message,
         description: "Failed to send invitation",
@@ -79,12 +89,14 @@ export const useAcceptInvitation = ({
   errorMessage,
   successMessage,
 }: HookOptions<ProjectInvitation> = {}) => {
+  const hookName = "useAcceptInvitation";
   const queryClient = useQueryClient();
   const { toast } = useToastQueue();
 
   return useMutation({
     mutationFn: async (invitationId: string) => {
-      const { data } = await acceptInvitationAction(invitationId);
+      const { data, error } = await acceptInvitationAction(invitationId);
+      conditionalLog(hookName, { data, error }, false);
       return data;
     },
     onSuccess: () => {
@@ -95,6 +107,7 @@ export const useAcceptInvitation = ({
       });
     },
     onError: (error: Error) => {
+      conditionalLog(hookName, { error }, false);
       toast({
         title: errorMessage || error.message,
         description: "Failed to accept invitation",
@@ -108,6 +121,7 @@ export const useUpdateMemberRole = ({
   errorMessage,
   successMessage,
 }: HookOptions<ProjectMember> = {}) => {
+  const hookName = "useUpdateMemberRole";
   const queryClient = useQueryClient();
   const { toast } = useToastQueue();
 
@@ -121,7 +135,12 @@ export const useUpdateMemberRole = ({
       userId: string;
       role: string;
     }) => {
-      const { data } = await updateMemberRoleAction(projectId, userId, role);
+      const { data, error } = await updateMemberRoleAction(
+        projectId,
+        userId,
+        role,
+      );
+      conditionalLog(hookName, { data, error }, false);
       return data;
     },
     onSuccess: () => {
@@ -131,6 +150,7 @@ export const useUpdateMemberRole = ({
       });
     },
     onError: (error: Error) => {
+      conditionalLog(hookName, { error }, false);
       toast({
         title: errorMessage || error.message,
         description: "Failed to update member role",
@@ -144,6 +164,7 @@ export const useRemoveMember = ({
   errorMessage,
   successMessage,
 }: HookOptions<ProjectMember> = {}) => {
+  const hookName = "useRemoveMember";
   const queryClient = useQueryClient();
   const { toast } = useToastQueue();
 
@@ -155,7 +176,8 @@ export const useRemoveMember = ({
       projectId: string;
       userId: string;
     }) => {
-      const { data } = await removeMemberAction(projectId, userId);
+      const { data, error } = await removeMemberAction(projectId, userId);
+      conditionalLog(hookName, { data, error }, false);
       return data;
     },
     onSuccess: () => {
@@ -165,6 +187,7 @@ export const useRemoveMember = ({
       });
     },
     onError: (error: Error) => {
+      conditionalLog(hookName, { error }, false);
       toast({
         title: errorMessage || error.message,
         description: "Failed to remove member",
