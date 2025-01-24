@@ -207,40 +207,37 @@ export const removeMemberAction = async (
 };
 
 export const listMembersAction = async (
-  projectId: string,
+  projectSlug: string,
 ): Promise<MemberListResponse> => {
   const actionName = "listMembersAction";
   const supabase = await getSupabaseServerActionClient();
 
   try {
-    const { data, error } = await supabase
-      .from("project_members")
-      .select(
-        `
-        *,
-        profile:profiles!user_id(*),
-        project:projects(*)
-      `,
-      )
-      .eq("project_id", projectId);
+    const { data, error } = await supabase.rpc("list_project_members", {
+      project_slug: projectSlug,
+    });
 
-    conditionalLog(actionName, { data, error }, true);
+    conditionalLog(actionName, { data, error }, true, null);
 
-    if (error) throw error;
+    if (error) {
+      throw error;
+    }
 
-    const transformedData = data
-      .filter(member => member.project && member.profile)
-      .map(member => ({
-        ...member,
-        profile: Array.isArray(member.profile)
-          ? member.profile[0]
-          : member.profile,
-        project: member.project!,
+    if (!data) {
+      throw new Error("Members not found");
+    }
+
+    const transformedData = (data as any[])
+      .filter(result => result.member && result.profile)
+      .map(result => ({
+        ...result.member,
+        project: result.project,
+        profile: result.profile,
       }));
 
     return getActionResponse({ data: transformedData });
   } catch (error) {
-    conditionalLog(actionName, { error }, true);
+    conditionalLog(actionName, { error });
     return getActionResponse({ error });
   }
 };

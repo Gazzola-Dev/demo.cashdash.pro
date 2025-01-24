@@ -25,13 +25,13 @@ enum SuccessMessages {
 }
 
 // List members hook
-export const useListMembers = (projectId: string) => {
+export const useListMembers = (projectSlug: string) => {
   const hookName = "useListMembers";
 
   return useQuery({
-    queryKey: ["project-members", projectId],
+    queryKey: ["project-members", projectSlug],
     queryFn: async () => {
-      const { data, error } = await listMembersAction(projectId);
+      const { data, error } = await listMembersAction(projectSlug);
       conditionalLog(hookName, { data, error }, false);
       return data || [];
     },

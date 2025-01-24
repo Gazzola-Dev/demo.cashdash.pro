@@ -660,6 +660,12 @@ export type Database = {
         }
         Returns: Json
       }
+      list_project_members: {
+        Args: {
+          project_slug: string
+        }
+        Returns: Json[]
+      }
       list_project_tasks: {
         Args: {
           project_slug: string

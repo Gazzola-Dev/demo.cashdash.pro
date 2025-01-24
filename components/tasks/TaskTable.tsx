@@ -78,7 +78,7 @@ const TaskTable = ({ projectId, projectSlug }: TaskTableProps) => {
   const [debouncedFilters] = useDebounce(rawFilters, 300);
 
   const { data: tasks = [] } = useListTasks(debouncedFilters);
-  const { data: members = [] } = useListMembers(projectId);
+  const { data: members = [] } = useListMembers(projectSlug);
 
   const handleRowClick = React.useCallback(
     (task: TaskResult, event: React.MouseEvent<HTMLTableRowElement>) => {

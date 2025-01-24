@@ -16,9 +16,7 @@ interface TaskPageProps {
 
 const TaskPage = ({ projectSlug, taskSlug, initialData }: TaskPageProps) => {
   const { data: taskData } = useGetTask(taskSlug, { initialData });
-  const { data: members = [] } = useListMembers(
-    taskData?.task.project_id || "",
-  );
+  const { data: members = [] } = useListMembers(projectSlug);
   const { mutate: updateTask } = useUpdateTask();
 
   if (!taskData) {
