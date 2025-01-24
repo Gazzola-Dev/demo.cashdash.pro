@@ -102,6 +102,21 @@ async function combineMigrations(migrationsDir, outputPath) {
   );
 }
 
+async function processCombinedFiles(combinedFilesDir, dest) {
+  const entries = await fs.readdir(combinedFilesDir, { withFileTypes: true });
+
+  for (const entry of entries) {
+    if (entry.name === ".DS_Store") continue;
+
+    const srcPath = path.join(combinedFilesDir, entry.name);
+    if (entry.isFile()) {
+      await fs.copyFile(srcPath, path.join(dest, entry.name));
+    } else if (entry.isDirectory()) {
+      await processCombinedFiles(srcPath, dest);
+    }
+  }
+}
+
 async function main() {
   // Empty the output directory if it exists
   await emptyDirectory(OUTPUT_DIR);
@@ -115,6 +130,11 @@ async function main() {
   }
   if (await exists("components")) {
     await processDirectory("components", OUTPUT_DIR);
+  }
+
+  // Process combinedFiles directory if it exists
+  if (await exists("combinedFiles")) {
+    await processCombinedFiles("combinedFiles", OUTPUT_DIR);
   }
 
   // Directories to copy (process all files in these directories)
