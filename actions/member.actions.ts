@@ -217,7 +217,7 @@ export const listMembersAction = async (
       project_slug: projectSlug,
     });
 
-    conditionalLog(actionName, { data, error }, true, null);
+    conditionalLog(actionName, { data, error }, true);
 
     if (error) {
       throw error;
