@@ -4,7 +4,7 @@ import { TaskComments } from "@/components/tasks/TaskPage/TaskComments";
 import { TaskDescription } from "@/components/tasks/TaskPage/TaskDescription";
 import { TaskHeader } from "@/components/tasks/TaskPage/TaskHeader";
 import { TaskSidebar } from "@/components/tasks/TaskPage/TaskSidebar";
-import { useCreateComment } from "@/hooks/comment.hooks";
+import { useCreateComment, useUpdateComment } from "@/hooks/comment.hooks";
 import { useListMembers } from "@/hooks/member.hooks";
 import { useGetTask, useUpdateTask } from "@/hooks/task.hooks";
 import { TaskResult } from "@/types/task.types";
@@ -20,6 +20,8 @@ const TaskPage = ({ projectSlug, taskSlug, initialData }: TaskPageProps) => {
   const { data: members = [] } = useListMembers(projectSlug);
   const { mutate: updateTask } = useUpdateTask();
   const { mutate: createComment } = useCreateComment(taskData?.task?.id);
+  const { mutate: updateComment } = useUpdateComment();
+
   if (!taskData) {
     return <div className="p-8">Loading...</div>;
   }
@@ -39,6 +41,10 @@ const TaskPage = ({ projectSlug, taskSlug, initialData }: TaskPageProps) => {
     });
   };
 
+  const handleSaveTitle = (title: string) => {
+    handleUpdateTask({ title });
+  };
+
   const handleSaveDescription = (description: string) => {
     handleUpdateTask({ description });
   };
@@ -46,13 +52,18 @@ const TaskPage = ({ projectSlug, taskSlug, initialData }: TaskPageProps) => {
   const handleCommentSubmit = (comment: string) => {
     createComment(comment);
   };
+
+  const handleUpdateComment = (commentId: string, content: string) => {
+    updateComment({ id: commentId, content });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto pt-2 pb-6 px-6">
         <div className="grid grid-cols-3 gap-6">
           {/* Main Content */}
           <div className="col-span-2">
-            <TaskHeader task={task} />
+            <TaskHeader task={task} onSave={handleSaveTitle} />
             <TaskDescription
               description={task.description || ""}
               onSave={handleSaveDescription}
@@ -60,6 +71,7 @@ const TaskPage = ({ projectSlug, taskSlug, initialData }: TaskPageProps) => {
             <TaskComments
               comments={comments}
               onSubmitComment={handleCommentSubmit}
+              onUpdateComment={handleUpdateComment}
             />
           </div>
 

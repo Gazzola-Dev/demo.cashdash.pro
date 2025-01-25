@@ -693,6 +693,14 @@ export type Database = {
         }
         Returns: Json
       }
+      update_comment_data: {
+        Args: {
+          comment_id: string
+          comment_content: string
+          user_id: string
+        }
+        Returns: Json
+      }
       update_task_data: {
         Args: {
           task_slug: string
