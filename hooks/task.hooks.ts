@@ -2,6 +2,7 @@
 import {
   createSubtaskAction,
   createTaskAction,
+  deleteSubtaskAction,
   deleteTaskAction,
   getTaskAction,
   listTasksAction,
@@ -38,7 +39,7 @@ export const useGetTask = (
     queryKey: ["task", taskSlug],
     queryFn: async () => {
       const { data, error } = await getTaskAction(taskSlug);
-      conditionalLog(hookName, { data, error }, false, null);
+      conditionalLog(hookName, { data, error }, false);
       if (!data) throw new Error("Task not found");
       return data;
     },
@@ -112,11 +113,11 @@ export const useUpdateTask = ({
       updates: TaskUpdateWithSubtasks;
     }) => {
       const { data, error } = await updateTaskAction(slug, updates);
-      conditionalLog(hookName, { data, error }, false, null);
+      conditionalLog(hookName, { data, error }, false);
       return data;
     },
     onSuccess: data => {
-      conditionalLog(hookName, { success: data }, false, null);
+      conditionalLog(hookName, { success: data }, false);
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       if (data) {
         queryClient.invalidateQueries({ queryKey: ["task", data.task.slug] });
@@ -238,6 +239,38 @@ export const useCreateSubtask = ({
       toast({
         title: errorMessage || getErrorMessage(minifiedError),
         description: "Failed to create subtask",
+        variant: "destructive",
+      });
+    },
+  });
+};
+
+export const useDeleteSubtask = ({
+  errorMessage,
+  successMessage,
+}: HookOptions<TaskResult> = {}) => {
+  const hookName = "useDeleteSubtask";
+  const queryClient = useQueryClient();
+  const { toast } = useToastQueue();
+
+  return useMutation({
+    mutationFn: async (subtaskId: string) => {
+      const { data, error } = await deleteSubtaskAction(subtaskId);
+      conditionalLog(hookName, { data, error });
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["task"] });
+      toast({
+        title: successMessage || "Subtask deleted successfully",
+      });
+    },
+    onError: (error: Error) => {
+      const minifiedError = minifyForLog(error);
+      conditionalLog(hookName, { error: minifiedError });
+      toast({
+        title: errorMessage || getErrorMessage(minifiedError),
+        description: "Failed to delete subtask",
         variant: "destructive",
       });
     },

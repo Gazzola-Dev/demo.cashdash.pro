@@ -338,3 +338,25 @@ export const createSubtaskAction = async (
     return getActionResponse({ error });
   }
 };
+
+export const deleteSubtaskAction = async (
+  subtaskId: string,
+): Promise<ActionResponse<null>> => {
+  const actionName = "deleteSubtaskAction";
+  const supabase = await getSupabaseServerActionClient();
+
+  try {
+    const { error } = await supabase
+      .from("subtasks")
+      .delete()
+      .eq("id", subtaskId);
+
+    conditionalLog(actionName, { error });
+    if (error) throw error;
+
+    return getActionResponse({ data: null });
+  } catch (error) {
+    conditionalLog(actionName, { error });
+    return getActionResponse({ error });
+  }
+};

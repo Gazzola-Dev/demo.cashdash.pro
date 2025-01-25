@@ -6,7 +6,11 @@ import { TaskHeader } from "@/components/tasks/TaskPage/TaskHeader";
 import { TaskSidebar } from "@/components/tasks/TaskPage/TaskSidebar";
 import { useCreateComment, useUpdateComment } from "@/hooks/comment.hooks";
 import { useListMembers } from "@/hooks/member.hooks";
-import { useGetTask, useUpdateTask } from "@/hooks/task.hooks";
+import {
+  useDeleteSubtask,
+  useGetTask,
+  useUpdateTask,
+} from "@/hooks/task.hooks";
 import { Tables } from "@/types/database.types";
 import { TaskResult } from "@/types/task.types";
 
@@ -22,6 +26,7 @@ const TaskPage = ({ projectSlug, taskSlug, initialData }: TaskPageProps) => {
   const { mutate: updateTask } = useUpdateTask();
   const { mutate: createComment } = useCreateComment(taskData?.task?.id);
   const { mutate: updateComment } = useUpdateComment();
+  const { mutate: deleteSubtask } = useDeleteSubtask();
 
   if (!taskData) {
     return <div className="p-8">Loading...</div>;
@@ -47,6 +52,18 @@ const TaskPage = ({ projectSlug, taskSlug, initialData }: TaskPageProps) => {
     subtaskId: string,
     updates: Partial<Tables<"subtasks">>,
   ) => {
+    const updatedTitle = updates.title?.trim();
+
+    // If the title is empty and it's not the last subtask, delete it
+    if (
+      "title" in updates &&
+      !updatedTitle &&
+      subtasks.findIndex(st => st.id === subtaskId) < subtasks.length - 1
+    ) {
+      deleteSubtask(subtaskId);
+      return;
+    }
+
     updateTask({
       slug: task.slug,
       updates: {
@@ -77,7 +94,6 @@ const TaskPage = ({ projectSlug, taskSlug, initialData }: TaskPageProps) => {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto pt-2 pb-6 px-6">
         <div className="grid grid-cols-3 gap-6">
-          {/* Main Content */}
           <div className="col-span-2">
             <TaskHeader task={task} onSave={handleSaveTitle} />
             <TaskDescription
@@ -91,7 +107,6 @@ const TaskPage = ({ projectSlug, taskSlug, initialData }: TaskPageProps) => {
             />
           </div>
 
-          {/* Sidebar */}
           <div className="space-y-6">
             <TaskSidebar
               task={task}

@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { useCreateSubtask } from "@/hooks/task.hooks";
+import { cn } from "@/lib/utils";
 import { Tables } from "@/types/database.types";
 import { TaskResult } from "@/types/task.types";
 import { Edit2, Plus, Save } from "lucide-react";
@@ -32,7 +33,7 @@ export function SubtaskSidebar({
 
   const handleSave = (subtask: Subtask) => {
     if (editedTitle.trim() !== subtask.title) {
-      onUpdateSubtask(subtask.id, { title: editedTitle.trim() });
+      onUpdateSubtask(subtask.id, { title: editedTitle });
     }
     setEditingId(null);
   };
@@ -67,7 +68,7 @@ export function SubtaskSidebar({
         <CardTitle>Subtasks</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {subtasks.map(subtask => (
+        {subtasks.map((subtask, index) => (
           <div key={subtask.id} className="flex items-center gap-2">
             <Button
               variant="ghost"
@@ -109,9 +110,14 @@ export function SubtaskSidebar({
               ) : (
                 <label
                   htmlFor={subtask.id}
-                  className="text-sm cursor-pointer flex-1"
+                  className={cn(
+                    "text-sm cursor-pointer flex-1",
+                    !subtask.title.trim() &&
+                      index === subtasks.length - 1 &&
+                      "italic text-gray-700",
+                  )}
                 >
-                  {subtask.title || "New subtask"}
+                  {subtask.title.trim() || "New subtask"}
                 </label>
               )}
             </div>
