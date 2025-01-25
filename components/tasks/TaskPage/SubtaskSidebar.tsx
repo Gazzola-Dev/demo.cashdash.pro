@@ -2,24 +2,28 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { useCreateSubtask } from "@/hooks/task.hooks";
 import { Tables } from "@/types/database.types";
 import { TaskResult } from "@/types/task.types";
-import { Edit2, Save } from "lucide-react";
+import { Edit2, Plus, Save } from "lucide-react";
 import { useState } from "react";
 
 type Subtask = Tables<"subtasks">;
 
 interface SubtaskSidebarProps {
   subtasks: TaskResult["subtasks"];
+  taskId: string;
   onUpdateSubtask: (subtaskId: string, updates: Partial<Subtask>) => void;
 }
 
 export function SubtaskSidebar({
   subtasks = [],
+  taskId,
   onUpdateSubtask,
 }: SubtaskSidebarProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editedTitle, setEditedTitle] = useState("");
+  const { mutate: createSubtask } = useCreateSubtask();
 
   const handleEdit = (subtask: Subtask) => {
     setEditingId(subtask.id);
@@ -38,6 +42,24 @@ export function SubtaskSidebar({
       status: subtask.status === "completed" ? "todo" : "completed",
     });
   };
+
+  const handleAddSubtask = () => {
+    // Check if the last subtask is empty
+    const lastSubtask = subtasks[subtasks.length - 1];
+    if (lastSubtask && !lastSubtask.title.trim()) {
+      return;
+    }
+
+    createSubtask({
+      task_id: taskId,
+      title: "",
+      status: "todo",
+    });
+  };
+
+  // Check if we should show the Add Subtask button
+  const showAddButton =
+    subtasks.length === 0 || subtasks[subtasks.length - 1].title.trim() !== "";
 
   return (
     <Card className="mt-6">
@@ -89,16 +111,21 @@ export function SubtaskSidebar({
                   htmlFor={subtask.id}
                   className="text-sm cursor-pointer flex-1"
                 >
-                  {subtask.title}
+                  {subtask.title || "New subtask"}
                 </label>
               )}
             </div>
           </div>
         ))}
-        {subtasks.length === 0 && (
-          <div className="text-sm text-muted-foreground">
-            No subtasks created
-          </div>
+        {showAddButton && (
+          <Button
+            variant="ghost"
+            className="w-full justify-start"
+            onClick={handleAddSubtask}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add subtask
+          </Button>
         )}
       </CardContent>
     </Card>

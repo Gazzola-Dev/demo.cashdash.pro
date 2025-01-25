@@ -1,5 +1,6 @@
 "use client";
 import {
+  createSubtaskAction,
   createTaskAction,
   deleteTaskAction,
   getTaskAction,
@@ -11,6 +12,7 @@ import { conditionalLog, getErrorMessage, minifyForLog } from "@/lib/log.utils";
 import { TablesInsert } from "@/types/database.types";
 import { HookOptions } from "@/types/db.types";
 import {
+  SubtaskInput,
   TaskFilters,
   TaskResult,
   TaskUpdateWithSubtasks,
@@ -203,6 +205,39 @@ export const useReorderTasks = ({
       toast({
         title: errorMessage || getErrorMessage(minifiedError),
         description: "Failed to reorder tasks",
+        variant: "destructive",
+      });
+    },
+  });
+};
+
+export const useCreateSubtask = ({
+  errorMessage,
+  successMessage,
+}: HookOptions<TaskResult> = {}) => {
+  const hookName = "useCreateSubtask";
+  const queryClient = useQueryClient();
+  const { toast } = useToastQueue();
+
+  return useMutation({
+    mutationFn: async (subtask: SubtaskInput) => {
+      const { data, error } = await createSubtaskAction(subtask);
+      conditionalLog(hookName, { data, error });
+      return data;
+    },
+    onSuccess: data => {
+      conditionalLog(hookName, { success: data });
+      queryClient.invalidateQueries({ queryKey: ["task"] });
+      toast({
+        title: successMessage || "Subtask created successfully",
+      });
+    },
+    onError: (error: Error) => {
+      const minifiedError = minifyForLog(error);
+      conditionalLog(hookName, { error: minifiedError });
+      toast({
+        title: errorMessage || getErrorMessage(minifiedError),
+        description: "Failed to create subtask",
         variant: "destructive",
       });
     },

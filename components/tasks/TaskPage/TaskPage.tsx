@@ -47,8 +47,6 @@ const TaskPage = ({ projectSlug, taskSlug, initialData }: TaskPageProps) => {
     subtaskId: string,
     updates: Partial<Tables<"subtasks">>,
   ) => {
-    // Currently using the same updateTask mutation - you might want to create a separate
-    // mutation for subtasks if you need different behavior
     updateTask({
       slug: task.slug,
       updates: {
@@ -104,6 +102,7 @@ const TaskPage = ({ projectSlug, taskSlug, initialData }: TaskPageProps) => {
             />
             <SubtaskSidebar
               subtasks={subtasks}
+              taskId={task.id}
               onUpdateSubtask={handleUpdateSubtask}
             />
           </div>

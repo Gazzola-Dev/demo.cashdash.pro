@@ -55,6 +55,7 @@ export interface TaskResult {
 // Response types
 export interface TaskResponse extends ActionResponse<TaskResult> {}
 export interface TaskListResponse extends ActionResponse<TaskResult[]> {}
+export interface SubtaskResponse extends ActionResponse<Subtask> {}
 
 // Filter types for listing tasks
 export interface TaskFilters {
@@ -83,6 +84,15 @@ export interface TaskInput {
   prefix: Task["prefix"];
   assignee?: Task["assignee"];
   budget_cents?: Task["budget_cents"];
+}
+
+// Subtask input type for creation
+export interface SubtaskInput {
+  task_id: Subtask["task_id"];
+  title: Subtask["title"];
+  description?: Subtask["description"];
+  status?: Subtask["status"];
+  budget_cents?: Subtask["budget_cents"];
 }
 
 export interface TaskUpdate extends Partial<TaskInput> {

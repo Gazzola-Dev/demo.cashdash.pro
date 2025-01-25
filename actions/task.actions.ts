@@ -5,6 +5,8 @@ import { conditionalLog } from "@/lib/log.utils";
 import { ActionResponse } from "@/types/action.types";
 import { Json, TablesInsert } from "@/types/database.types";
 import {
+  SubtaskInput,
+  SubtaskResponse,
   TaskFilters,
   TaskResult,
   TaskUpdateWithSubtasks,
@@ -285,6 +287,54 @@ export const reorderTasksAction = async (
     return getActionResponse({ data: null });
   } catch (error) {
     conditionalLog(actionName, { error });
+    return getActionResponse({ error });
+  }
+};
+
+export const createSubtaskAction = async (
+  subtask: SubtaskInput,
+): Promise<SubtaskResponse> => {
+  const actionName = "createSubtaskAction";
+  const supabase = await getSupabaseServerActionClient();
+
+  try {
+    // Get the current highest ordinal_id for the task
+    const { data: currentSubtasks, error: subtasksError } = await supabase
+      .from("subtasks")
+      .select("ordinal_id")
+      .eq("task_id", subtask.task_id)
+      .order("ordinal_id", { ascending: false })
+      .limit(1);
+    conditionalLog(
+      actionName + "1",
+      { currentSubtasks, subtasksError },
+      true,
+      null,
+    );
+    if (subtasksError) throw subtasksError;
+
+    // Calculate new ordinal_id
+    const nextOrdinalId = currentSubtasks?.length
+      ? currentSubtasks[0].ordinal_id + 1
+      : 1;
+
+    const { data, error } = await supabase
+      .from("subtasks")
+      .insert({
+        ...subtask,
+        ordinal_id: nextOrdinalId,
+        status: subtask.status || "todo",
+      })
+      .select("*")
+      .single();
+
+    conditionalLog(actionName + "2", { data, error }, true);
+
+    if (error) throw error;
+
+    return getActionResponse({ data });
+  } catch (error) {
+    conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });
   }
 };
