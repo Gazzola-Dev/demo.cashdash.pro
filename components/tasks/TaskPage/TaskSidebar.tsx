@@ -3,6 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent } from "@/components/ui/card";
 import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -18,8 +23,8 @@ import { useToastQueue } from "@/hooks/useToastQueue";
 import { cn } from "@/lib/utils";
 import { TaskResult } from "@/types/task.types";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
-import { useMemo } from "react";
+import { CalendarIcon, ChevronsUpDown } from "lucide-react";
+import { useMemo, useState } from "react";
 
 interface TaskSidebarProps {
   task: TaskResult["task"];
@@ -29,6 +34,11 @@ interface TaskSidebarProps {
   onUpdateTask: (updates: any) => void;
 }
 
+interface PrevTimes {
+  start_date: string | null;
+  due_date: string | null;
+}
+
 export function TaskSidebar({
   task,
   members,
@@ -36,10 +46,43 @@ export function TaskSidebar({
   taskSchedule,
   onUpdateTask,
 }: TaskSidebarProps) {
-  const hookName = "TaskSidebar";
   const { toast } = useToastQueue();
+  const [isOpen, setIsOpen] = useState(
+    !!taskSchedule?.start_date || !!taskSchedule?.due_date,
+  );
+  const [prevTimes, setPrevTimes] = useState<PrevTimes>({
+    start_date: taskSchedule?.start_date || null,
+    due_date: taskSchedule?.due_date || null,
+  });
 
-  // Inside the handleDateChange function in TaskSidebar.tsx
+  const handleIsOpenChange = (open: boolean) => {
+    if (!open) {
+      // Store current times before closing
+      setPrevTimes({
+        start_date: taskSchedule?.start_date || null,
+        due_date: taskSchedule?.due_date || null,
+      });
+      // Clear dates in DB
+      onUpdateTask({
+        task_schedule: {
+          start_date: null,
+          due_date: null,
+        },
+      });
+    } else {
+      // Restore previous times if they exist
+      if (prevTimes.start_date || prevTimes.due_date) {
+        onUpdateTask({
+          task_schedule: {
+            start_date: prevTimes.start_date,
+            due_date: prevTimes.due_date,
+          },
+        });
+      }
+    }
+    setIsOpen(open);
+  };
+
   const handleDateChange = (
     date: Date | undefined,
     type: "start_date" | "due_date",
@@ -226,69 +269,80 @@ export function TaskSidebar({
             </div>
           </div>
 
-          {/* Start Date */}
-          <div>
-            <label className="text-sm font-medium">Start Date</label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !currentStartDate && "text-muted-foreground",
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {currentStartDate ? (
-                    format(currentStartDate, "PPP")
-                  ) : (
-                    <span>Set start date</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={currentStartDate}
-                  onSelect={date => handleDateChange(date, "start_date")}
-                  disabled={date => date < disableBefore}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
+          {/* Dates Collapsible */}
+          <Collapsible open={isOpen} onOpenChange={handleIsOpenChange}>
+            <CollapsibleTrigger className="flex w-full items-center gap-2">
+              <ChevronsUpDown className="h-4 w-4" />
+              <span className="text-sm font-semibold italic text-gray-700">
+                {isOpen ? "Clear start and due date" : "Add start and due date"}
+              </span>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-4 pt-4">
+              {/* Start Date */}
+              <div>
+                <label className="text-sm font-medium">Start Date</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !currentStartDate && "text-muted-foreground",
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {currentStartDate ? (
+                        format(currentStartDate, "PPP")
+                      ) : (
+                        <span>Set start date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={currentStartDate}
+                      onSelect={date => handleDateChange(date, "start_date")}
+                      disabled={date => date < disableBefore}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
 
-          {/* Due Date */}
-          <div>
-            <label className="text-sm font-medium">Due Date</label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !currentDueDate && "text-muted-foreground",
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {currentDueDate ? (
-                    format(currentDueDate, "PPP")
-                  ) : (
-                    <span>Set due date</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={currentDueDate}
-                  onSelect={date => handleDateChange(date, "due_date")}
-                  disabled={date => date < disableBefore}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
+              {/* Due Date */}
+              <div>
+                <label className="text-sm font-medium">Due Date</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !currentDueDate && "text-muted-foreground",
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {currentDueDate ? (
+                        format(currentDueDate, "PPP")
+                      ) : (
+                        <span>Set due date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={currentDueDate}
+                      onSelect={date => handleDateChange(date, "due_date")}
+                      disabled={date => date < disableBefore}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         </div>
       </CardContent>
     </Card>
