@@ -23,7 +23,7 @@ import { useToastQueue } from "@/hooks/useToastQueue";
 import { cn } from "@/lib/utils";
 import { TaskResult } from "@/types/task.types";
 import { format } from "date-fns";
-import { CalendarIcon, ChevronsUpDown } from "lucide-react";
+import { CalendarIcon, ChevronDown, ChevronUp } from "lucide-react";
 import { useMemo, useState } from "react";
 
 interface TaskSidebarProps {
@@ -272,8 +272,17 @@ export function TaskSidebar({
           {/* Dates Collapsible */}
           <Collapsible open={isOpen} onOpenChange={handleIsOpenChange}>
             <CollapsibleTrigger className="flex w-full items-center gap-2">
-              <ChevronsUpDown className="h-4 w-4" />
-              <span className="text-sm font-semibold italic text-gray-700">
+              {isOpen ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+              <span
+                className={cn(
+                  "text-sm italic text-gray-700",
+                  !isOpen && "font-semibold",
+                )}
+              >
                 {isOpen ? "Clear start and due date" : "Add start and due date"}
               </span>
             </CollapsibleTrigger>
