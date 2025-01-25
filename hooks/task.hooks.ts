@@ -8,9 +8,13 @@ import {
   updateTaskAction,
 } from "@/actions/task.actions";
 import { conditionalLog, getErrorMessage, minifyForLog } from "@/lib/log.utils";
-import { TablesInsert, TablesUpdate } from "@/types/database.types";
+import { TablesInsert } from "@/types/database.types";
 import { HookOptions } from "@/types/db.types";
-import { TaskFilters, TaskResult } from "@/types/task.types";
+import {
+  TaskFilters,
+  TaskResult,
+  TaskUpdateWithSubtasks,
+} from "@/types/task.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToastQueue } from "./useToastQueue";
 
@@ -32,7 +36,7 @@ export const useGetTask = (
     queryKey: ["task", taskSlug],
     queryFn: async () => {
       const { data, error } = await getTaskAction(taskSlug);
-      conditionalLog(hookName, { data, error });
+      conditionalLog(hookName, { data, error }, false, null);
       if (!data) throw new Error("Task not found");
       return data;
     },
@@ -103,14 +107,14 @@ export const useUpdateTask = ({
       updates,
     }: {
       slug: string;
-      updates: TablesUpdate<"tasks">;
+      updates: TaskUpdateWithSubtasks;
     }) => {
       const { data, error } = await updateTaskAction(slug, updates);
-      conditionalLog(hookName, { data, error }, false);
+      conditionalLog(hookName, { data, error }, false, null);
       return data;
     },
     onSuccess: data => {
-      conditionalLog(hookName, { success: data }, false);
+      conditionalLog(hookName, { success: data }, false, null);
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       if (data) {
         queryClient.invalidateQueries({ queryKey: ["task", data.task.slug] });

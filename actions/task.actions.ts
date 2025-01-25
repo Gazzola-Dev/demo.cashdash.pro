@@ -3,8 +3,12 @@ import getSupabaseServerActionClient from "@/clients/action-client";
 import getActionResponse from "@/lib/action.util";
 import { conditionalLog } from "@/lib/log.utils";
 import { ActionResponse } from "@/types/action.types";
-import { TablesInsert, TablesUpdate } from "@/types/database.types";
-import { TaskFilters, TaskResult } from "@/types/task.types";
+import { Json, TablesInsert } from "@/types/database.types";
+import {
+  TaskFilters,
+  TaskResult,
+  TaskUpdateWithSubtasks,
+} from "@/types/task.types";
 
 export const listTasksAction = async (
   filters?: TaskFilters,
@@ -98,7 +102,7 @@ export const getTaskAction = async (
       task_slug: taskSlug,
     });
 
-    conditionalLog(actionName, { data, error });
+    conditionalLog(actionName, { data, error }, true);
 
     if (error) {
       throw error;
@@ -110,7 +114,7 @@ export const getTaskAction = async (
 
     return getActionResponse({ data: data as any as TaskResult });
   } catch (error) {
-    conditionalLog(actionName, { error });
+    conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });
   }
 };
@@ -161,7 +165,7 @@ export const createTaskAction = async (
           user: Array.isArray(comment.user) ? comment.user[0] : comment.user,
         })) ?? [],
       subtasks: data.subtasks ?? [],
-      task_schedule: data.task_schedule ?? null,
+      task_schedule: data.task_schedule,
       project: data.project,
     };
 
@@ -174,15 +178,27 @@ export const createTaskAction = async (
 
 export const updateTaskAction = async (
   taskSlug: string,
-  updates: TablesUpdate<"tasks">,
+  updates: TaskUpdateWithSubtasks,
 ): Promise<ActionResponse<TaskResult>> => {
   const actionName = "updateTaskAction";
   const supabase = await getSupabaseServerActionClient();
 
   try {
+    // Convert the strongly-typed updates to a plain JSON object
+    const jsonUpdates: { [key: string]: Json } = {
+      ...updates,
+      // Ensure nested objects are also converted to plain JSON
+      subtasks: updates.subtasks
+        ? JSON.parse(JSON.stringify(updates.subtasks))
+        : undefined,
+      task_schedule: updates.task_schedule
+        ? JSON.parse(JSON.stringify(updates.task_schedule))
+        : undefined,
+    };
+
     const { data, error } = await supabase.rpc("update_task_data", {
       task_slug: taskSlug,
-      task_updates: updates,
+      task_updates: jsonUpdates,
     });
 
     conditionalLog(actionName, { data, error }, true);

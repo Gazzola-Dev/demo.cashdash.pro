@@ -1,4 +1,3 @@
-// types/task.types.ts
 import { ActionResponse } from "@/types/action.types";
 import { Tables } from "@/types/database.types";
 
@@ -68,6 +67,11 @@ export interface TaskFilters {
   order?: "asc" | "desc";
 }
 
+// Updated TaskUpdate type to include subtask updates
+export interface SubtaskUpdate extends Partial<Subtask> {
+  id: string;
+}
+
 // Task input types for creation/updates
 export interface TaskInput {
   project_id: Task["project_id"];
@@ -83,6 +87,13 @@ export interface TaskInput {
 
 export interface TaskUpdate extends Partial<TaskInput> {
   id: string;
+}
+
+// Updated task update types to include subtask updates
+export interface TaskUpdateWithSubtasks extends Partial<TaskInput> {
+  id?: string;
+  subtasks?: SubtaskUpdate[];
+  task_schedule?: TaskScheduleWithTimestamps;
 }
 
 export const STATUS_OPTIONS: Tables<"tasks">["status"][] = [

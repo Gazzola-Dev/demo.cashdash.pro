@@ -701,6 +701,13 @@ export type Database = {
         }
         Returns: Json
       }
+      update_subtask_data: {
+        Args: {
+          subtask_id: string
+          subtask_updates: Json
+        }
+        Returns: Json
+      }
       update_task_data: {
         Args: {
           task_slug: string

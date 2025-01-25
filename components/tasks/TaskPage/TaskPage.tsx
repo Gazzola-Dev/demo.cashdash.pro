@@ -1,5 +1,5 @@
 "use client";
-
+import { SubtaskSidebar } from "@/components/tasks/TaskPage/SubtaskSidebar";
 import { TaskComments } from "@/components/tasks/TaskPage/TaskComments";
 import { TaskDescription } from "@/components/tasks/TaskPage/TaskDescription";
 import { TaskHeader } from "@/components/tasks/TaskPage/TaskHeader";
@@ -7,6 +7,7 @@ import { TaskSidebar } from "@/components/tasks/TaskPage/TaskSidebar";
 import { useCreateComment, useUpdateComment } from "@/hooks/comment.hooks";
 import { useListMembers } from "@/hooks/member.hooks";
 import { useGetTask, useUpdateTask } from "@/hooks/task.hooks";
+import { Tables } from "@/types/database.types";
 import { TaskResult } from "@/types/task.types";
 
 interface TaskPageProps {
@@ -32,12 +33,29 @@ const TaskPage = ({ projectSlug, taskSlug, initialData }: TaskPageProps) => {
     assignee_profile,
     project,
     task_schedule,
+    subtasks = [],
   } = taskData;
 
   const handleUpdateTask = (updates: any) => {
     updateTask({
       slug: task.slug,
       updates,
+    });
+  };
+
+  const handleUpdateSubtask = (
+    subtaskId: string,
+    updates: Partial<Tables<"subtasks">>,
+  ) => {
+    // Currently using the same updateTask mutation - you might want to create a separate
+    // mutation for subtasks if you need different behavior
+    updateTask({
+      slug: task.slug,
+      updates: {
+        subtasks: subtasks.map(st =>
+          st.id === subtaskId ? { ...st, ...updates } : st,
+        ),
+      },
     });
   };
 
@@ -83,6 +101,10 @@ const TaskPage = ({ projectSlug, taskSlug, initialData }: TaskPageProps) => {
               assigneeProfile={assignee_profile}
               taskSchedule={task_schedule}
               onUpdateTask={handleUpdateTask}
+            />
+            <SubtaskSidebar
+              subtasks={subtasks}
+              onUpdateSubtask={handleUpdateSubtask}
             />
           </div>
         </div>

@@ -159,26 +159,6 @@ async function createSquashedMigration(migrationsDir) {
   );
 }
 
-async function combineMigrations(migrationsDir, outputPath) {
-  const files = (await fs.readdir(migrationsDir)).sort();
-  let combined = "";
-  for (const file of files) {
-    if (file === ".DS_Store") continue;
-    const content = await fs.readFile(path.join(migrationsDir, file), "utf-8");
-    combined += `-- From ${file}\n${content}\n\n`;
-  }
-  const timestamp = files
-    .filter(f => f !== ".DS_Store")
-    [files.length - 1].split("_")[0];
-  await fs.writeFile(
-    path.join(OUTPUT_DIR, `${timestamp}combined_migrations.sql`),
-    combined,
-  );
-
-  // Also create the squashed migration
-  await createSquashedMigration(migrationsDir);
-}
-
 async function processCombinedFiles(combinedFilesDir, dest) {
   const entries = await fs.readdir(combinedFilesDir, { withFileTypes: true });
 
@@ -230,9 +210,9 @@ async function main() {
   }
 
   // Process combinedFiles directory if it exists
-  if (await exists("combinedFiles")) {
-    await processCombinedFiles("combinedFiles", OUTPUT_DIR);
-  }
+  // if (await exists("combinedFiles")) {
+  //   await processCombinedFiles("combinedFiles", OUTPUT_DIR);
+  // }
 
   // Process templateFiles directory if it exists
   if (await exists("templateFiles")) {
@@ -264,19 +244,8 @@ async function main() {
   }
 
   if (await exists("supabase/migrations")) {
-    // Copy individual migration files
-    const migrationsDir = "supabase/migrations";
-    const files = await fs.readdir(migrationsDir);
-    for (const file of files) {
-      if (file === ".DS_Store") continue;
-      await fs.copyFile(
-        path.join(migrationsDir, file),
-        path.join(OUTPUT_DIR, file),
-      );
-    }
-
-    // Create both combined and squashed migrations
-    await combineMigrations(migrationsDir);
+    // Create squashed migration only
+    await createSquashedMigration("supabase/migrations");
   }
 
   // Files to copy
