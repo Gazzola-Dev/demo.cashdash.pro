@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { TaskResult } from "@/types/task.types";
 import { format } from "date-fns";
-import { useState } from "react";
+import { KeyboardEvent, useState } from "react";
 
 interface TaskCommentsProps {
   comments: TaskResult["comments"];
@@ -19,8 +19,18 @@ export function TaskComments({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmitComment(newComment);
-    setNewComment("");
+    if (newComment.trim()) {
+      onSubmitComment(newComment);
+      setNewComment("");
+    }
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && newComment.trim()) {
+      e.preventDefault();
+      onSubmitComment(newComment);
+      setNewComment("");
+    }
   };
 
   return (
@@ -34,7 +44,8 @@ export function TaskComments({
           <Textarea
             value={newComment}
             onChange={e => setNewComment(e.target.value)}
-            placeholder="Add a comment..."
+            onKeyDown={handleKeyDown}
+            placeholder="Add a comment... (Press Ctrl+Enter or Cmd+Enter to submit)"
             className="mb-2"
           />
           <Button type="submit" disabled={!newComment.trim()}>
@@ -58,7 +69,7 @@ export function TaskComments({
                     {comment.user.display_name}
                   </span>
                   <span className="text-sm text-muted-foreground">
-                    {format(new Date(comment.created_at), "MMM d, yyyy")}
+                    {format(new Date(comment.created_at), "MMM d, yyyy h:mm a")}
                   </span>
                 </div>
                 <div className="mt-2 prose dark:prose-invert">

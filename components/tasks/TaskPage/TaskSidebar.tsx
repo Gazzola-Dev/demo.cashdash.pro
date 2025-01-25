@@ -36,7 +36,6 @@ export function TaskSidebar({
   taskSchedule,
   onUpdateTask,
 }: TaskSidebarProps) {
-  console.log(taskSchedule);
   const hookName = "TaskSidebar";
   const { toast } = useToastQueue();
 
