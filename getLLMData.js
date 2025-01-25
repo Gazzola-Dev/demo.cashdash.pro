@@ -72,17 +72,91 @@ async function flatCopyDir(src, dest) {
   }
 }
 
-async function combineTypesFiles(typesDir, outputPath) {
-  const files = await fs.readdir(typesDir);
-  let combined = "";
+function extractCreateStatements(sql) {
+  // Split on semicolons but keep comments
+  const statements = sql.split(/;(?=(?:[^'"]*["'][^'"]*["'])*[^'"]*$)/g);
+  return statements
+    .filter(stmt => {
+      const normalizedStmt = stmt.trim().toLowerCase();
+      return (
+        normalizedStmt.startsWith("create ") ||
+        normalizedStmt.startsWith("-- create") ||
+        normalizedStmt.startsWith("alter ") ||
+        normalizedStmt.startsWith("grant ") ||
+        normalizedStmt.startsWith("revoke ")
+      );
+    })
+    .map(stmt => stmt.trim())
+    .filter(stmt => stmt.length > 0);
+}
+
+function extractInsertStatements(sql) {
+  const statements = sql.split(/;(?=(?:[^'"]*["'][^'"]*["'])*[^'"]*$)/g);
+  return statements
+    .filter(stmt => {
+      const normalizedStmt = stmt.trim().toLowerCase();
+      return (
+        normalizedStmt.startsWith("insert ") ||
+        normalizedStmt.startsWith("-- insert")
+      );
+    })
+    .map(stmt => stmt.trim())
+    .filter(stmt => stmt.length > 0);
+}
+
+async function createSquashedMigration(migrationsDir) {
+  const files = (await fs.readdir(migrationsDir))
+    .filter(f => f !== ".DS_Store")
+    .sort();
+
+  let createStatements = new Set();
+  let insertStatements = new Set();
+  let timestamp = files[files.length - 1].split("_")[0];
+
   for (const file of files) {
-    if (file === "database.types.ts" || file === ".DS_Store") continue;
-    const content = await fs.readFile(path.join(typesDir, file), "utf-8");
-    combined += `// From ${file}\n${content}\n\n`;
+    const content = await fs.readFile(path.join(migrationsDir, file), "utf-8");
+
+    // Extract and add CREATE statements
+    extractCreateStatements(content).forEach(stmt =>
+      createStatements.add(stmt + ";"),
+    );
+
+    // Extract and add INSERT statements
+    extractInsertStatements(content).forEach(stmt =>
+      insertStatements.add(stmt + ";"),
+    );
   }
-  if (combined) {
-    await fs.writeFile(outputPath, combined);
-  }
+
+  // Combine statements in logical order
+  const combinedContent = [
+    "-- Squashed migration combining all changes",
+    "-- Types and Enums",
+    ...Array.from(createStatements)
+      .filter(
+        stmt =>
+          stmt.toLowerCase().includes("type") ||
+          stmt.toLowerCase().includes("enum"),
+      )
+      .sort(),
+    "",
+    "-- Tables, Functions, and Triggers",
+    ...Array.from(createStatements)
+      .filter(
+        stmt =>
+          !stmt.toLowerCase().includes("type") &&
+          !stmt.toLowerCase().includes("enum"),
+      )
+      .sort(),
+    "",
+    "-- Data",
+    ...Array.from(insertStatements).sort(),
+    "",
+  ].join("\n");
+
+  await fs.writeFile(
+    path.join(OUTPUT_DIR, `${timestamp}squashed_migration.sql`),
+    combinedContent,
+  );
 }
 
 async function combineMigrations(migrationsDir, outputPath) {
@@ -100,6 +174,9 @@ async function combineMigrations(migrationsDir, outputPath) {
     path.join(OUTPUT_DIR, `${timestamp}combined_migrations.sql`),
     combined,
   );
+
+  // Also create the squashed migration
+  await createSquashedMigration(migrationsDir);
 }
 
 async function processCombinedFiles(combinedFilesDir, dest) {
@@ -198,11 +275,8 @@ async function main() {
       );
     }
 
-    // Also create the combined migrations file
-    await combineMigrations(
-      "supabase/migrations",
-      path.join(OUTPUT_DIR, "combined_migrations.sql"),
-    );
+    // Create both combined and squashed migrations
+    await combineMigrations(migrationsDir);
   }
 
   // Files to copy
