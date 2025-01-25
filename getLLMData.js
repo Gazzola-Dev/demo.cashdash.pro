@@ -187,6 +187,18 @@ async function main() {
   }
 
   if (await exists("supabase/migrations")) {
+    // Copy individual migration files
+    const migrationsDir = "supabase/migrations";
+    const files = await fs.readdir(migrationsDir);
+    for (const file of files) {
+      if (file === ".DS_Store") continue;
+      await fs.copyFile(
+        path.join(migrationsDir, file),
+        path.join(OUTPUT_DIR, file),
+      );
+    }
+
+    // Also create the combined migrations file
     await combineMigrations(
       "supabase/migrations",
       path.join(OUTPUT_DIR, "combined_migrations.sql"),
