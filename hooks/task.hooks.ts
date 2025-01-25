@@ -106,11 +106,11 @@ export const useUpdateTask = ({
       updates: TablesUpdate<"tasks">;
     }) => {
       const { data, error } = await updateTaskAction(slug, updates);
-      conditionalLog(hookName, { data, error }, false, null);
+      conditionalLog(hookName, { data, error }, false);
       return data;
     },
     onSuccess: data => {
-      conditionalLog(hookName, { success: data }, false, null);
+      conditionalLog(hookName, { success: data }, false);
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       if (data) {
         queryClient.invalidateQueries({ queryKey: ["task", data.task.slug] });
@@ -121,7 +121,7 @@ export const useUpdateTask = ({
     },
     onError: (error: Error) => {
       const minifiedError = minifyForLog(error);
-      conditionalLog(hookName, { error: minifiedError }, false, null);
+      conditionalLog(hookName, { error: minifiedError }, false);
       toast({
         title: errorMessage || getErrorMessage(minifiedError),
         description: "Failed to update task",

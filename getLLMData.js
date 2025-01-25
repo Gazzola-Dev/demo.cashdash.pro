@@ -117,6 +117,26 @@ async function processCombinedFiles(combinedFilesDir, dest) {
   }
 }
 
+async function processTemplateFiles(templateDir, dest) {
+  if (!(await exists(templateDir))) return;
+
+  const entries = await fs.readdir(templateDir, { withFileTypes: true });
+
+  for (const entry of entries) {
+    if (entry.name === ".DS_Store") continue;
+
+    const srcPath = path.join(templateDir, entry.name);
+    const destPath = path.join(dest, entry.name);
+
+    if (entry.isDirectory()) {
+      await fs.mkdir(destPath, { recursive: true });
+      await processTemplateFiles(srcPath, destPath);
+    } else {
+      await fs.copyFile(srcPath, destPath);
+    }
+  }
+}
+
 async function main() {
   // Empty the output directory if it exists
   await emptyDirectory(OUTPUT_DIR);
@@ -135,6 +155,11 @@ async function main() {
   // Process combinedFiles directory if it exists
   if (await exists("combinedFiles")) {
     await processCombinedFiles("combinedFiles", OUTPUT_DIR);
+  }
+
+  // Process templateFiles directory if it exists
+  if (await exists("templateFiles")) {
+    await processTemplateFiles("templateFiles", OUTPUT_DIR);
   }
 
   // Directories to copy (process all files in these directories)

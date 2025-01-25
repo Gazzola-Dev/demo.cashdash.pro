@@ -629,6 +629,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      create_comment_data: {
+        Args: {
+          comment_content: string
+          content_id: string
+          content_type: Database["public"]["Enums"]["content_type"]
+          user_id: string
+        }
+        Returns: Json
+      }
       create_project_with_owner: {
         Args: {
           project_data: Json

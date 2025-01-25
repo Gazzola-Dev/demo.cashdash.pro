@@ -185,7 +185,7 @@ export const updateTaskAction = async (
       task_updates: updates,
     });
 
-    conditionalLog(actionName, { data, error }, true, null);
+    conditionalLog(actionName, { data, error }, true);
 
     if (error) {
       throw error;
@@ -197,7 +197,7 @@ export const updateTaskAction = async (
 
     return getActionResponse({ data: data as any as TaskResult });
   } catch (error) {
-    conditionalLog(actionName, { error }, true, null);
+    conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });
   }
 };
