@@ -36,7 +36,10 @@ yarn-error.log*
 next-env.d.ts
 
 # Development
-.llm-data/
+.llm/
+.llm-dev/
 changes.txt
 combinedFiles/*
 templateFiles/*
+index-repo.txt
+llm-files.txt

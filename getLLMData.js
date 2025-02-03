@@ -1,279 +1,256 @@
-const fs = require("fs/promises");
+const fs = require("fs");
 const path = require("path");
-const OUTPUT_DIR = ".llm-data";
 
-async function exists(path) {
-  try {
-    await fs.access(path);
+// Whitelist of directories that contain reference-worthy code
+const whitelistedDirs = [
+  "actions", // Core business logic and data mutations
+  "hooks", // Custom React hooks for reusable logic
+  "types", // Type definitions useful for understanding data structures
+  "components/shared", // Shared components across the application
+  "components/layout", // Layout components
+  "configuration.ts", // Configuration constants
+  "constants", // Application constants
+  "stores", // State management
+  "middleware", // Authentication and routing middleware
+  "lib",
+];
+
+// Whitelist of specific files that are useful for reference
+const whitelistedFiles = [
+  // Configuration files
+  "tailwind.config.ts",
+  "tailwind.config.js",
+  "components.json",
+  "next.config.mjs",
+  "tsconfig.json",
+  "package.json",
+  "configuration.ts",
+  ".prettierrc.json",
+  ".eslintrc.json",
+
+  // Environment files
+  ".env.local",
+  ".env.local.example",
+  ".env.development",
+  ".env.production",
+
+  // Documentation
+  "README.md",
+
+  // Development utilities
+  "makeAdmin.js",
+  "getChanges.js",
+  "generateTypes.js",
+  "getIndex.js",
+  "seed.js",
+
+  // Test files are handled separately in isWhitelisted function
+];
+
+// Excluded directories and files that shouldn't be copied
+const excludedDirs = ["node_modules", ".git", ".next", "out", "dist", "build"];
+
+// Function to clear directory contents
+function clearDirectory(dirPath) {
+  if (fs.existsSync(dirPath)) {
+    fs.rmSync(dirPath, { recursive: true });
+  }
+  fs.mkdirSync(dirPath, { recursive: true });
+}
+
+// Function to check if path matches whitelist patterns
+function isWhitelisted(filePath) {
+  // Check if file is directly whitelisted
+  if (whitelistedFiles.includes(filePath)) {
     return true;
-  } catch {
-    return false;
   }
+
+  // Check if file is a test file
+  if (filePath.endsWith(".cy.ts") || filePath.endsWith(".cy.tsx")) {
+    return true;
+  }
+
+  // Check if file is in a whitelisted directory
+  return whitelistedDirs.some(dir => filePath.startsWith(dir));
 }
 
-async function emptyDirectory(directory) {
-  if (!(await exists(directory))) {
-    return;
-  }
-
-  const entries = await fs.readdir(directory, { withFileTypes: true });
-
-  for (const entry of entries) {
-    const fullPath = path.join(directory, entry.name);
-    if (entry.isDirectory()) {
-      await emptyDirectory(fullPath);
-      await fs.rmdir(fullPath);
-    } else {
-      await fs.unlink(fullPath);
-    }
-  }
-}
-
-async function processDirectory(src, dest, prefix = "") {
-  const entries = await fs.readdir(src, { withFileTypes: true });
-
-  for (const entry of entries) {
-    if (entry.name === ".DS_Store") continue;
-
-    const srcPath = path.join(src, entry.name);
-    const baseName = entry.name.replace(/\.(ts|tsx|js|jsx)$/, "");
-
-    if (entry.isDirectory()) {
-      const newPrefix = prefix ? `${prefix}_${entry.name}` : entry.name;
-      await processDirectory(srcPath, dest, newPrefix);
-    } else {
-      if (entry.name.match(/\.(ts|tsx|js|jsx)$/)) {
-        const fileName = prefix ? `${prefix}_${baseName}` : baseName;
-        const extension = path.extname(entry.name);
-        const newFileName = fileName + extension;
-        await fs.copyFile(srcPath, path.join(dest, newFileName));
-      }
-    }
-  }
-}
-
-async function flatCopyDir(src, dest) {
-  await fs.mkdir(dest, { recursive: true });
-  const entries = await fs.readdir(src, { withFileTypes: true });
-  const dirName = path.basename(src);
-
-  for (const entry of entries) {
-    if (entry.name === ".DS_Store") continue;
-
-    const srcPath = path.join(src, entry.name);
-    if (entry.isDirectory()) {
-      await flatCopyDir(srcPath, dest);
-    } else {
-      const baseName = entry.name.replace(/\.(ts|tsx|js|jsx)$/, "");
-      const extension = path.extname(entry.name);
-      const newFileName = `${dirName}_${baseName}${extension}`;
-      await fs.copyFile(srcPath, path.join(dest, newFileName));
-    }
-  }
-}
-
-function extractCreateStatements(sql) {
-  // Split on semicolons but keep comments
+// Function to extract SQL statements
+function extractStatements(sql, type) {
   const statements = sql.split(/;(?=(?:[^'"]*["'][^'"]*["'])*[^'"]*$)/g);
   return statements
     .filter(stmt => {
       const normalizedStmt = stmt.trim().toLowerCase();
-      return (
-        normalizedStmt.startsWith("create ") ||
-        normalizedStmt.startsWith("-- create") ||
-        normalizedStmt.startsWith("alter ") ||
-        normalizedStmt.startsWith("grant ") ||
-        normalizedStmt.startsWith("revoke ")
-      );
+      switch (type) {
+        case "create":
+          return (
+            normalizedStmt.startsWith("create ") ||
+            normalizedStmt.startsWith("-- create") ||
+            normalizedStmt.startsWith("alter ") ||
+            normalizedStmt.startsWith("grant ") ||
+            normalizedStmt.startsWith("revoke ")
+          );
+        case "insert":
+          return (
+            normalizedStmt.startsWith("insert ") ||
+            normalizedStmt.startsWith("-- insert")
+          );
+        default:
+          return false;
+      }
     })
     .map(stmt => stmt.trim())
     .filter(stmt => stmt.length > 0);
 }
 
-function extractInsertStatements(sql) {
-  const statements = sql.split(/;(?=(?:[^'"]*["'][^'"]*["'])*[^'"]*$)/g);
-  return statements
-    .filter(stmt => {
-      const normalizedStmt = stmt.trim().toLowerCase();
-      return (
-        normalizedStmt.startsWith("insert ") ||
-        normalizedStmt.startsWith("-- insert")
+// Function to create squashed migration
+function createSquashedMigration(migrationsDir, outputDir) {
+  try {
+    const files = fs
+      .readdirSync(migrationsDir)
+      .filter(f => f !== ".DS_Store")
+      .sort();
+
+    let createStatements = new Set();
+    let insertStatements = new Set();
+    let timestamp = files[files.length - 1].split("_")[0];
+
+    files.forEach(file => {
+      const content = fs.readFileSync(path.join(migrationsDir, file), "utf-8");
+
+      // Extract and add CREATE statements
+      extractStatements(content, "create").forEach(stmt =>
+        createStatements.add(stmt + ";"),
       );
-    })
-    .map(stmt => stmt.trim())
-    .filter(stmt => stmt.length > 0);
-}
 
-async function createSquashedMigration(migrationsDir) {
-  const files = (await fs.readdir(migrationsDir))
-    .filter(f => f !== ".DS_Store")
-    .sort();
+      // Extract and add INSERT statements
+      extractStatements(content, "insert").forEach(stmt =>
+        insertStatements.add(stmt + ";"),
+      );
+    });
 
-  let createStatements = new Set();
-  let insertStatements = new Set();
-  let timestamp = files[files.length - 1].split("_")[0];
+    // Combine statements in logical order
+    const combinedContent = [
+      "-- Squashed migration combining all changes",
+      "-- Types and Enums",
+      ...Array.from(createStatements)
+        .filter(
+          stmt =>
+            stmt.toLowerCase().includes("type") ||
+            stmt.toLowerCase().includes("enum"),
+        )
+        .sort(),
+      "",
+      "-- Tables, Functions, and Triggers",
+      ...Array.from(createStatements)
+        .filter(
+          stmt =>
+            !stmt.toLowerCase().includes("type") &&
+            !stmt.toLowerCase().includes("enum"),
+        )
+        .sort(),
+      "",
+      "-- Data",
+      ...Array.from(insertStatements).sort(),
+      "",
+    ].join("\n");
 
-  for (const file of files) {
-    const content = await fs.readFile(path.join(migrationsDir, file), "utf-8");
-
-    // Extract and add CREATE statements
-    extractCreateStatements(content).forEach(stmt =>
-      createStatements.add(stmt + ";"),
+    fs.writeFileSync(
+      path.join(outputDir, `${timestamp}squashed_migration.sql`),
+      combinedContent,
     );
-
-    // Extract and add INSERT statements
-    extractInsertStatements(content).forEach(stmt =>
-      insertStatements.add(stmt + ";"),
-    );
+  } catch (error) {
+    console.error("Error creating squashed migration:", error);
   }
-
-  // Combine statements in logical order
-  const combinedContent = [
-    "-- Squashed migration combining all changes",
-    "-- Types and Enums",
-    ...Array.from(createStatements)
-      .filter(
-        stmt =>
-          stmt.toLowerCase().includes("type") ||
-          stmt.toLowerCase().includes("enum"),
-      )
-      .sort(),
-    "",
-    "-- Tables, Functions, and Triggers",
-    ...Array.from(createStatements)
-      .filter(
-        stmt =>
-          !stmt.toLowerCase().includes("type") &&
-          !stmt.toLowerCase().includes("enum"),
-      )
-      .sort(),
-    "",
-    "-- Data",
-    ...Array.from(insertStatements).sort(),
-    "",
-  ].join("\n");
-
-  await fs.writeFile(
-    path.join(OUTPUT_DIR, `${timestamp}squashed_migration.sql`),
-    combinedContent,
-  );
 }
 
-async function processCombinedFiles(combinedFilesDir, dest) {
-  const entries = await fs.readdir(combinedFilesDir, { withFileTypes: true });
+// Function to transform file path to flattened name
+function getFlattenedFileName(sourcePath) {
+  // Replace directory separators and special characters with underscores
+  return sourcePath.replace(/[\/\\]/g, "_").replace(/[^a-zA-Z0-9._-]/g, "_");
+}
 
-  for (const entry of entries) {
-    if (entry.name === ".DS_Store") continue;
+// Function to copy file with flattened structure
+function copyFile(sourcePath, targetDir) {
+  const flattenedName = getFlattenedFileName(sourcePath);
+  const targetPath = path.join(targetDir, flattenedName);
+  fs.copyFileSync(sourcePath, targetPath);
+}
 
-    const srcPath = path.join(combinedFilesDir, entry.name);
-    if (entry.isFile()) {
-      await fs.copyFile(srcPath, path.join(dest, entry.name));
-    } else if (entry.isDirectory()) {
-      await processCombinedFiles(srcPath, dest);
+// Function to get all whitelisted files recursively
+function getAllFiles(dirPath, arrayOfFiles = []) {
+  const files = fs.readdirSync(dirPath);
+
+  files.forEach(file => {
+    if (excludedDirs.includes(file)) return;
+
+    const filePath = path.join(dirPath, file);
+    const relativePath = path.relative(process.cwd(), filePath);
+
+    if (fs.statSync(filePath).isDirectory()) {
+      getAllFiles(filePath, arrayOfFiles);
+    } else if (isWhitelisted(relativePath)) {
+      arrayOfFiles.push(relativePath);
     }
-  }
+  });
+
+  return arrayOfFiles;
 }
 
-async function processTemplateFiles(templateDir, dest) {
-  if (!(await exists(templateDir))) return;
-
-  const entries = await fs.readdir(templateDir, { withFileTypes: true });
-
-  for (const entry of entries) {
-    if (entry.name === ".DS_Store") continue;
-
-    const srcPath = path.join(templateDir, entry.name);
-    const destPath = path.join(dest, entry.name);
-
-    if (entry.isDirectory()) {
-      await fs.mkdir(destPath, { recursive: true });
-      await processTemplateFiles(srcPath, destPath);
-    } else {
-      await fs.copyFile(srcPath, destPath);
+// Function to read llm-files.txt
+function getLLMFiles() {
+  try {
+    if (fs.existsSync("llm-files.txt")) {
+      const content = fs.readFileSync("llm-files.txt", "utf8");
+      return content.split("\n").filter(line => line.trim());
     }
+  } catch (error) {
+    console.error("Error reading llm-files.txt:", error);
   }
+  return [];
 }
 
-async function main() {
-  // Empty the output directory if it exists
-  await emptyDirectory(OUTPUT_DIR);
+// Main execution
+function main() {
+  // Clear and recreate output directories
+  clearDirectory(".llm");
+  clearDirectory(".llm-dev");
 
-  // Create fresh output directory
-  await fs.mkdir(OUTPUT_DIR, { recursive: true });
-
-  // Process app and components directories with flattened structure
-  if (await exists("app")) {
-    await processDirectory("app", OUTPUT_DIR);
-  }
-  if (await exists("components")) {
-    await processDirectory("components", OUTPUT_DIR);
+  // Create squashed migration if migrations directory exists
+  if (fs.existsSync("supabase/migrations")) {
+    createSquashedMigration("supabase/migrations", ".llm");
   }
 
-  // Process combinedFiles directory if it exists
-  // if (await exists("combinedFiles")) {
-  //   await processCombinedFiles("combinedFiles", OUTPUT_DIR);
-  // }
+  // Get all whitelisted files
+  const allFiles = getAllFiles(process.cwd());
 
-  // Process templateFiles directory if it exists
-  if (await exists("templateFiles")) {
-    await processTemplateFiles("templateFiles", OUTPUT_DIR);
-  }
+  // Get files from llm-files.txt
+  const llmFiles = getLLMFiles();
 
-  // Directories to copy (process all files in these directories)
-  const dirsToCopy = ["actions", "hooks", "types", "constants", "stores"];
-  for (const dir of dirsToCopy) {
-    if (await exists(dir)) {
-      await flatCopyDir(dir, OUTPUT_DIR);
-    }
-  }
-
-  // Handle database types separately
-  if (await exists("types/database.types.ts")) {
-    await fs.copyFile(
-      "types/database.types.ts",
-      path.join(OUTPUT_DIR, "types_database.types.ts"),
-    );
-  }
-
-  // Handle Supabase specific files
-  if (await exists("supabase/database.types.ts")) {
-    await fs.copyFile(
-      "supabase/database.types.ts",
-      path.join(OUTPUT_DIR, "supabase_database.types.ts"),
-    );
-  }
-
-  if (await exists("supabase/migrations")) {
-    // Create squashed migration only
-    await createSquashedMigration("supabase/migrations");
-  }
-
-  // Files to copy
-  const filesToCopy = [
-    "package.json",
-    "README.md",
-    "tailwind.config.ts",
-    "tailwind.config.js",
-    "tsconfig.json",
-    "next.config.mjs",
-    "configuration.ts",
-    "components.json",
-    ".env.local.example",
-    "styles/global.css",
-  ];
-
-  for (const file of filesToCopy) {
-    if (await exists(file)) {
-      const destPath = path.join(OUTPUT_DIR, path.basename(file));
-      const destDir = path.dirname(destPath);
-      if (destDir !== OUTPUT_DIR) {
-        await fs.mkdir(destDir, { recursive: true });
+  if (llmFiles.length > 0) {
+    // Copy files listed in llm-files.txt to .llm-dev
+    llmFiles.forEach(file => {
+      if (allFiles.includes(file)) {
+        copyFile(file, ".llm-dev");
+        console.log(
+          `Copied to .llm-dev: ${file} as ${getFlattenedFileName(file)}`,
+        );
       }
-      await fs.copyFile(file, destPath);
-    }
-  }
+    });
 
-  console.log("Data collection complete!");
+    // Copy remaining files to .llm
+    const remainingFiles = allFiles.filter(file => !llmFiles.includes(file));
+    remainingFiles.forEach(file => {
+      copyFile(file, ".llm");
+      console.log(`Copied to .llm: ${file} as ${getFlattenedFileName(file)}`);
+    });
+  } else {
+    // Copy all files to .llm if no files are specified in llm-files.txt
+    allFiles.forEach(file => {
+      copyFile(file, ".llm");
+      console.log(`Copied to .llm: ${file} as ${getFlattenedFileName(file)}`);
+    });
+  }
 }
 
-main().catch(console.error);
+// Run the script
+main();
