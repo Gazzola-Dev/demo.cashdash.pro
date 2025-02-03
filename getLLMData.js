@@ -10,7 +10,6 @@ const whitelistedDirs = [
   "components/layout", // Layout components
   "configuration.ts", // Configuration constants
   "constants", // Application constants
-  "stores", // State management
   "middleware", // Authentication and routing middleware
   "lib",
 ];
@@ -154,12 +153,12 @@ function createSquashedMigration(migrationsDir, outputDir) {
       "",
     ].join("\n");
 
-    fs.writeFileSync(
-      path.join(outputDir, `${timestamp}squashed_migration.sql`),
-      combinedContent,
-    );
+    const outputFileName = `${timestamp}squashed_migration.sql`;
+    fs.writeFileSync(path.join(outputDir, outputFileName), combinedContent);
+    return { originalPath: "supabase/migrations", outputFileName };
   } catch (error) {
     console.error("Error creating squashed migration:", error);
+    return null;
   }
 }
 
@@ -174,6 +173,7 @@ function copyFile(sourcePath, targetDir) {
   const flattenedName = getFlattenedFileName(sourcePath);
   const targetPath = path.join(targetDir, flattenedName);
   fs.copyFileSync(sourcePath, targetPath);
+  return flattenedName;
 }
 
 // Function to get all whitelisted files recursively
@@ -209,15 +209,37 @@ function getLLMFiles() {
   return [];
 }
 
+// Function to write index.txt
+function writeIndexFile(mappings, outputDir) {
+  const indexContent = mappings
+    .map(
+      ({ originalPath, outputFileName }) =>
+        `${originalPath} ::> ${outputFileName}`,
+    )
+    .sort()
+    .join("\n");
+  fs.writeFileSync(path.join(outputDir, "index.txt"), indexContent);
+}
+
 // Main execution
 function main() {
   // Clear and recreate output directories
   clearDirectory(".llm");
   clearDirectory(".llm-dev");
 
+  // Arrays to store file mappings
+  const llmMappings = [];
+  const llmDevMappings = [];
+
   // Create squashed migration if migrations directory exists
   if (fs.existsSync("supabase/migrations")) {
-    createSquashedMigration("supabase/migrations", ".llm");
+    const migrationMapping = createSquashedMigration(
+      "supabase/migrations",
+      ".llm",
+    );
+    if (migrationMapping) {
+      llmMappings.push(migrationMapping);
+    }
   }
 
   // Get all whitelisted files
@@ -230,25 +252,32 @@ function main() {
     // Copy files listed in llm-files.txt to .llm-dev
     llmFiles.forEach(file => {
       if (allFiles.includes(file)) {
-        copyFile(file, ".llm-dev");
-        console.log(
-          `Copied to .llm-dev: ${file} as ${getFlattenedFileName(file)}`,
-        );
+        const outputFileName = copyFile(file, ".llm-dev");
+        llmDevMappings.push({ originalPath: file, outputFileName });
+        console.log(`.llm-dev: ${outputFileName}`);
       }
     });
 
     // Copy remaining files to .llm
     const remainingFiles = allFiles.filter(file => !llmFiles.includes(file));
     remainingFiles.forEach(file => {
-      copyFile(file, ".llm");
-      console.log(`Copied to .llm: ${file} as ${getFlattenedFileName(file)}`);
+      const outputFileName = copyFile(file, ".llm");
+      llmMappings.push({ originalPath: file, outputFileName });
+      console.log(`.llm: ${outputFileName}`);
     });
   } else {
     // Copy all files to .llm if no files are specified in llm-files.txt
     allFiles.forEach(file => {
-      copyFile(file, ".llm");
-      console.log(`Copied to .llm: ${file} as ${getFlattenedFileName(file)}`);
+      const outputFileName = copyFile(file, ".llm");
+      llmMappings.push({ originalPath: file, outputFileName });
+      console.log(`.llm: ${outputFileName}`);
     });
+  }
+
+  // Write index.txt files
+  writeIndexFile(llmMappings, ".llm");
+  if (llmDevMappings.length > 0) {
+    writeIndexFile(llmDevMappings, ".llm-dev");
   }
 }
 
