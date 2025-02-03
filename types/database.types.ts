@@ -735,6 +735,7 @@ export type Database = {
       project_status: "active" | "archived" | "completed"
       task_priority: "low" | "medium" | "high" | "urgent"
       task_status:
+        | "draft"
         | "backlog"
         | "todo"
         | "in_progress"

@@ -1,67 +1,119 @@
 "use client";
 
+import { SubtaskSidebar } from "@/components/tasks/TaskPage/SubtaskSidebar";
+import { TaskComments } from "@/components/tasks/TaskPage/TaskComments";
+import { TaskDescription } from "@/components/tasks/TaskPage/TaskDescription";
+import { TaskHeader } from "@/components/tasks/TaskPage/TaskHeader";
+import { TaskSidebar } from "@/components/tasks/TaskPage/TaskSidebar";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { useGetTask } from "@/hooks/task.hooks";
-import { Files, Terminal } from "lucide-react";
+import { useCreateComment, useUpdateComment } from "@/hooks/comment.hooks";
+import { useGetTask, useUpdateTask } from "@/hooks/task.hooks";
+import { useToastQueue } from "@/hooks/useToastQueue";
+import { TerminalIcon } from "lucide-react";
 import { useParams } from "next/navigation";
 
 export default function TaskPage() {
   const params = useParams();
   const taskSlug = params.task_slug as string;
+  const { toast } = useToastQueue();
 
   const { data: taskData } = useGetTask(taskSlug);
+  const { mutate: updateTask } = useUpdateTask();
+  const { mutate: createComment } = useCreateComment(taskData?.task.id);
+  const { mutate: updateComment } = useUpdateComment();
+
+  const handleUpdateTask = (updates: any) => {
+    if (!taskData) return;
+    updateTask({
+      slug: taskData.task.slug,
+      updates,
+    });
+  };
 
   const handlePublish = () => {
-    console.log("PUBLISH");
+    if (!taskData) return;
+    updateTask({
+      slug: taskData.task.slug,
+      updates: { status: "backlog" },
+    });
+    toast({
+      title: "Task published",
+      description: "Task is now visible to all project members",
+    });
+  };
+
+  const handleUpdateComment = (commentId: string, content: string) => {
+    updateComment({ id: commentId, content });
   };
 
   if (!taskData) return null;
 
+  const isDraft = taskData.task.status === "draft";
+
   return (
     <div className="relative w-full max-w-6xl mx-auto">
-      <div className="sticky top-0 z-50 mb-4">
-        <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950">
-          <Terminal className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-          <AlertTitle className="text-amber-800 dark:text-amber-200">
-            Draft Mode
-          </AlertTitle>
-          <div className="flex items-center justify-between w-full">
-            <AlertDescription className="text-amber-600 dark:text-amber-400">
-              This task is currently in draft mode and is only visible to you.
-            </AlertDescription>
-            <Button
-              variant="outline"
-              size="sm"
-              className="ml-4 border-amber-500 text-amber-700 hover:bg-amber-100 hover:text-amber-800"
-              onClick={handlePublish}
-            >
-              Publish Task
-            </Button>
-          </div>
-        </Alert>
-      </div>
+      {isDraft && (
+        <div className="sticky top-0 z-50 mb-4">
+          <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950">
+            <TerminalIcon className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            <AlertTitle className="text-amber-800 dark:text-amber-200">
+              Draft Mode
+            </AlertTitle>
+            <div className="flex items-center justify-between w-full">
+              <AlertDescription className="text-amber-600 dark:text-amber-400">
+                This task is currently in draft mode and is only visible to you.
+              </AlertDescription>
+              <Button
+                variant="outline"
+                size="sm"
+                className="ml-4 border-amber-500 text-amber-700 hover:bg-amber-100 hover:text-amber-800"
+                onClick={handlePublish}
+              >
+                Publish Task
+              </Button>
+            </div>
+          </Alert>
+        </div>
+      )}
 
-      <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow">
-        <div className="flex items-start justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {taskData.task.title}
-            </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              {taskData.task.prefix}-{taskData.task.ordinal_id}
-            </p>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm">
-              <Files className="h-4 w-4 mr-2" />
-              Edit
-            </Button>
-          </div>
+      <div className="flex gap-6">
+        <div className="flex-1 space-y-6">
+          <TaskHeader
+            task={taskData.task}
+            onSave={title => handleUpdateTask({ title })}
+          />
+
+          <TaskDescription
+            description={taskData.task.description || ""}
+            onSave={description => handleUpdateTask({ description })}
+          />
+
+          <TaskComments
+            comments={taskData.comments || []}
+            onSubmitComment={content => createComment(content)}
+            onUpdateComment={handleUpdateComment}
+          />
         </div>
 
-        <div className="prose dark:prose-invert max-w-none">
-          {taskData.task.description}
+        <div className="w-80 space-y-6">
+          <TaskSidebar
+            task={taskData.task}
+            taskSchedule={taskData.task_schedule}
+            assigneeProfile={taskData.assignee_profile}
+            members={[]} // TODO: Pass project members
+            onUpdateTask={handleUpdateTask}
+          />
+
+          <SubtaskSidebar
+            taskId={taskData.task.id}
+            subtasks={taskData.subtasks}
+            onUpdateSubtask={(subtaskId, updates) =>
+              handleUpdateTask({
+                subtasks: [{ id: subtaskId, ...updates }],
+              })
+            }
+          />
         </div>
       </div>
     </div>

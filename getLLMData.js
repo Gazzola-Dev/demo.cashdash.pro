@@ -43,6 +43,15 @@ const whitelistedRootFiles = [
   "seed.js",
 ];
 
+// System files to ignore
+const ignoredFiles = [
+  ".DS_Store",
+  "Thumbs.db",
+  ".directory",
+  "desktop.ini",
+  ".localized",
+];
+
 // Function to clear directory contents
 function clearDirectory(dirPath) {
   if (fs.existsSync(dirPath)) {
@@ -55,6 +64,12 @@ function clearDirectory(dirPath) {
 function shouldIncludeFile(filePath) {
   // Normalize path for consistent comparison
   const normalizedPath = filePath.replace(/\\/g, "/");
+
+  // Check if file is in ignored list
+  const fileName = path.basename(normalizedPath);
+  if (ignoredFiles.includes(fileName)) {
+    return false;
+  }
 
   // If file is in repo root, check against whitelistedRootFiles
   if (!normalizedPath.includes("/")) {
@@ -102,7 +117,10 @@ function extractStatements(sql, type) {
 // Function to create squashed migration
 function createSquashedMigration(migrationsDir, outputDir) {
   try {
-    const files = fs.readdirSync(migrationsDir).sort();
+    const files = fs
+      .readdirSync(migrationsDir)
+      .filter(file => !ignoredFiles.includes(file))
+      .sort();
 
     let createStatements = new Set();
     let insertStatements = new Set();
@@ -172,7 +190,9 @@ function copyFile(sourcePath, targetDir) {
 
 // Function to get all whitelisted files recursively
 function getAllFiles(dirPath, arrayOfFiles = []) {
-  const files = fs.readdirSync(dirPath);
+  const files = fs
+    .readdirSync(dirPath)
+    .filter(file => !ignoredFiles.includes(file));
 
   files.forEach(file => {
     const filePath = path.join(dirPath, file);
