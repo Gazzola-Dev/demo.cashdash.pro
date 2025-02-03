@@ -221,8 +221,8 @@ function getLLMFiles() {
   return [];
 }
 
-// Function to write index.txt
-function writeIndexFile(mappings, outputDir) {
+// Function to write index files
+function writeIndexFile(mappings, outputDir, isDev = false) {
   const indexContent = mappings
     .map(
       ({ originalPath, outputFileName }) =>
@@ -230,7 +230,9 @@ function writeIndexFile(mappings, outputDir) {
     )
     .sort()
     .join("\n");
-  fs.writeFileSync(path.join(outputDir, "index.txt"), indexContent);
+
+  const fileName = isDev ? "_index-llm-dev.txt" : "_index-llm.txt";
+  fs.writeFileSync(path.join(outputDir, fileName), indexContent);
 }
 
 // Main execution
@@ -286,10 +288,10 @@ function main() {
     });
   }
 
-  // Write index.txt files
-  writeIndexFile(llmMappings, ".llm");
+  // Write index files
+  writeIndexFile(llmMappings, ".llm", false);
   if (llmDevMappings.length > 0) {
-    writeIndexFile(llmDevMappings, ".llm-dev");
+    writeIndexFile(llmDevMappings, ".llm-dev", true);
   }
 }
 
