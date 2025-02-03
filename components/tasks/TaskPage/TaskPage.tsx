@@ -1,130 +1,69 @@
 "use client";
-import { SubtaskSidebar } from "@/components/tasks/TaskPage/SubtaskSidebar";
-import { TaskComments } from "@/components/tasks/TaskPage/TaskComments";
-import { TaskDescription } from "@/components/tasks/TaskPage/TaskDescription";
-import { TaskHeader } from "@/components/tasks/TaskPage/TaskHeader";
-import { TaskSidebar } from "@/components/tasks/TaskPage/TaskSidebar";
-import { useCreateComment, useUpdateComment } from "@/hooks/comment.hooks";
-import { useListMembers } from "@/hooks/member.hooks";
-import {
-  useDeleteSubtask,
-  useGetTask,
-  useUpdateTask,
-} from "@/hooks/task.hooks";
-import { Tables } from "@/types/database.types";
-import { TaskResult } from "@/types/task.types";
 
-interface TaskPageProps {
-  projectSlug: string;
-  taskSlug: string;
-  initialData: TaskResult;
-}
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { useGetTask } from "@/hooks/task.hooks";
+import { Files, Terminal } from "lucide-react";
+import { useParams } from "next/navigation";
 
-const TaskPage = ({ projectSlug, taskSlug, initialData }: TaskPageProps) => {
-  const { data: taskData } = useGetTask(taskSlug, { initialData });
-  const { data: members = [] } = useListMembers(projectSlug);
-  const { mutate: updateTask } = useUpdateTask();
-  const { mutate: createComment } = useCreateComment(taskData?.task?.id);
-  const { mutate: updateComment } = useUpdateComment();
-  const { mutate: deleteSubtask } = useDeleteSubtask();
+export default function TaskPage() {
+  const params = useParams();
+  const taskSlug = params.task_slug as string;
 
-  if (!taskData) {
-    return <div className="p-8">Loading...</div>;
-  }
+  const { data: taskData } = useGetTask(taskSlug);
 
-  const {
-    task,
-    comments = [],
-    assignee_profile,
-    project,
-    task_schedule,
-    subtasks = [],
-  } = taskData;
-
-  const handleUpdateTask = (updates: any) => {
-    updateTask({
-      slug: task.slug,
-      updates,
-    });
+  const handlePublish = () => {
+    console.log("PUBLISH");
   };
 
-  const handleUpdateSubtask = (
-    subtaskId: string,
-    updates: Partial<Tables<"subtasks">>,
-  ) => {
-    const updatedTitle = updates.title?.trim();
-
-    // If the title is empty and it's not the last subtask, delete it
-    if (
-      "title" in updates &&
-      !updatedTitle &&
-      subtasks.findIndex(st => st.id === subtaskId) < subtasks.length - 1
-    ) {
-      deleteSubtask(subtaskId);
-      return;
-    }
-
-    updateTask({
-      slug: task.slug,
-      updates: {
-        subtasks: subtasks.map(st =>
-          st.id === subtaskId ? { ...st, ...updates } : st,
-        ),
-      },
-    });
-  };
-
-  const handleSaveTitle = (title: string) => {
-    handleUpdateTask({ title });
-  };
-
-  const handleSaveDescription = (description: string) => {
-    handleUpdateTask({ description });
-  };
-
-  const handleCommentSubmit = (comment: string) => {
-    createComment(comment);
-  };
-
-  const handleUpdateComment = (commentId: string, content: string) => {
-    updateComment({ id: commentId, content });
-  };
+  if (!taskData) return null;
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto pt-2 pb-6 px-6">
-        <div className="grid grid-cols-3 gap-6">
-          <div className="col-span-2">
-            <TaskHeader task={task} onSave={handleSaveTitle} />
-            <TaskDescription
-              description={task.description || ""}
-              onSave={handleSaveDescription}
-            />
-            <TaskComments
-              comments={comments}
-              onSubmitComment={handleCommentSubmit}
-              onUpdateComment={handleUpdateComment}
-            />
+    <div className="relative w-full max-w-6xl mx-auto">
+      <div className="sticky top-0 z-50 mb-4">
+        <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950">
+          <Terminal className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+          <AlertTitle className="text-amber-800 dark:text-amber-200">
+            Draft Mode
+          </AlertTitle>
+          <div className="flex items-center justify-between w-full">
+            <AlertDescription className="text-amber-600 dark:text-amber-400">
+              This task is currently in draft mode and is only visible to you.
+            </AlertDescription>
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-4 border-amber-500 text-amber-700 hover:bg-amber-100 hover:text-amber-800"
+              onClick={handlePublish}
+            >
+              Publish Task
+            </Button>
           </div>
+        </Alert>
+      </div>
 
-          <div className="space-y-6">
-            <TaskSidebar
-              task={task}
-              members={members}
-              assigneeProfile={assignee_profile}
-              taskSchedule={task_schedule}
-              onUpdateTask={handleUpdateTask}
-            />
-            <SubtaskSidebar
-              subtasks={subtasks}
-              taskId={task.id}
-              onUpdateSubtask={handleUpdateSubtask}
-            />
+      <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow">
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              {taskData.task.title}
+            </h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {taskData.task.prefix}-{taskData.task.ordinal_id}
+            </p>
           </div>
+          <div className="flex items-center space-x-2">
+            <Button variant="outline" size="sm">
+              <Files className="h-4 w-4 mr-2" />
+              Edit
+            </Button>
+          </div>
+        </div>
+
+        <div className="prose dark:prose-invert max-w-none">
+          {taskData.task.description}
         </div>
       </div>
     </div>
   );
-};
-
-export default TaskPage;
+}

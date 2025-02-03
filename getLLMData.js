@@ -6,16 +6,15 @@ const whitelistedDirs = [
   "actions", // Core business logic and data mutations
   "hooks", // Custom React hooks for reusable logic
   "types", // Type definitions useful for understanding data structures
-  "components/shared", // Shared components across the application
-  "components/layout", // Layout components
+  "components", // All component directories
   "configuration.ts", // Configuration constants
   "constants", // Application constants
   "middleware", // Authentication and routing middleware
   "lib",
 ];
 
-// Whitelist of specific files that are useful for reference
-const whitelistedFiles = [
+// Whitelist of specific files that should be included when in repo root
+const whitelistedRootFiles = [
   // Configuration files
   "tailwind.config.ts",
   "tailwind.config.js",
@@ -42,12 +41,7 @@ const whitelistedFiles = [
   "generateTypes.js",
   "getIndex.js",
   "seed.js",
-
-  // Test files are handled separately in isWhitelisted function
 ];
-
-// Excluded directories and files that shouldn't be copied
-const excludedDirs = ["node_modules", ".git", ".next", "out", "dist", "build"];
 
 // Function to clear directory contents
 function clearDirectory(dirPath) {
@@ -57,20 +51,24 @@ function clearDirectory(dirPath) {
   fs.mkdirSync(dirPath, { recursive: true });
 }
 
-// Function to check if path matches whitelist patterns
-function isWhitelisted(filePath) {
-  // Check if file is directly whitelisted
-  if (whitelistedFiles.includes(filePath)) {
-    return true;
+// Function to check if a file should be included based on whitelist rules
+function shouldIncludeFile(filePath) {
+  // Normalize path for consistent comparison
+  const normalizedPath = filePath.replace(/\\/g, "/");
+
+  // If file is in repo root, check against whitelistedRootFiles
+  if (!normalizedPath.includes("/")) {
+    return whitelistedRootFiles.includes(normalizedPath);
   }
 
-  // Check if file is a test file
-  if (filePath.endsWith(".cy.ts") || filePath.endsWith(".cy.tsx")) {
-    return true;
-  }
-
-  // Check if file is in a whitelisted directory
-  return whitelistedDirs.some(dir => filePath.startsWith(dir));
+  // Check if file is in or under a whitelisted directory
+  return whitelistedDirs.some(dir => {
+    const normalizedDir = dir.replace(/\\/g, "/");
+    return (
+      normalizedPath.startsWith(normalizedDir + "/") ||
+      normalizedPath === normalizedDir
+    );
+  });
 }
 
 // Function to extract SQL statements
@@ -104,10 +102,7 @@ function extractStatements(sql, type) {
 // Function to create squashed migration
 function createSquashedMigration(migrationsDir, outputDir) {
   try {
-    const files = fs
-      .readdirSync(migrationsDir)
-      .filter(f => f !== ".DS_Store")
-      .sort();
+    const files = fs.readdirSync(migrationsDir).sort();
 
     let createStatements = new Set();
     let insertStatements = new Set();
@@ -164,7 +159,6 @@ function createSquashedMigration(migrationsDir, outputDir) {
 
 // Function to transform file path to flattened name
 function getFlattenedFileName(sourcePath) {
-  // Replace directory separators and special characters with underscores
   return sourcePath.replace(/[\/\\]/g, "_").replace(/[^a-zA-Z0-9._-]/g, "_");
 }
 
@@ -181,14 +175,12 @@ function getAllFiles(dirPath, arrayOfFiles = []) {
   const files = fs.readdirSync(dirPath);
 
   files.forEach(file => {
-    if (excludedDirs.includes(file)) return;
-
     const filePath = path.join(dirPath, file);
     const relativePath = path.relative(process.cwd(), filePath);
 
     if (fs.statSync(filePath).isDirectory()) {
       getAllFiles(filePath, arrayOfFiles);
-    } else if (isWhitelisted(relativePath)) {
+    } else if (shouldIncludeFile(relativePath)) {
       arrayOfFiles.push(relativePath);
     }
   });
