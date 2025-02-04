@@ -11,6 +11,7 @@ const whitelistedDirs = [
   "constants", // Application constants
   "middleware", // Authentication and routing middleware
   "lib",
+  "app",
 ];
 
 // Whitelist of specific files that should be included when in repo root
@@ -51,6 +52,21 @@ const ignoredFiles = [
   "desktop.ini",
   ".localized",
 ];
+
+// Development warning header to prepend to files
+const devWarningHeader = `/*
+ * ⚠️ DEVELOPMENT USE ONLY ⚠️
+ *
+ * This file has all TypeScript errors disabled.
+ * These error suppressions should NOT be copied into application code.
+ * This file is for development reference only.
+ *
+ * Use the original source files for application code.
+ */
+// @ts-nocheck
+/* eslint-disable */
+
+`;
 
 // Function to clear directory contents
 function clearDirectory(dirPath) {
@@ -140,8 +156,9 @@ function createSquashedMigration(migrationsDir, outputDir) {
       );
     });
 
-    // Combine statements in logical order
+    // Combine statements in logical order with development warning header
     const combinedContent = [
+      devWarningHeader,
       "-- Squashed migration combining all changes",
       "-- Types and Enums",
       ...Array.from(createStatements)
@@ -180,11 +197,17 @@ function getFlattenedFileName(sourcePath) {
   return sourcePath.replace(/[\/\\]/g, "_").replace(/[^a-zA-Z0-9._-]/g, "_");
 }
 
-// Function to copy file with flattened structure
+// Function to copy file with flattened structure and add development warning header
 function copyFile(sourcePath, targetDir) {
   const flattenedName = getFlattenedFileName(sourcePath);
   const targetPath = path.join(targetDir, flattenedName);
-  fs.copyFileSync(sourcePath, targetPath);
+
+  // Read the source file
+  const content = fs.readFileSync(sourcePath, "utf8");
+
+  // Write the file with the development warning header
+  fs.writeFileSync(targetPath, devWarningHeader + content);
+
   return flattenedName;
 }
 
@@ -224,10 +247,7 @@ function getLLMFiles() {
 // Function to write index files
 function writeIndexFile(mappings, outputDir, isDev = false) {
   const indexContent = mappings
-    .map(
-      ({ originalPath, outputFileName }) =>
-        `${originalPath} ::> ${outputFileName}`,
-    )
+    .map(({ originalPath, outputFileName }) => `${originalPath}`)
     .sort()
     .join("\n");
 

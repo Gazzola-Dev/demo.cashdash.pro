@@ -102,9 +102,7 @@ export function AppLayout({ children, layoutData }: AppLayoutProps) {
               <Dot className="size-3" />
               <Link href={configuration.paths.terms}>Terms</Link>
               <Dot className="size-3" />
-              <p className="">
-                &copy; {new Date().getFullYear()} Cash Dash Pro
-              </p>
+              <p className="">&copy; {new Date().getFullYear()} Apex Apps</p>
             </footer>
           </div>
         </SidebarInset>

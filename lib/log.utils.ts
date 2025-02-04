@@ -4,6 +4,7 @@ export const conditionalLog = (
   isServer = false,
   sliceCount: number | null = 10,
 ) => {
+  const isVerbose = process.env.NEXT_PUBLIC_VERBOSE_LOGS === "true";
   const serverShouldLog = process.env.SERVER_DEBUG === "true" && isServer;
   const clientShouldLog =
     process.env.NEXT_PUBLIC_CLIENT_DEBUG === "true" && !isServer;
@@ -16,7 +17,7 @@ export const conditionalLog = (
             ? JSON.stringify(value, null, 0).replace(/[{}\[\]]/g, "")
             : String(value);
 
-        if (sliceCount !== null) {
+        if (sliceCount !== null && !isVerbose) {
           valueStr = valueStr.slice(0, sliceCount);
         }
 
