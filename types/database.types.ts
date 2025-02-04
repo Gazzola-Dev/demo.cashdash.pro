@@ -663,6 +663,14 @@ export type Database = {
         }
         Returns: Json
       }
+      generate_unique_slug: {
+        Args: {
+          base_slug: string
+          table_name: string
+          existing_id?: string
+        }
+        Returns: string
+      }
       get_task_data: {
         Args: {
           task_slug: string
@@ -693,6 +701,12 @@ export type Database = {
         }
         Returns: Json
       }
+      to_kebab_case: {
+        Args: {
+          text_input: string
+        }
+        Returns: string
+      }
       update_comment_data: {
         Args: {
           comment_id: string
@@ -712,6 +726,12 @@ export type Database = {
         Args: {
           task_slug: string
           task_updates: Json
+        }
+        Returns: Json
+      }
+      upsert_draft_task: {
+        Args: {
+          p_project_slug: string
         }
         Returns: Json
       }

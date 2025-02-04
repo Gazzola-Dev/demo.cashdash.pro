@@ -1,5 +1,5 @@
 import { getTaskAction } from "@/actions/task.actions";
-import TaskPage from "@/components/tasks/TaskPage/TaskPage";
+import TaskPageContent from "@/components/tasks/TaskPage/TaskPageContent";
 import { notFound } from "next/navigation";
 
 interface TaskPageProps {
@@ -11,24 +11,24 @@ interface TaskPageProps {
 
 export default async function TaskPageRoute({ params }: TaskPageProps) {
   try {
-    const { data: task, error } = await getTaskAction(params.task_slug);
+    const { data: taskData, error } = await getTaskAction(params.task_slug);
 
-    if (error || !task) {
+    if (error || !taskData) {
       console.error("Error fetching task:", error);
       return notFound();
     }
 
     // Verify that the task belongs to the correct project by checking slug
-    if (task.project?.slug !== params.project_slug) {
+    if (taskData.project?.slug !== params.project_slug) {
       console.error("Task does not belong to this project");
       return notFound();
     }
 
     return (
-      <TaskPage
+      <TaskPageContent
         projectSlug={params.project_slug}
         taskSlug={params.task_slug}
-        initialData={task}
+        initialData={taskData}
       />
     );
   } catch (error) {

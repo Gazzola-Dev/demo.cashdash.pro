@@ -8,7 +8,9 @@ import {
   listTasksAction,
   reorderTasksAction,
   updateTaskAction,
+  upsertDraftTaskAction,
 } from "@/actions/task.actions";
+import configuration from "@/configuration";
 import { conditionalLog, getErrorMessage, minifyForLog } from "@/lib/log.utils";
 import { TablesInsert } from "@/types/database.types";
 import { HookOptions } from "@/types/db.types";
@@ -19,6 +21,7 @@ import {
   TaskUpdateWithSubtasks,
 } from "@/types/task.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { useToastQueue } from "./useToastQueue";
 
 enum SuccessMessages {
@@ -96,13 +99,14 @@ export const useCreateTask = ({
 };
 
 // Update task hook
-export const useUpdateTask = ({
-  errorMessage,
-  successMessage,
-}: HookOptions<TaskResult> = {}) => {
+export const useUpdateTask = (
+  { errorMessage, successMessage }: HookOptions<TaskResult> = {},
+  isDraft = false,
+) => {
   const hookName = "useUpdateTask";
   const queryClient = useQueryClient();
   const { toast } = useToastQueue();
+  const router = useRouter();
 
   return useMutation({
     mutationFn: async ({
@@ -121,6 +125,16 @@ export const useUpdateTask = ({
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       if (data) {
         queryClient.invalidateQueries({ queryKey: ["task", data.task.slug] });
+        queryClient.invalidateQueries({
+          queryKey: ["draft-task", data.project?.slug],
+        });
+        if (isDraft && data.task.status !== "draft")
+          router.push(
+            configuration.paths.tasks.view({
+              project_slug: data.project?.slug,
+              task_slug: data.task.slug,
+            }),
+          );
       }
       toast({
         title: successMessage || SuccessMessages.UPDATE,
@@ -273,6 +287,19 @@ export const useDeleteSubtask = ({
         description: "Failed to delete subtask",
         variant: "destructive",
       });
+    },
+  });
+};
+
+export const useGetDraftTask = (projectSlug: string) => {
+  const hookName = "useGetDraftTask";
+
+  return useQuery({
+    queryKey: ["draft-task", projectSlug],
+    queryFn: async () => {
+      const { data, error } = await upsertDraftTaskAction(projectSlug);
+      if (error) throw error;
+      return data;
     },
   });
 };

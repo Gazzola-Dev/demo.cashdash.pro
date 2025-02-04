@@ -360,3 +360,26 @@ export const deleteSubtaskAction = async (
     return getActionResponse({ error });
   }
 };
+
+export const upsertDraftTaskAction = async (
+  projectSlug: string,
+): Promise<ActionResponse<TaskResult>> => {
+  const actionName = "upsertDraftTaskAction";
+  const supabase = await getSupabaseServerActionClient();
+
+  try {
+    const { data, error } = await supabase.rpc("upsert_draft_task", {
+      p_project_slug: projectSlug,
+    });
+
+    conditionalLog(actionName, { data, error }, true);
+
+    if (error) throw error;
+    if (!data) throw new Error("No data returned from upsert_draft_task");
+
+    return getActionResponse({ data: data as any as TaskResult });
+  } catch (error) {
+    conditionalLog(actionName, { error }, true);
+    return getActionResponse({ error });
+  }
+};
