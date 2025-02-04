@@ -14,6 +14,11 @@ const whitelistedDirs = [
   "app",
 ];
 
+// Blacklist of directories that should be excluded even if under whitelisted directories
+const blacklistedDirs = [
+  "ui", // Exclude components/ui directory
+];
+
 // Whitelist of specific files that should be included when in repo root
 const whitelistedRootFiles = [
   // Configuration files
@@ -84,6 +89,11 @@ function shouldIncludeFile(filePath) {
   // Check if file is in ignored list
   const fileName = path.basename(normalizedPath);
   if (ignoredFiles.includes(fileName)) {
+    return false;
+  }
+
+  // Check if file is in or under a blacklisted directory
+  if (blacklistedDirs.some(dir => normalizedPath.includes(`/${dir}/`))) {
     return false;
   }
 

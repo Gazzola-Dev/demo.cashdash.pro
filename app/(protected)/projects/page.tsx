@@ -1,5 +1,9 @@
-const Page = async () => {
-  return <div>page</div>;
-};
+import ProjectTable from "@/components/projects/ProjectTable";
 
-export default Page;
+export default function ProjectsPage() {
+  return (
+    <div className="container">
+      <ProjectTable />
+    </div>
+  );
+}
