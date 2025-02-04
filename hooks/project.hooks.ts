@@ -22,7 +22,6 @@ enum SuccessMessages {
   DELETE = "Project deleted successfully",
 }
 
-// List projects hook
 export const useListProjects = (filters?: {
   status?: Project["status"];
   search?: string;
@@ -41,7 +40,6 @@ export const useListProjects = (filters?: {
   });
 };
 
-// Get single project hook
 export const useGetProject = (projectId: string) => {
   const hookName = "useGetProject";
 
@@ -56,7 +54,6 @@ export const useGetProject = (projectId: string) => {
   });
 };
 
-// Create project hook
 export const useCreateProject = ({
   errorMessage,
   successMessage,
@@ -88,7 +85,6 @@ export const useCreateProject = ({
   });
 };
 
-// Update project hook
 export const useUpdateProject = ({
   errorMessage,
   successMessage,
@@ -127,7 +123,6 @@ export const useUpdateProject = ({
   });
 };
 
-// Delete project hook
 export const useDeleteProject = ({
   errorMessage,
   successMessage,

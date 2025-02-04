@@ -689,6 +689,15 @@ export type Database = {
         }
         Returns: Json[]
       }
+      list_projects: {
+        Args: {
+          p_search?: string
+          p_status?: string
+          p_sort_column?: string
+          p_sort_order?: string
+        }
+        Returns: Json[]
+      }
       list_tasks: {
         Args: {
           p_project_id?: string

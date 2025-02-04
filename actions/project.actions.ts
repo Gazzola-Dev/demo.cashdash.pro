@@ -5,7 +5,7 @@ import getActionResponse from "@/lib/action.util";
 import { conditionalLog } from "@/lib/log.utils";
 import { ActionResponse } from "@/types/action.types";
 import { Tables, TablesInsert, TablesUpdate } from "@/types/database.types";
-import { ProjectListResponse, ProjectWithDetails } from "@/types/project.types";
+import { ProjectWithDetails } from "@/types/project.types";
 
 type Project = Tables<"projects">;
 
@@ -56,7 +56,7 @@ export const createProjectAction = async (
     conditionalLog(actionName, { fullProject, fetchError }, true);
     if (fetchError) throw fetchError;
 
-    // Transform the profile arrays into single objects
+    // Transform nested objects
     const transformedProject = {
       ...fullProject,
       project_members: fullProject.project_members?.map(member => ({
@@ -118,7 +118,7 @@ export const updateProjectAction = async (
 
     if (error) throw error;
 
-    // Transform the profile arrays into single objects
+    // Transform nested objects
     const transformedProject = {
       ...data,
       project_members: data.project_members?.map(member => ({
@@ -206,7 +206,7 @@ export const getProjectAction = async (
 
     if (error) throw error;
 
-    // Transform the profile arrays into single objects
+    // Transform nested objects
     const transformedProject = {
       ...data,
       project_members: data.project_members?.map(member => ({
@@ -231,62 +231,32 @@ export const listProjectsAction = async (filters?: {
   search?: string;
   sort?: keyof Project;
   order?: "asc" | "desc";
-}): Promise<ProjectListResponse> => {
+}): Promise<ActionResponse<ProjectWithDetails[]>> => {
   const actionName = "listProjectsAction";
   const supabase = await getSupabaseServerActionClient();
 
+  console.log("filters", filters);
   try {
-    let query = supabase.from("projects").select(`
-      *,
-      project_members (
-        *,
-        profile:profiles!user_id(*)
-      ),
-      project_invitations (
-        *,
-        inviter:profiles!invited_by(*)
-      ),
-      tasks (*),
-      external_integrations (*),
-      project_metrics (*)
-    `);
+    const { data, error } = await supabase.rpc("list_projects", {
+      p_status: filters?.status || undefined,
+      p_search: filters?.search || undefined,
+      p_sort_column: filters?.sort || undefined,
+      p_sort_order: filters?.order || undefined,
+    });
 
-    if (filters?.status) {
-      query = query.eq("status", filters.status);
-    }
+    console.log("data", data);
+    console.log("error", error);
 
-    if (filters?.search) {
-      query = query.ilike("name", `%${filters.search}%`);
-    }
-
-    if (filters?.sort) {
-      query = query.order(filters.sort, { ascending: filters.order === "asc" });
-    } else {
-      query = query.order("created_at", { ascending: false });
-    }
-
-    const { data, error } = await query;
-
-    conditionalLog(actionName, { data, error }, true);
+    conditionalLog(actionName, { data, error });
 
     if (error) throw error;
 
-    // Transform the profile arrays into single objects for each project
-    const transformedProjects = data?.map(project => ({
-      ...project,
-      project_members: project.project_members?.map(member => ({
-        ...member,
-        profile: member.profile?.[0] || null,
-      })),
-      project_invitations: project.project_invitations?.map(invitation => ({
-        ...invitation,
-        inviter: invitation.inviter?.[0] || null,
-      })),
-    }));
-
-    return getActionResponse({ data: transformedProjects });
+    // Assert the type since we know the DB function returns data matching ProjectWithDetails
+    return getActionResponse({
+      data: (data || []) as any as ProjectWithDetails[],
+    });
   } catch (error) {
-    conditionalLog(actionName, { error }, true);
+    conditionalLog(actionName, { error });
     return getActionResponse({ error });
   }
 };
