@@ -36,6 +36,7 @@ import {
   LayoutDashboard,
   LifeBuoy,
   Menu,
+  PlusIcon,
   Send,
   Settings2,
   Signal,
@@ -200,7 +201,7 @@ function AppSidebar({ layoutData }: { layoutData: LayoutData }) {
                         href={configuration.paths.tasks.all({
                           project_slug: currentProject.slug,
                         })}
-                        matchPattern={`/${currentProject.slug}/tasks`}
+                        matchPattern={`/${currentProject.slug}/tasks$`}
                       >
                         <div className="flex w-full items-center justify-between">
                           <h2
@@ -261,6 +262,38 @@ function AppSidebar({ layoutData }: { layoutData: LayoutData }) {
                   ))}
                 </TooltipProvider>
               </SidebarMenu>
+
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <SidebarMenuItem>
+                      <SidebarButton
+                        href={configuration.paths.tasks.new({
+                          project_slug: currentProject.slug,
+                        })}
+                        matchPattern={`/${currentProject.slug}/tasks/new`}
+                      >
+                        <div className="flex w-full items-center justify-end">
+                          <div className="flex items-center gap-2 text-xs">
+                            <span
+                              className={cn(
+                                !open && "hidden",
+                                "italic font-medium",
+                              )}
+                            >
+                              New task
+                            </span>
+                            <PlusIcon className="size-3.5" />
+                          </div>
+                        </div>
+                      </SidebarButton>
+                    </SidebarMenuItem>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    {open ? "View and manage all tasks" : "All tasks"}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </SidebarGroup>
           </>
         )}
