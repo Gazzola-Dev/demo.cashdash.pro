@@ -13,6 +13,6 @@ export async function middleware(request: NextRequest) {
   const response = NextResponse.next();
   const csrfResponse = await csrffMiddleware(request, response);
   const adminResponse = await adminMiddleware(request, csrfResponse);
-  const userResponse = await userMiddleware(request, adminResponse);  
-  return userResponse
+  const userResponse = await userMiddleware(request, adminResponse);
+  return userResponse;
 }
