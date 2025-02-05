@@ -3,7 +3,11 @@
 import getSupabaseServerActionClient from "@/clients/action-client";
 import getActionResponse from "@/lib/action.util";
 import { conditionalLog } from "@/lib/log.utils";
-import { ProfileResponse, UpdateProfileInput } from "@/types/profile.types";
+import {
+  ProfileResponse,
+  ProfileWithDetails,
+  UpdateProfileInput,
+} from "@/types/profile.types";
 
 export const getProfileAction = async (): Promise<ProfileResponse> => {
   const actionName = "getProfileAction";
@@ -24,7 +28,7 @@ export const getProfileAction = async (): Promise<ProfileResponse> => {
     conditionalLog(actionName, { data, error }, true);
     if (error) throw error;
 
-    return getActionResponse({ data: data as any as ProfileResponse["data"] });
+    return getActionResponse({ data: data as any as ProfileWithDetails });
   } catch (error) {
     conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });

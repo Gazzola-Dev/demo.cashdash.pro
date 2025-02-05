@@ -22,7 +22,6 @@ import configuration from "@/configuration";
 import { useGetProfile, useUpdateProfile } from "@/hooks/profile.hooks";
 import { useListProjects } from "@/hooks/project.hooks";
 import { cn } from "@/lib/utils";
-import { ProjectWithDetails } from "@/types/project.types";
 import { ChevronsUpDown, Code2, ListFilter, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -42,11 +41,6 @@ export function ProjectSwitcher() {
       projects[0],
     [projects, profileData?.profile.current_project_id],
   );
-
-  const handleProjectSelect = (project: ProjectWithDetails) => {
-    updateProfile({ current_project_id: project.id });
-    router.refresh();
-  };
 
   if (!activeProject) return null;
 
@@ -98,17 +92,20 @@ export function ProjectSwitcher() {
               {projects.map(project => (
                 <Tooltip key={project.id}>
                   <TooltipTrigger asChild>
-                    <DropdownMenuItem
-                      onClick={() => handleProjectSelect(project)}
-                      className="cursor-pointer dark:hover:bg-gray-800 dark:focus:bg-gray-800"
+                    <Link
+                      href={configuration.paths.project.overview({
+                        project_slug: project.slug,
+                      })}
                     >
-                      <div className="flex size-6 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-700">
-                        <Code2 className="size-4 shrink-0 dark:text-gray-100" />
-                      </div>
-                      <div className="ml-2 flex-1 truncate dark:text-gray-100">
-                        {project.name}
-                      </div>
-                    </DropdownMenuItem>
+                      <DropdownMenuItem className="cursor-pointer dark:hover:bg-gray-800 dark:focus:bg-gray-800">
+                        <div className="flex size-6 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-700">
+                          <Code2 className="size-4 shrink-0 dark:text-gray-100" />
+                        </div>
+                        <div className="ml-2 flex-1 truncate dark:text-gray-100">
+                          {project.name}
+                        </div>
+                      </DropdownMenuItem>
+                    </Link>
                   </TooltipTrigger>
                   <TooltipContent
                     side="right"
