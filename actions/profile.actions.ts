@@ -18,9 +18,8 @@ export const getProfileAction = async (): Promise<ProfileResponse> => {
     conditionalLog(actionName, { user, userError }, true);
     if (userError || !user) throw new Error("Not authenticated");
 
-    const { data, error } = await supabase.rpc("get_profile_data", {
-      user_id: user.id,
-    });
+    // Remove the user_id parameter since the function uses auth.uid() internally
+    const { data, error } = await supabase.rpc("get_profile_data");
 
     conditionalLog(actionName, { data, error }, true);
     if (error) throw error;
