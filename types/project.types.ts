@@ -2,7 +2,7 @@ import { ActionResponse } from "@/types/action.types";
 import { Tables } from "@/types/database.types";
 
 // Base types from database
-type Project = Tables<"projects">;
+export type Project = Tables<"projects">;
 type ProjectMember = Tables<"project_members">;
 type ProjectInvitation = Tables<"project_invitations">;
 type Task = Tables<"tasks">;

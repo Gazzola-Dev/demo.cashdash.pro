@@ -17,8 +17,8 @@ export const listTasksAction = async (
 ): Promise<ActionResponse<TaskResult[]>> => {
   const actionName = "listTasksAction";
   const supabase = await getSupabaseServerActionClient();
-  if (!filters?.projectSlug) throw new Error("Project slug is required");
-
+  if (!filters?.projectSlug)
+    return getActionResponse({ error: "No project slug provided" });
   try {
     const { data: rawData, error } = await supabase.rpc("list_project_tasks", {
       project_slug: filters.projectSlug,

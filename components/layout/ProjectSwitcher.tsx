@@ -1,4 +1,3 @@
-"use client";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -20,34 +19,32 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import configuration from "@/configuration";
-import { useSetCurrentProject } from "@/hooks/layout.hooks";
+import { useGetProfile, useUpdateProfile } from "@/hooks/profile.hooks";
+import { useListProjects } from "@/hooks/project.hooks";
 import { cn } from "@/lib/utils";
-import { LayoutProject } from "@/types/layout.types";
-import { ChevronsUpDown, ListFilter, Plus } from "lucide-react";
+import { ProjectWithDetails } from "@/types/project.types";
+import { ChevronsUpDown, Code2, ListFilter, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 
-interface ProjectSwitcherProps {
-  projects: (LayoutProject & { logo: React.ElementType })[];
-}
-
-export function ProjectSwitcher({ projects }: ProjectSwitcherProps) {
+export function ProjectSwitcher() {
   const { isMobile, open } = useSidebar();
   const router = useRouter();
-  const setCurrentProject = useSetCurrentProject();
+  const { data: profileData } = useGetProfile();
+  const { data: projects = [] } = useListProjects();
+  const { mutate: updateProfile } = useUpdateProfile();
 
-  const initialProject =
-    projects.find(project => project.isCurrent) || projects[0];
-  const [activeProject, setActiveProject] = React.useState<
-    LayoutProject & { logo: React.ElementType }
-  >(initialProject);
+  // Get active project based on current_project_id
+  const activeProject = React.useMemo(
+    () =>
+      projects.find(p => p.id === profileData?.profile.current_project_id) ||
+      projects[0],
+    [projects, profileData?.profile.current_project_id],
+  );
 
-  const handleProjectSelect = (
-    project: LayoutProject & { logo: React.ElementType },
-  ) => {
-    setCurrentProject.mutate(project.id);
-    setActiveProject(project);
+  const handleProjectSelect = (project: ProjectWithDetails) => {
+    updateProfile({ current_project_id: project.id });
     router.refresh();
   };
 
@@ -72,7 +69,7 @@ export function ProjectSwitcher({ projects }: ProjectSwitcherProps) {
                   !open && "ml-1.5 mt-1.5",
                 )}
               >
-                <activeProject.logo className="size-4 dark:text-gray-100" />
+                <Code2 className="size-4 dark:text-gray-100" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold dark:text-gray-100">
@@ -98,18 +95,18 @@ export function ProjectSwitcher({ projects }: ProjectSwitcherProps) {
               My Projects
             </DropdownMenuLabel>
             <TooltipProvider>
-              {projects.map(team => (
-                <Tooltip key={team.id}>
+              {projects.map(project => (
+                <Tooltip key={project.id}>
                   <TooltipTrigger asChild>
                     <DropdownMenuItem
-                      onClick={() => handleProjectSelect(team)}
+                      onClick={() => handleProjectSelect(project)}
                       className="cursor-pointer dark:hover:bg-gray-800 dark:focus:bg-gray-800"
                     >
                       <div className="flex size-6 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-700">
-                        <team.logo className="size-4 shrink-0 dark:text-gray-100" />
+                        <Code2 className="size-4 shrink-0 dark:text-gray-100" />
                       </div>
                       <div className="ml-2 flex-1 truncate dark:text-gray-100">
-                        {team.name}
+                        {project.name}
                       </div>
                     </DropdownMenuItem>
                   </TooltipTrigger>
@@ -117,7 +114,7 @@ export function ProjectSwitcher({ projects }: ProjectSwitcherProps) {
                     side="right"
                     className="dark:bg-gray-800 dark:text-gray-100"
                   >
-                    {team.name}
+                    {project.name}
                   </TooltipContent>
                 </Tooltip>
               ))}
@@ -176,3 +173,5 @@ export function ProjectSwitcher({ projects }: ProjectSwitcherProps) {
     </SidebarMenu>
   );
 }
+
+export default ProjectSwitcher;

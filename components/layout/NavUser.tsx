@@ -1,4 +1,3 @@
-import ThemeSwitcher from "@/components/layout/ThemeSwitcher";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,9 +21,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import configuration from "@/configuration";
+import { useGetProfile } from "@/hooks/profile.hooks";
 import { useSignOut } from "@/hooks/user.hooks";
 import { cn } from "@/lib/utils";
-import { LayoutData } from "@/types/layout.types";
 import {
   Bell,
   ChevronsUpDown,
@@ -34,19 +33,19 @@ import {
   UsersRound,
 } from "lucide-react";
 import Link from "next/link";
+import ThemeSwitcher from "./ThemeSwitcher";
 
-interface NavUserProps {
-  user: LayoutData["user"];
-}
-
-export function NavUser({ user }: NavUserProps) {
+export function NavUser() {
   const { isMobile } = useSidebar();
   const { mutate: signOut } = useSignOut();
   const { open } = useSidebar();
+  const { data: profileData } = useGetProfile();
 
   const handleSignOut = () => {
     signOut();
   };
+
+  if (!profileData) return null;
 
   return (
     <SidebarMenu>
@@ -62,17 +61,20 @@ export function NavUser({ user }: NavUserProps) {
               )}
             >
               <Avatar className="size-8 rounded-lg">
-                <AvatarImage src={user.avatar ?? ""} alt={user.name} />
+                <AvatarImage
+                  src={profileData.profile.avatar_url ?? ""}
+                  alt={profileData.profile.display_name ?? "User"}
+                />
                 <AvatarFallback className="rounded-lg dark:bg-gray-700 dark:text-gray-100">
-                  {user.name.charAt(0)}
+                  {profileData.profile.display_name?.charAt(0) ?? "?"}
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold dark:text-gray-100">
-                  {user.name}
+                  {profileData.profile.display_name ?? "Unnamed User"}
                 </span>
                 <span className="truncate text-xs dark:text-gray-400">
-                  {user.email}
+                  {profileData.profile.professional_title ?? "No title set"}
                 </span>
               </div>
               {open && (
@@ -92,17 +94,20 @@ export function NavUser({ user }: NavUserProps) {
                 className="flex items-center gap-2 p-1 cursor-pointer dark:hover:bg-gray-800 rounded-md"
               >
                 <Avatar className="size-8 rounded-lg">
-                  <AvatarImage src={user.avatar || ""} alt={user.name} />
+                  <AvatarImage
+                    src={profileData.profile.avatar_url ?? ""}
+                    alt={profileData.profile.display_name ?? "User"}
+                  />
                   <AvatarFallback className="rounded-lg dark:bg-gray-700 dark:text-gray-100">
-                    {user.name.charAt(0)}
+                    {profileData.profile.display_name?.charAt(0) ?? "?"}
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm">
                   <span className="font-semibold dark:text-gray-100">
-                    {user.name}
+                    {profileData.profile.display_name ?? "Unnamed User"}
                   </span>
                   <span className="text-xs dark:text-gray-400">
-                    {user.email}
+                    {profileData.profile.professional_title ?? "No title set"}
                   </span>
                 </div>
               </Link>

@@ -235,7 +235,6 @@ export const listProjectsAction = async (filters?: {
   const actionName = "listProjectsAction";
   const supabase = await getSupabaseServerActionClient();
 
-  console.log("filters", filters);
   try {
     const { data, error } = await supabase.rpc("list_projects", {
       p_status: filters?.status || undefined,
@@ -243,9 +242,6 @@ export const listProjectsAction = async (filters?: {
       p_sort_column: filters?.sort || undefined,
       p_sort_order: filters?.order || undefined,
     });
-
-    console.log("data", data);
-    console.log("error", error);
 
     conditionalLog(actionName, { data, error });
 

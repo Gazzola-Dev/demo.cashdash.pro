@@ -199,6 +199,7 @@ export type Database = {
           display_name: string | null
           github_username: string | null
           id: string
+          invited: boolean
           notification_preferences: Json | null
           professional_title: string | null
           timezone: string | null
@@ -214,6 +215,7 @@ export type Database = {
           display_name?: string | null
           github_username?: string | null
           id: string
+          invited?: boolean
           notification_preferences?: Json | null
           professional_title?: string | null
           timezone?: string | null
@@ -229,6 +231,7 @@ export type Database = {
           display_name?: string | null
           github_username?: string | null
           id?: string
+          invited?: boolean
           notification_preferences?: Json | null
           professional_title?: string | null
           timezone?: string | null
@@ -671,6 +674,17 @@ export type Database = {
         }
         Returns: string
       }
+      get_profile_data:
+        | {
+            Args: Record<PropertyKey, never>
+            Returns: Json
+          }
+        | {
+            Args: {
+              user_id: string
+            }
+            Returns: Json
+          }
       get_task_data: {
         Args: {
           task_slug: string

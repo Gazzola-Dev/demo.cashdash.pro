@@ -1,8 +1,10 @@
 "use client";
+
 import NavUser from "@/components/layout/NavUser";
 import { ProjectSwitcher } from "@/components/layout/ProjectSwitcher";
 import RouteBreadcrumb from "@/components/layout/RouteBreadCrumb";
 import { SidebarButton } from "@/components/layout/SidebarComponents";
+import { Button } from "@/components/ui/button";
 import {
   Sidebar,
   SidebarContent,
@@ -15,7 +17,6 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
-  useSidebar,
 } from "@/components/ui/sidebar";
 import {
   TooltipContent,
@@ -23,14 +24,10 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import configuration from "@/configuration";
-import { cn } from "@/lib/utils";
-import { LayoutData } from "@/types/layout.types";
+import { useGetProfile } from "@/hooks/profile.hooks";
 import { Tooltip } from "@radix-ui/react-tooltip";
 import {
-  ArrowRight,
-  CircleAlert,
   Clock,
-  Code2,
   Dot,
   Kanban,
   LayoutDashboard,
@@ -39,9 +36,6 @@ import {
   PlusIcon,
   Send,
   Settings2,
-  Signal,
-  SignalHigh,
-  SignalMedium,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -49,21 +43,169 @@ import React from "react";
 
 interface AppLayoutProps {
   children: React.ReactNode;
-  layoutData: LayoutData;
+  projectSlug?: string;
 }
 
-export function AppLayout({ children, layoutData }: AppLayoutProps) {
+export function AppLayout({ children }: AppLayoutProps) {
+  const { data: profileData } = useGetProfile();
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
-        <AppSidebar layoutData={layoutData} />
+        <Sidebar collapsible="icon">
+          <SidebarContent className="border-r dark:border-blue-900">
+            <SidebarHeader>
+              <ProjectSwitcher />
+            </SidebarHeader>
+            {profileData?.current_project && (
+              <>
+                <SidebarGroup>
+                  <SidebarMenu>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <SidebarMenuItem>
+                            <SidebarButton
+                              href={configuration.paths.project.overview({
+                                project_slug: profileData.current_project.slug,
+                              })}
+                              matchPattern={`/${profileData.current_project.slug}$`}
+                            >
+                              <LayoutDashboard className="size-4" />
+                              <span>Overview</span>
+                            </SidebarButton>
+                          </SidebarMenuItem>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">Overview</TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <SidebarMenuItem>
+                            <SidebarButton
+                              href={configuration.paths.project.timeline({
+                                project_slug: profileData.current_project.slug,
+                              })}
+                            >
+                              <Clock className="size-4" />
+                              <span>Timeline</span>
+                            </SidebarButton>
+                          </SidebarMenuItem>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">Timeline</TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <SidebarMenuItem>
+                            <SidebarButton
+                              href={configuration.paths.project.kanban({
+                                project_slug: profileData.current_project.slug,
+                              })}
+                            >
+                              <Kanban className="size-4" />
+                              <span>Kanban</span>
+                            </SidebarButton>
+                          </SidebarMenuItem>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">Kanban</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </SidebarMenu>
+                </SidebarGroup>
+
+                <SidebarGroup>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <SidebarMenuItem>
+                          <SidebarButton
+                            href={configuration.paths.tasks.all({
+                              project_slug: profileData.current_project.slug,
+                            })}
+                            matchPattern={`/${profileData.current_project.slug}/tasks$`}
+                          >
+                            <div className="flex w-full items-center justify-between gap-2">
+                              <h2 className="text-sm font-medium">Tasks</h2>
+                              <Button variant="ghost" size="icon" asChild>
+                                <Link
+                                  href={configuration.paths.tasks.new({
+                                    project_slug:
+                                      profileData.current_project.slug,
+                                  })}
+                                >
+                                  <PlusIcon className="size-4" />
+                                </Link>
+                              </Button>
+                            </div>
+                          </SidebarButton>
+                        </SidebarMenuItem>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">Manage Tasks</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </SidebarGroup>
+              </>
+            )}
+
+            <SidebarGroup className="mt-auto">
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <SidebarMenuItem>
+                          <SidebarButton
+                            href={configuration.paths.settings.all}
+                          >
+                            <Settings2 className="size-4" />
+                            <span>Settings</span>
+                          </SidebarButton>
+                        </SidebarMenuItem>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">Settings</TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <SidebarMenuItem>
+                          <SidebarButton href={configuration.paths.feedback}>
+                            <Send className="size-4" />
+                            <span>Feedback</span>
+                          </SidebarButton>
+                        </SidebarMenuItem>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">Feedback</TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <SidebarMenuItem>
+                          <SidebarButton href={configuration.paths.support}>
+                            <LifeBuoy className="size-4" />
+                            <span>Support</span>
+                          </SidebarButton>
+                        </SidebarMenuItem>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">Support</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            <SidebarFooter>
+              <NavUser />
+            </SidebarFooter>
+          </SidebarContent>
+        </Sidebar>
+
         <SidebarInset>
           <header className="flex h-12 shrink-0 items-start justify-between gap-2">
             <div className="flex">
               <SidebarTrigger className="p-6 hover:bg-gray-100 rounded-t-none rounded-l-none">
                 <Menu className="size-4" />
               </SidebarTrigger>
-              <RouteBreadcrumb layoutData={layoutData} />
+              <RouteBreadcrumb />
             </div>
             <div className="flex items-center justify-center gap-2 h-full pr-[1.1rem]">
               <Image
@@ -109,265 +251,6 @@ export function AppLayout({ children, layoutData }: AppLayoutProps) {
         </SidebarInset>
       </div>
     </SidebarProvider>
-  );
-}
-
-function AppSidebar({ layoutData }: { layoutData: LayoutData }) {
-  const { open } = useSidebar();
-  const currentProject = layoutData.currentProject;
-
-  const projectsWithLogos = layoutData.projects.map(project => ({
-    ...project,
-    logo: Code2,
-  }));
-
-  return (
-    <Sidebar collapsible="icon">
-      <SidebarContent className="border-r dark:border-blue-900">
-        <SidebarHeader>
-          <ProjectSwitcher projects={projectsWithLogos} />
-        </SidebarHeader>
-        {currentProject && (
-          <>
-            <SidebarGroup>
-              <SidebarMenu>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <SidebarMenuItem>
-                        <SidebarButton
-                          href={configuration.paths.project.overview({
-                            project_slug: currentProject.slug,
-                          })}
-                          matchPattern={`/${currentProject.slug}$`}
-                        >
-                          <LayoutDashboard className="size-4" />
-                          <span>Overview</span>
-                        </SidebarButton>
-                      </SidebarMenuItem>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">
-                      {open
-                        ? "View project dashboard and key metrics"
-                        : "Overview"}
-                    </TooltipContent>
-                  </Tooltip>
-
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <SidebarMenuItem>
-                        <SidebarButton
-                          href={configuration.paths.project.timeline({
-                            project_slug: currentProject.slug,
-                          })}
-                        >
-                          <Clock className="size-4" />
-                          <span>Timeline</span>
-                        </SidebarButton>
-                      </SidebarMenuItem>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">
-                      {open ? "View project timeline and schedule" : "Timeline"}
-                    </TooltipContent>
-                  </Tooltip>
-
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <SidebarMenuItem>
-                        <SidebarButton
-                          href={configuration.paths.project.kanban({
-                            project_slug: currentProject.slug,
-                          })}
-                        >
-                          <Kanban className="size-4" />
-                          <span>Kanban</span>
-                        </SidebarButton>
-                      </SidebarMenuItem>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">
-                      {open ? "Manage tasks in kanban board view" : "Kanban"}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </SidebarMenu>
-            </SidebarGroup>
-
-            <SidebarGroup>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <SidebarMenuItem>
-                      <SidebarButton
-                        href={configuration.paths.tasks.all({
-                          project_slug: currentProject.slug,
-                        })}
-                        matchPattern={`/${currentProject.slug}/tasks$`}
-                      >
-                        <div className="flex w-full items-center justify-between">
-                          <h2
-                            className={cn(
-                              !open && "hidden",
-                              "text-sm font-medium",
-                            )}
-                          >
-                            Tasks
-                          </h2>
-                          <div className="flex items-center gap-2 text-xs">
-                            <span
-                              className={cn(
-                                !open && "hidden",
-                                "italic font-medium",
-                              )}
-                            >
-                              View all
-                            </span>
-                            <ArrowRight className="size-3.5" />
-                          </div>
-                        </div>
-                      </SidebarButton>
-                    </SidebarMenuItem>
-                  </TooltipTrigger>
-                  <TooltipContent side="right">
-                    {open ? "View and manage all tasks" : "All tasks"}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-
-              <SidebarMenu className="pt-1.5">
-                <TooltipProvider>
-                  {layoutData.priorityTasks.map((task, i) => (
-                    <Tooltip key={task.id}>
-                      <TooltipTrigger>
-                        <SidebarMenuItem>
-                          <SidebarButton href={task.url}>
-                            {task.priority === "high" ? (
-                              <Signal className="size-4" />
-                            ) : task.priority === "medium" ? (
-                              <SignalHigh className="size-4" />
-                            ) : task.priority === "low" ? (
-                              <SignalMedium className="size-4" />
-                            ) : task.priority === "urgent" ? (
-                              <CircleAlert className="size-4" />
-                            ) : null}
-                            <span
-                              className={cn(!open && "text-base font-medium")}
-                            >
-                              {task.title}
-                            </span>
-                          </SidebarButton>
-                        </SidebarMenuItem>
-                      </TooltipTrigger>
-                      <TooltipContent side="right">{task.title}</TooltipContent>
-                    </Tooltip>
-                  ))}
-                </TooltipProvider>
-              </SidebarMenu>
-
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <SidebarMenuItem>
-                      <SidebarButton
-                        href={configuration.paths.tasks.new({
-                          project_slug: currentProject.slug,
-                        })}
-                        matchPattern={`/${currentProject.slug}/tasks/new`}
-                      >
-                        <div className="flex w-full items-center justify-end">
-                          <div className="flex items-center gap-2 text-xs">
-                            <span
-                              className={cn(
-                                !open && "hidden",
-                                "italic font-medium",
-                              )}
-                            >
-                              New task
-                            </span>
-                            <PlusIcon className="size-3.5" />
-                          </div>
-                        </div>
-                      </SidebarButton>
-                    </SidebarMenuItem>
-                  </TooltipTrigger>
-                  <TooltipContent side="right">
-                    {open ? "View and manage all tasks" : "All tasks"}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </SidebarGroup>
-          </>
-        )}
-        <NavSecondary />
-        <SidebarFooter>
-          <NavUser user={layoutData.user} />
-        </SidebarFooter>
-      </SidebarContent>
-    </Sidebar>
-  );
-}
-
-export function NavSecondary() {
-  const { open } = useSidebar();
-
-  return (
-    <SidebarGroup className="mt-auto relative">
-      <SidebarGroupContent>
-        <SidebarMenu>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger>
-                <SidebarMenuItem>
-                  <SidebarButton
-                    href={configuration.paths.settings.all}
-                    matchPattern="^/settings"
-                  >
-                    <Settings2 className="size-4" />
-                    <span>Settings</span>
-                  </SidebarButton>
-                </SidebarMenuItem>
-              </TooltipTrigger>
-              <TooltipContent side="right">
-                {open ? "Configure your account and preferences" : "Settings"}
-              </TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger>
-                <SidebarMenuItem>
-                  <SidebarButton
-                    href={configuration.paths.feedback}
-                    matchPattern="^/feedback"
-                  >
-                    <Send className="size-4" />
-                    <span>Feedback</span>
-                  </SidebarButton>
-                </SidebarMenuItem>
-              </TooltipTrigger>
-              <TooltipContent side="right">
-                {open ? "Share your feedback with us" : "Feedback"}
-              </TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger>
-                <SidebarMenuItem>
-                  <SidebarButton
-                    href={configuration.paths.support}
-                    matchPattern="^/support"
-                  >
-                    <LifeBuoy className="size-4" />
-                    <span>Support</span>
-                  </SidebarButton>
-                </SidebarMenuItem>
-              </TooltipTrigger>
-              <TooltipContent side="right">
-                {open ? "Get help and support" : "Support"}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </SidebarMenu>
-      </SidebarGroupContent>
-    </SidebarGroup>
   );
 }
 

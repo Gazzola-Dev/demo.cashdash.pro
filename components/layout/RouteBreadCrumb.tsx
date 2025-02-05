@@ -8,20 +8,46 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import configuration from "@/configuration";
+import { useGetProfile } from "@/hooks/profile.hooks";
+import { useListTasks } from "@/hooks/task.hooks";
 import { capitalizeFirstLetter, truncateString } from "@/lib/string.util";
-import { LayoutData } from "@/types/layout.types";
 import { Home } from "lucide-react";
 import { usePathname } from "next/navigation";
 
-interface RouteBreadcrumbProps {
-  layoutData: LayoutData;
-}
-
 const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
 
-export default function RouteBreadcrumb({ layoutData }: RouteBreadcrumbProps) {
+export default function RouteBreadcrumb() {
   const pathname = usePathname();
   const segments = pathname.split("/").filter(Boolean);
+  const { data } = useGetProfile();
+  const { data: profileData } = useGetProfile();
+  const { data: tasks } = useListTasks({
+    projectSlug: segments[0],
+    sort: "ordinal_id",
+    order: "asc",
+  });
+
+  if (!segments.length)
+    return (
+      <Breadcrumb className="flex-grow">
+        <BreadcrumbList className="h-full !gap-0">
+          <BreadcrumbItem className="h-full">
+            <BreadcrumbLink
+              href={configuration.paths.appHome}
+              className="h-full flex items-center px-3"
+            >
+              <Home className="size-[1.1rem]" />
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator className="h-full flex items-center" />
+          <BreadcrumbItem className="h-full">
+            <BreadcrumbPage className="capitalize h-full flex items-center px-2">
+              {profileData?.profile.display_name || "Sign in"}
+            </BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+    );
 
   // Simple routes with home icon
   const simpleRoutes = [
@@ -144,18 +170,18 @@ export default function RouteBreadcrumb({ layoutData }: RouteBreadcrumbProps) {
   // Handle project-specific routes
   if (segments.length >= 1) {
     const projectSlug = segments[0];
-    const project = layoutData.projects.find(p => p.slug === projectSlug);
+    const project = data?.projects?.find(p => p.project.slug === projectSlug);
     const projectName = truncateString(
-      capitalize(project ? project.name : projectSlug),
+      capitalize(project ? project.project.name : projectSlug),
     );
 
     // Handle task view route
     // Handle project-specific routes
     if (segments.length >= 1) {
       const projectSlug = segments[0];
-      const project = layoutData.projects.find(p => p.slug === projectSlug);
+      const project = data?.projects.find(p => p.project.slug === projectSlug);
       const projectName = truncateString(
-        capitalize(project ? project.name : projectSlug),
+        capitalize(project ? project.project.name : projectSlug),
       );
 
       // Handle task view route
@@ -163,9 +189,7 @@ export default function RouteBreadcrumb({ layoutData }: RouteBreadcrumbProps) {
         segments.length === 2 &&
         !["timeline", "kanban", "tasks"].includes(segments[1])
       ) {
-        const task = layoutData.recentTasks.find(t =>
-          t.url.includes(segments[1]),
-        );
+        const task = tasks?.find(t => t.task?.slug.includes(segments[1]));
         return (
           <Breadcrumb className="flex-grow">
             <BreadcrumbList className="h-full !gap-0">
@@ -190,7 +214,7 @@ export default function RouteBreadcrumb({ layoutData }: RouteBreadcrumbProps) {
               <BreadcrumbItem className="h-full">
                 <BreadcrumbPage className="h-full flex items-center px-2">
                   {task
-                    ? `${project?.prefix || "Task"}-${task.ordinalId}: ${capitalizeFirstLetter(task.title)}`
+                    ? `${project?.project.prefix || "Task"}-${task.task?.ordinal_id}: ${capitalizeFirstLetter(task.task.title)}`
                     : segments[1]}
                 </BreadcrumbPage>
               </BreadcrumbItem>
