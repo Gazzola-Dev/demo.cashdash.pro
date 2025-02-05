@@ -61,6 +61,7 @@ export const useListTasks = (filters?: TaskFilters) => {
       conditionalLog(hookName, { data, error });
       return data || [];
     },
+    enabled: !!filters && !!filters.projectSlug,
   });
 };
 

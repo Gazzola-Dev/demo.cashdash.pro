@@ -59,7 +59,7 @@ export interface SubtaskResponse extends ActionResponse<Subtask> {}
 
 // Filter types for listing tasks
 export interface TaskFilters {
-  projectSlug: string;
+  projectSlug?: string | null;
   status?: Tables<"tasks">["status"];
   priority?: Tables<"tasks">["priority"];
   assignee?: string;
