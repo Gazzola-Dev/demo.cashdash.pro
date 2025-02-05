@@ -10,6 +10,7 @@ import {
 import configuration from "@/configuration";
 import { useGetProfile } from "@/hooks/profile.hooks";
 import { useListTasks } from "@/hooks/task.hooks";
+import { useGetUser } from "@/hooks/user.hooks";
 import { capitalizeFirstLetter, truncateString } from "@/lib/string.util";
 import { Home } from "lucide-react";
 import { usePathname } from "next/navigation";
@@ -20,6 +21,7 @@ export default function RouteBreadcrumb() {
   const pathname = usePathname();
   const segments = pathname.split("/").filter(Boolean);
   const { data } = useGetProfile();
+  const { data: user } = useGetUser();
   const { data: profileData } = useGetProfile();
   const { data: tasks } = useListTasks({
     projectSlug: segments[0],
@@ -42,7 +44,9 @@ export default function RouteBreadcrumb() {
           <BreadcrumbSeparator className="h-full flex items-center" />
           <BreadcrumbItem className="h-full">
             <BreadcrumbPage className="capitalize h-full flex items-center px-2">
-              {profileData?.profile.display_name || "Sign in"}
+              {profileData?.profile.display_name ||
+                user?.email?.split("@")[0] ||
+                "Sign in"}
             </BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>

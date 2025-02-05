@@ -11,13 +11,20 @@ async function userMiddleware(request: NextRequest, response: NextResponse) {
   const hookName = "userMiddleware";
   const supabase = createMiddlewareClient(request, response);
   const pathname = request.nextUrl.pathname;
+  const pathSegments = pathname.split("/").filter(Boolean);
 
-  // Skip middleware for public paths
-  const publicPaths = [configuration.paths.appHome, configuration.paths.auth];
-  if (publicPaths.includes(pathname)) {
-    conditionalLog(hookName, { skippingPath: pathname }, true);
-    return response;
-  }
+  const publicPaths = [
+    "settings",
+    "support",
+    "feedback",
+    "privacy",
+    "terms",
+    "404",
+    "about",
+    "invite",
+  ];
+
+  if (publicPaths.includes(pathSegments[0])) return response;
 
   // Get user session
   const {
@@ -29,6 +36,14 @@ async function userMiddleware(request: NextRequest, response: NextResponse) {
 
   if (sessionError || !user) {
     conditionalLog(hookName, { error: "No authenticated user" }, true);
+
+    if (pathSegments[0] === "projects" && pathSegments[1] !== "new") {
+      return NextResponse.redirect(
+        new URL(configuration.paths.project.new, request.url),
+      );
+    }
+    if (pathname === configuration.paths.project.new) return response;
+
     return NextResponse.redirect(
       new URL(configuration.paths.appHome, request.url),
     );
@@ -54,7 +69,7 @@ async function userMiddleware(request: NextRequest, response: NextResponse) {
   if (!profile.invited) {
     conditionalLog(hookName, { error: "User not invited" }, true);
     return NextResponse.redirect(
-      new URL(configuration.paths.appHome, request.url),
+      new URL(configuration.paths.invite, request.url),
     );
   }
 
@@ -80,7 +95,7 @@ async function userMiddleware(request: NextRequest, response: NextResponse) {
   const projectSlugs = projects.map(p => p.slug);
 
   // Get the first path segment (potential project slug)
-  const pathSegments = pathname.split("/").filter(Boolean);
+
   const urlProjectSlug = pathSegments[0];
 
   conditionalLog(

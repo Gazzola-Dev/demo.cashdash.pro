@@ -42,7 +42,7 @@ const configuration = {
     terms: "/terms",
     notFound: "/404",
     about: "/about",
-    auth: "/auth",
+    invite: "/invite",
   },
   production,
 };
