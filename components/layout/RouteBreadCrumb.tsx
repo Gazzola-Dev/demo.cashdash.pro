@@ -229,7 +229,7 @@ export default function RouteBreadcrumb() {
     }
 
     return (
-      <Breadcrumb className="flex-grow">
+      <Breadcrumb className="flex-grow ml-1.5">
         <BreadcrumbList className="h-full !gap-0">
           <BreadcrumbItem className="h-full">
             {segments.length === 1 ? (
