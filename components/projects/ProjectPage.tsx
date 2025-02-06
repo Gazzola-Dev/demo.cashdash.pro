@@ -15,7 +15,7 @@ import {
   PROJECT_STATUS_OPTIONS,
   ProjectWithDetails,
 } from "@/types/project.types";
-import { TerminalIcon } from "lucide-react";
+import { LoaderCircle, Save, TerminalIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface ProjectPageProps {
@@ -23,6 +23,7 @@ interface ProjectPageProps {
   isNew?: boolean;
   onCreate?: (project: Partial<ProjectWithDetails>) => void;
   onUpdate?: (updates: Partial<ProjectWithDetails>) => void;
+  isPending?: boolean;
 }
 
 export function ProjectPage({
@@ -30,6 +31,7 @@ export function ProjectPage({
   isNew = false,
   onCreate,
   onUpdate,
+  isPending = false,
 }: ProjectPageProps) {
   // Only use state management for new projects
   const [formData, setFormData] = useState<Partial<ProjectWithDetails>>(
@@ -47,11 +49,14 @@ export function ProjectPage({
       : {},
   );
 
+  const [hasChanges, setHasChanges] = useState(false);
+
   // When editing an existing project, sync the form with project data
   useEffect(() => {
     if (!isNew && projectData) {
       // Clear any local form state since we're editing
       setFormData({});
+      setHasChanges(false);
     }
   }, [isNew, projectData]);
 
@@ -62,8 +67,9 @@ export function ProjectPage({
   ) => {
     if (isNew) {
       setFormData(prev => ({ ...prev, [field]: value }));
-    } else if (onUpdate && projectData) {
-      onUpdate({ [field]: value });
+    } else {
+      setHasChanges(true);
+      setFormData(prev => ({ ...prev, [field]: value }));
     }
   };
 
@@ -74,12 +80,20 @@ export function ProjectPage({
     }
   };
 
+  // Handle save for existing projects
+  const handleSave = () => {
+    if (onUpdate && formData && Object.keys(formData).length > 0) {
+      onUpdate(formData);
+      setHasChanges(false);
+    }
+  };
+
   // Get the current data based on whether we're creating or editing
-  const currentData = isNew ? formData : projectData;
+  const displayData = isNew ? formData : { ...projectData, ...formData };
 
   // Check if all required fields are filled for new project
   const isValid = Boolean(
-    currentData?.name && currentData?.prefix && currentData?.slug,
+    displayData?.name && displayData?.prefix && displayData?.slug,
   );
 
   return (
@@ -101,9 +115,18 @@ export function ProjectPage({
                 size="sm"
                 className="ml-4 border-amber-500 text-amber-700 hover:bg-amber-100 hover:text-amber-800"
                 onClick={handleCreate}
-                disabled={!isValid}
+                disabled={!isValid || isPending}
               >
-                Publish Project
+                <div className="relative flex items-center">
+                  Publish Project
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div
+                      className={`scale-0 transition-all duration-500 ease-out ${isPending ? "scale-100" : ""}`}
+                    >
+                      <LoaderCircle className="h-4 w-4 animate-spin" />
+                    </div>
+                  </div>
+                </div>
               </Button>
             </div>
           </Alert>
@@ -114,14 +137,34 @@ export function ProjectPage({
         <div className="flex-1 space-y-6">
           {/* Basic Information Card */}
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Project Information</CardTitle>
+              {!isNew && hasChanges && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSave}
+                  disabled={isPending}
+                >
+                  <div className="relative flex items-center gap-2">
+                    <Save className="h-4 w-4" />
+                    Save Changes
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div
+                        className={`scale-0 transition-all duration-500 ease-out ${isPending ? "scale-100" : ""}`}
+                      >
+                        <LoaderCircle className="h-4 w-4 animate-spin" />
+                      </div>
+                    </div>
+                  </div>
+                </Button>
+              )}
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Project Name</label>
                 <Input
-                  value={currentData?.name || ""}
+                  value={displayData?.name || ""}
                   onChange={e => handleChange("name", e.target.value)}
                   placeholder="My Awesome Project"
                 />
@@ -130,7 +173,7 @@ export function ProjectPage({
               <div className="space-y-2">
                 <label className="text-sm font-medium">Description</label>
                 <Textarea
-                  value={currentData?.description || ""}
+                  value={displayData?.description || ""}
                   onChange={e => handleChange("description", e.target.value)}
                   placeholder="Project description..."
                   className="min-h-[100px]"
@@ -140,7 +183,7 @@ export function ProjectPage({
               <div className="space-y-2">
                 <label className="text-sm font-medium">Project Status</label>
                 <Select
-                  value={currentData?.status || "active"}
+                  value={displayData?.status || "active"}
                   onValueChange={value =>
                     handleChange(
                       "status",
@@ -164,7 +207,7 @@ export function ProjectPage({
               <div className="space-y-2">
                 <label className="text-sm font-medium">Project Prefix</label>
                 <Input
-                  value={currentData?.prefix || ""}
+                  value={displayData?.prefix || ""}
                   onChange={e =>
                     handleChange("prefix", e.target.value.toUpperCase())
                   }
@@ -179,7 +222,7 @@ export function ProjectPage({
               <div className="space-y-2">
                 <label className="text-sm font-medium">Project Slug</label>
                 <Input
-                  value={currentData?.slug || ""}
+                  value={displayData?.slug || ""}
                   onChange={e =>
                     handleChange("slug", e.target.value.toLowerCase())
                   }
@@ -203,7 +246,7 @@ export function ProjectPage({
                   GitHub Repository URL
                 </label>
                 <Input
-                  value={currentData?.github_repo_url || ""}
+                  value={displayData?.github_repo_url || ""}
                   onChange={e =>
                     handleChange("github_repo_url", e.target.value)
                   }
@@ -214,7 +257,7 @@ export function ProjectPage({
               <div className="space-y-2">
                 <label className="text-sm font-medium">GitHub Owner</label>
                 <Input
-                  value={currentData?.github_owner || ""}
+                  value={displayData?.github_owner || ""}
                   onChange={e => handleChange("github_owner", e.target.value)}
                   placeholder="owner"
                 />
@@ -223,7 +266,7 @@ export function ProjectPage({
               <div className="space-y-2">
                 <label className="text-sm font-medium">GitHub Repository</label>
                 <Input
-                  value={currentData?.github_repo || ""}
+                  value={displayData?.github_repo || ""}
                   onChange={e => handleChange("github_repo", e.target.value)}
                   placeholder="repository-name"
                 />

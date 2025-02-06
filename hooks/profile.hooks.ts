@@ -21,7 +21,7 @@ export const useGetProfile = (initialData?: ProfileResponse["data"]) => {
     queryKey: ["profile"],
     queryFn: async () => {
       const { data, error } = await getProfileAction();
-      conditionalLog(hookName, { data, error }, false);
+      conditionalLog(hookName, { data, error }, false, 10);
       return data;
     },
     initialData,
