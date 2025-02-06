@@ -44,14 +44,20 @@ export function ProjectSwitcher() {
   } = useListProjects();
   const currentProject = profileData?.current_project;
 
-  const firstSegment = pathname.split("/")[1];
-
   useEffect(() => {
-    if (!projects || firstSegment === currentProject?.slug) return;
+    const firstSegment = pathname.split("/")[1];
+
+    if (
+      !firstSegment ||
+      !currentProject?.slug ||
+      firstSegment === currentProject?.slug
+    )
+      return;
+
     if (!profileDataIsFetching) refetchProfile();
     if (!listProjectsIsFetching) refetchProjects();
   }, [
-    firstSegment,
+    pathname,
     profileDataIsFetching,
     currentProject,
     listProjectsIsFetching,
