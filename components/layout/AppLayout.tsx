@@ -119,14 +119,28 @@ export function AppLayout({ children }: AppLayoutProps) {
                 src="/svg/brand/logo-with-text-light.svg"
                 width={473}
                 height={293}
-                alt="Logo"
+                alt="Cash Dash Pro Logo"
               />
               <Image
                 className="w-24 z-10 -mr-1 pt-0.5 hidden dark:block"
                 src="/svg/brand/logo-with-text-dark.svg"
                 width={473}
                 height={293}
-                alt="Logo"
+                alt="Cash Dash Pro Logo"
+              />
+              <Image
+                className="w-8 z-10 -mr-1 dark:hidden"
+                src="/svg/brand/logo-light.svg"
+                width={473}
+                height={293}
+                alt="Cash Dash Pro Logo"
+              />
+              <Image
+                className="w-8 z-10 -mr-1 hidden dark:block"
+                src="/svg/brand/logo-dark.svg"
+                width={473}
+                height={293}
+                alt="Cash Dash Pro Logo"
               />
             </div>
           </header>
