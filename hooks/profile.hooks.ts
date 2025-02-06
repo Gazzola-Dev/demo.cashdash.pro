@@ -25,6 +25,7 @@ export const useGetProfile = (initialData?: ProfileResponse["data"]) => {
       return data;
     },
     initialData,
+    staleTime: 1000 * 60, // Data stays fresh for 1 minute
   });
 };
 

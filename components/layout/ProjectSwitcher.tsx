@@ -50,7 +50,8 @@ export function ProjectSwitcher() {
     if (
       !firstSegment ||
       !currentProject?.slug ||
-      firstSegment === currentProject?.slug
+      firstSegment === currentProject?.slug ||
+      firstSegment === "projects"
     )
       return;
 
