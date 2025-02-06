@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -19,30 +21,44 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import configuration from "@/configuration";
-import { useGetProfile, useUpdateProfile } from "@/hooks/profile.hooks";
+import { useGetProfile } from "@/hooks/profile.hooks";
 import { useListProjects } from "@/hooks/project.hooks";
 import { cn } from "@/lib/utils";
 import { ChevronsUpDown, Code2, ListFilter, Plus } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import * as React from "react";
+import { usePathname } from "next/navigation";
+import { useEffect } from "react";
 
 export function ProjectSwitcher() {
+  const pathname = usePathname();
   const { isMobile, open } = useSidebar();
-  const router = useRouter();
-  const { data: profileData } = useGetProfile();
-  const { data: projects = [] } = useListProjects();
-  const { mutate: updateProfile } = useUpdateProfile();
+  const {
+    data: profileData,
+    isFetching: profileDataIsFetching,
+    refetch: refetchProfile,
+  } = useGetProfile();
+  const {
+    data: projects = [],
+    isFetching: listProjectsIsFetching,
+    refetch: refetchProjects,
+  } = useListProjects();
+  const currentProject = profileData?.current_project;
 
-  // Get active project based on current_project_id
-  const activeProject = React.useMemo(
-    () =>
-      projects.find(p => p.id === profileData?.profile.current_project_id) ||
-      projects[0],
-    [projects, profileData?.profile.current_project_id],
-  );
+  const firstSegment = pathname.split("/")[1];
 
-  if (!activeProject) return null;
+  useEffect(() => {
+    if (!projects || firstSegment === currentProject?.slug) return;
+    if (!profileDataIsFetching) refetchProfile();
+    if (!listProjectsIsFetching) refetchProjects();
+  }, [
+    firstSegment,
+    profileDataIsFetching,
+    currentProject,
+    listProjectsIsFetching,
+    projects,
+    refetchProfile,
+    refetchProjects,
+  ]);
 
   return (
     <SidebarMenu>
@@ -67,10 +83,10 @@ export function ProjectSwitcher() {
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold dark:text-gray-100">
-                  {activeProject.name}
+                  {currentProject?.name}
                 </span>
-                <span className="truncate text-xs capitalize dark:text-gray-400">
-                  {activeProject.status}
+                <span className="truncate capitalize dark:text-gray-400">
+                  {currentProject?.status}
                 </span>
               </div>
               {open && (

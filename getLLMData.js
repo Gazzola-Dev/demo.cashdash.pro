@@ -12,6 +12,7 @@ const whitelistedDirs = [
   "middleware", // Authentication and routing middleware
   "lib",
   "app",
+  "supabase",
 ];
 
 // Blacklist of directories that should be excluded even if under whitelisted directories
@@ -23,7 +24,6 @@ const blacklistedDirs = [
 const whitelistedRootFiles = [
   // Configuration files
   "tailwind.config.ts",
-  "tailwind.config.js",
   "components.json",
   "next.config.mjs",
   "tsconfig.json",

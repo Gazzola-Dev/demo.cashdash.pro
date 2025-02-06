@@ -24,7 +24,7 @@ export const listTasksAction = async (
       project_slug: filters.projectSlug,
     });
 
-    conditionalLog(actionName, { data: rawData, error });
+    conditionalLog(actionName, { data: rawData, error }, false);
 
     if (error) {
       throw error;
