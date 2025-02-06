@@ -175,51 +175,27 @@ export const deleteProjectAction = async (
 };
 
 export const getProjectAction = async (
-  projectId: string,
+  projectSlug: string,
 ): Promise<ActionResponse<ProjectWithDetails>> => {
   const actionName = "getProjectAction";
   const supabase = await getSupabaseServerActionClient();
 
   try {
-    const { data, error } = await supabase
-      .from("projects")
-      .select(
-        `
-        *,
-        project_members (
-          *,
-          profile:profiles!user_id(*)
-        ),
-        project_invitations (
-          *,
-          inviter:profiles!invited_by(*)
-        ),
-        tasks (*),
-        external_integrations (*),
-        project_metrics (*)
-      `,
-      )
-      .eq("id", projectId)
-      .single();
+    const { data, error } = await supabase.rpc("get_project_data", {
+      project_slug: projectSlug,
+    });
 
     conditionalLog(actionName, { data, error }, true);
 
-    if (error) throw error;
+    if (error) {
+      throw error;
+    }
 
-    // Transform nested objects
-    const transformedProject = {
-      ...data,
-      project_members: data.project_members?.map(member => ({
-        ...member,
-        profile: member.profile?.[0] || null,
-      })),
-      project_invitations: data.project_invitations?.map(invitation => ({
-        ...invitation,
-        inviter: invitation.inviter?.[0] || null,
-      })),
-    };
+    if (!data) {
+      throw new Error("Project not found");
+    }
 
-    return getActionResponse({ data: transformedProject });
+    return getActionResponse({ data: data as any as ProjectWithDetails });
   } catch (error) {
     conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });

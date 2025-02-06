@@ -40,17 +40,17 @@ export const useListProjects = (filters?: {
   });
 };
 
-export const useGetProject = (projectId: string) => {
+export const useGetProject = (projectSlug: string) => {
   const hookName = "useGetProject";
 
   return useQuery({
-    queryKey: ["project", projectId],
+    queryKey: ["project", projectSlug],
     queryFn: async () => {
-      const { data, error } = await getProjectAction(projectId);
+      const { data, error } = await getProjectAction(projectSlug);
       conditionalLog(hookName, { data, error }, false);
       return data;
     },
-    enabled: !!projectId,
+    enabled: !!projectSlug,
   });
 };
 

@@ -360,7 +360,7 @@ export type Database = {
       projects: {
         Row: {
           created_at: string
-          description: Json | null
+          description: string | null
           github_owner: string | null
           github_repo: string | null
           github_repo_url: string | null
@@ -373,7 +373,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          description?: Json | null
+          description?: string | null
           github_owner?: string | null
           github_repo?: string | null
           github_repo_url?: string | null
@@ -386,7 +386,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          description?: Json | null
+          description?: string | null
           github_owner?: string | null
           github_repo?: string | null
           github_repo_url?: string | null
@@ -648,7 +648,7 @@ export type Database = {
         }
         Returns: {
           created_at: string
-          description: Json | null
+          description: string | null
           github_owner: string | null
           github_repo: string | null
           github_repo_url: string | null
@@ -685,6 +685,12 @@ export type Database = {
             }
             Returns: Json
           }
+      get_project_data: {
+        Args: {
+          project_slug: string
+        }
+        Returns: Json
+      }
       get_task_data: {
         Args: {
           task_slug: string

@@ -138,7 +138,7 @@ const ProjectTable = () => {
             <div className="flex -space-x-2 overflow-hidden">
               {members.slice(0, 3).map((member, index) => (
                 <Avatar
-                  key={member.id}
+                  key={member.id + index}
                   className="inline-block border-2 border-background"
                 >
                   <AvatarImage
