@@ -16,75 +16,71 @@ import {
   ProjectWithDetails,
 } from "@/types/project.types";
 import { TerminalIcon } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useEffect, useState } from "react";
 
 interface ProjectPageProps {
   projectData?: ProjectWithDetails | null;
-  onUpdate?: (updates: Partial<ProjectWithDetails>) => void;
-  onCreate?: (project: Partial<ProjectWithDetails>) => void;
   isNew?: boolean;
+  onCreate?: (project: Partial<ProjectWithDetails>) => void;
+  onUpdate?: (updates: Partial<ProjectWithDetails>) => void;
 }
 
 export function ProjectPage({
   projectData,
-  onUpdate,
-  onCreate,
   isNew = false,
+  onCreate,
+  onUpdate,
 }: ProjectPageProps) {
-  // Initialize state with either project data or empty values for new project
-  const [name, setName] = useState(projectData?.name || "");
-  const [description, setDescription] = useState(
-    projectData?.description || "",
-  );
-  const [status, setStatus] = useState(projectData?.status || "active");
-  const [prefix, setPrefix] = useState(projectData?.prefix || "");
-  const [githubRepoUrl, setGithubRepoUrl] = useState(
-    projectData?.github_repo_url || "",
-  );
-  const [githubOwner, setGithubOwner] = useState(
-    projectData?.github_owner || "",
-  );
-  const [githubRepo, setGithubRepo] = useState(projectData?.github_repo || "");
-  const [slug, setSlug] = useState(projectData?.slug || "");
-
-  // Handle updating for existing project
-  const handleUpdate = useCallback(
-    (updates: Partial<ProjectWithDetails>) => {
-      if (onUpdate) {
-        onUpdate(updates);
-      }
-    },
-    [onUpdate],
+  // Only use state management for new projects
+  const [formData, setFormData] = useState<Partial<ProjectWithDetails>>(
+    isNew
+      ? {
+          name: "",
+          description: "",
+          status: "active",
+          prefix: "",
+          github_repo_url: "",
+          github_owner: "",
+          github_repo: "",
+          slug: "",
+        }
+      : {},
   );
 
-  // Handle creating new project
-  const handleCreate = useCallback(() => {
-    if (onCreate) {
-      onCreate({
-        name,
-        description,
-        status: status as ProjectWithDetails["status"],
-        prefix,
-        github_repo_url: githubRepoUrl,
-        github_owner: githubOwner,
-        github_repo: githubRepo,
-        slug,
-      });
+  // When editing an existing project, sync the form with project data
+  useEffect(() => {
+    if (!isNew && projectData) {
+      // Clear any local form state since we're editing
+      setFormData({});
     }
-  }, [
-    name,
-    description,
-    status,
-    prefix,
-    githubRepoUrl,
-    githubOwner,
-    githubRepo,
-    slug,
-    onCreate,
-  ]);
+  }, [isNew, projectData]);
+
+  // Handle field changes
+  const handleChange = (
+    field: keyof ProjectWithDetails,
+    value: string | ProjectWithDetails["status"],
+  ) => {
+    if (isNew) {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    } else if (onUpdate && projectData) {
+      onUpdate({ [field]: value });
+    }
+  };
+
+  // Handle form submission for new projects
+  const handleCreate = () => {
+    if (onCreate && isValid) {
+      onCreate(formData);
+    }
+  };
+
+  // Get the current data based on whether we're creating or editing
+  const currentData = isNew ? formData : projectData;
 
   // Check if all required fields are filled for new project
-  const isValid = name && prefix && slug;
+  const isValid = Boolean(
+    currentData?.name && currentData?.prefix && currentData?.slug,
+  );
 
   return (
     <div className="relative w-full max-w-6xl mx-auto">
@@ -125,13 +121,8 @@ export function ProjectPage({
               <div className="space-y-2">
                 <label className="text-sm font-medium">Project Name</label>
                 <Input
-                  value={name}
-                  onChange={e => {
-                    setName(e.target.value);
-                    if (!isNew) {
-                      handleUpdate({ name: e.target.value });
-                    }
-                  }}
+                  value={currentData?.name || ""}
+                  onChange={e => handleChange("name", e.target.value)}
                   placeholder="My Awesome Project"
                 />
               </div>
@@ -139,13 +130,8 @@ export function ProjectPage({
               <div className="space-y-2">
                 <label className="text-sm font-medium">Description</label>
                 <Textarea
-                  value={description || ""}
-                  onChange={e => {
-                    setDescription(e.target.value);
-                    if (!isNew) {
-                      handleUpdate({ description: e.target.value });
-                    }
-                  }}
+                  value={currentData?.description || ""}
+                  onChange={e => handleChange("description", e.target.value)}
                   placeholder="Project description..."
                   className="min-h-[100px]"
                 />
@@ -154,15 +140,13 @@ export function ProjectPage({
               <div className="space-y-2">
                 <label className="text-sm font-medium">Project Status</label>
                 <Select
-                  value={status}
-                  onValueChange={value => {
-                    setStatus(value as ProjectWithDetails["status"]);
-                    if (!isNew) {
-                      handleUpdate({
-                        status: value as ProjectWithDetails["status"],
-                      });
-                    }
-                  }}
+                  value={currentData?.status || "active"}
+                  onValueChange={value =>
+                    handleChange(
+                      "status",
+                      value as ProjectWithDetails["status"],
+                    )
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -180,13 +164,10 @@ export function ProjectPage({
               <div className="space-y-2">
                 <label className="text-sm font-medium">Project Prefix</label>
                 <Input
-                  value={prefix}
-                  onChange={e => {
-                    setPrefix(e.target.value.toUpperCase());
-                    if (!isNew) {
-                      handleUpdate({ prefix: e.target.value.toUpperCase() });
-                    }
-                  }}
+                  value={currentData?.prefix || ""}
+                  onChange={e =>
+                    handleChange("prefix", e.target.value.toUpperCase())
+                  }
                   placeholder="PRJ"
                   maxLength={5}
                 />
@@ -198,13 +179,10 @@ export function ProjectPage({
               <div className="space-y-2">
                 <label className="text-sm font-medium">Project Slug</label>
                 <Input
-                  value={slug}
-                  onChange={e => {
-                    setSlug(e.target.value.toLowerCase());
-                    if (!isNew) {
-                      handleUpdate({ slug: e.target.value.toLowerCase() });
-                    }
-                  }}
+                  value={currentData?.slug || ""}
+                  onChange={e =>
+                    handleChange("slug", e.target.value.toLowerCase())
+                  }
                   placeholder="my-awesome-project"
                 />
                 <p className="text-xs text-gray-500">
@@ -225,13 +203,10 @@ export function ProjectPage({
                   GitHub Repository URL
                 </label>
                 <Input
-                  value={githubRepoUrl}
-                  onChange={e => {
-                    setGithubRepoUrl(e.target.value);
-                    if (!isNew) {
-                      handleUpdate({ github_repo_url: e.target.value });
-                    }
-                  }}
+                  value={currentData?.github_repo_url || ""}
+                  onChange={e =>
+                    handleChange("github_repo_url", e.target.value)
+                  }
                   placeholder="https://github.com/owner/repo"
                 />
               </div>
@@ -239,13 +214,8 @@ export function ProjectPage({
               <div className="space-y-2">
                 <label className="text-sm font-medium">GitHub Owner</label>
                 <Input
-                  value={githubOwner}
-                  onChange={e => {
-                    setGithubOwner(e.target.value);
-                    if (!isNew) {
-                      handleUpdate({ github_owner: e.target.value });
-                    }
-                  }}
+                  value={currentData?.github_owner || ""}
+                  onChange={e => handleChange("github_owner", e.target.value)}
                   placeholder="owner"
                 />
               </div>
@@ -253,13 +223,8 @@ export function ProjectPage({
               <div className="space-y-2">
                 <label className="text-sm font-medium">GitHub Repository</label>
                 <Input
-                  value={githubRepo}
-                  onChange={e => {
-                    setGithubRepo(e.target.value);
-                    if (!isNew) {
-                      handleUpdate({ github_repo: e.target.value });
-                    }
-                  }}
+                  value={currentData?.github_repo || ""}
+                  onChange={e => handleChange("github_repo", e.target.value)}
                   placeholder="repository-name"
                 />
               </div>

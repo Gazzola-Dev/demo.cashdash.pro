@@ -10,7 +10,7 @@ interface ProjectPageProps {
 }
 
 export default function ProjectOverviewPage({ params }: ProjectPageProps) {
-  const { data: projectData, error } = useGetProject(params.project_slug);
+  const { data: projectData } = useGetProject(params.project_slug);
   const { mutate: updateProject } = useUpdateProject();
 
   const handleUpdate = (updates: any) => {
@@ -21,8 +21,6 @@ export default function ProjectOverviewPage({ params }: ProjectPageProps) {
       });
     }
   };
-
-  console.log("projectData", projectData);
 
   return <ProjectPage projectData={projectData} onUpdate={handleUpdate} />;
 }
