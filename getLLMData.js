@@ -13,6 +13,7 @@ const whitelistedDirs = [
   "lib",
   "app",
   "supabase",
+  "styles",
 ];
 
 // Blacklist of directories that should be excluded even if under whitelisted directories
