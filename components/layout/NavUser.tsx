@@ -24,7 +24,7 @@ import configuration from "@/configuration";
 import { useGetProfile } from "@/hooks/profile.hooks";
 import { useSignOut } from "@/hooks/user.hooks";
 import { cn } from "@/lib/utils";
-import { Bell, ChevronsUpDown, CreditCard, Settings2 } from "lucide-react";
+import { Bell, CreditCard, Settings2 } from "lucide-react";
 import Link from "next/link";
 import ThemeSwitcher from "./ThemeSwitcher";
 
@@ -49,7 +49,7 @@ export function NavUser() {
               variant="ghost"
               className={cn(
                 "h-auto flex items-center justify-between w-full",
-                "hover:bg-gray-100 dark:hover:bg-gray-800",
+                "hover:bg-gray-100 dark:hover:bg-gray-800 space-x-1.5",
                 open ? "px-1 py-2" : "p-0",
               )}
             >
@@ -66,13 +66,7 @@ export function NavUser() {
                 <span className="truncate font-semibold dark:text-gray-100">
                   {profileData.profile.display_name ?? "Unnamed User"}
                 </span>
-                <span className="truncate text-xs dark:text-gray-400">
-                  {profileData.profile.professional_title ?? "No title set"}
-                </span>
               </div>
-              {open && (
-                <ChevronsUpDown className="ml-auto size-4 dark:text-gray-400" />
-              )}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -81,14 +75,13 @@ export function NavUser() {
             align="end"
             sideOffset={4}
           >
-            {" "}
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <DropdownMenuLabel>
                     <Link
                       href={configuration.paths.settings.profile}
-                      className="flex items-center gap-2 p-1 cursor-pointer dark:hover:bg-gray-800 rounded-md"
+                      className="flex items-center gap-2 p-1 cursor-pointer dark:hover:bg-gray-800 rounded-md space-x-1.5"
                     >
                       <Avatar className="size-8 rounded-lg">
                         <AvatarImage
@@ -102,10 +95,6 @@ export function NavUser() {
                       <div className="grid flex-1 text-left text-sm">
                         <span className="font-semibold dark:text-gray-100">
                           {profileData.profile.display_name ?? "Unnamed User"}
-                        </span>
-                        <span className="text-xs dark:text-gray-400">
-                          {profileData.profile.professional_title ??
-                            "No title set"}
                         </span>
                       </div>
                     </Link>

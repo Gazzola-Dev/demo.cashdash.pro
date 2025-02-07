@@ -25,7 +25,7 @@ import { useGetProfile } from "@/hooks/profile.hooks";
 import { useListProjects } from "@/hooks/project.hooks";
 import { useIsAdmin } from "@/hooks/user.hooks";
 import { cn } from "@/lib/utils";
-import { ChevronsUpDown, Code2, ListFilter, Plus } from "lucide-react";
+import { Code2, ListFilter, Plus } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
@@ -78,9 +78,7 @@ export function ProjectSwitcher() {
             <Button
               variant="ghost"
               className={cn(
-                "h-auto flex items-center justify-between w-full",
-                "hover:bg-gray-100 dark:hover:bg-gray-800",
-                open ? "px-1 py-2" : "p-0",
+                "h-auto flex items-center justify-between w-full space-x-1 hover:bg-gray-100 dark:hover:bg-gray-800",
               )}
             >
               <div
@@ -95,13 +93,7 @@ export function ProjectSwitcher() {
                 <span className="truncate font-semibold dark:text-gray-100">
                   {currentProject?.name}
                 </span>
-                <span className="truncate capitalize dark:text-gray-400">
-                  {currentProject?.status}
-                </span>
               </div>
-              {open && (
-                <ChevronsUpDown className="ml-auto size-4 dark:text-gray-400 mb-1" />
-              )}
             </Button>
           </DropdownMenuTrigger>
 

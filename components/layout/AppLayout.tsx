@@ -45,7 +45,10 @@ export function AppLayout({ children, projectSlug }: AppLayoutProps) {
         <SidebarInset>
           <header className="flex h-12 shrink-0 items-center justify-between gap-2">
             <RouteBreadcrumb />
-            <div className="flex items-center justify-center gap-2 h-full pr-[1.1rem]">
+            <Link
+              href={configuration.paths.about}
+              className="flex items-center justify-center gap-2 h-full pr-[1.1rem]"
+            >
               <Image
                 className="w-24 z-10 -mr-1 pt-0.5 dark:hidden"
                 src="/svg/brand/logo-with-text-light.svg"
@@ -60,7 +63,7 @@ export function AppLayout({ children, projectSlug }: AppLayoutProps) {
                 height={293}
                 alt="Cash Dash Pro Logo"
               />
-            </div>
+            </Link>
           </header>
           <div className="flex flex-1 flex-col gap-4 p-4 justify-between w-full pb-1">
             <main className="flex flex-col items-center">{children}</main>
