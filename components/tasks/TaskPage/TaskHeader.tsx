@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useIsAdmin } from "@/hooks/user.hooks";
 import { TaskResult } from "@/types/task.types";
 import { Edit2, Save } from "lucide-react";
 import { useState } from "react";
@@ -12,6 +13,7 @@ interface TaskHeaderProps {
 export function TaskHeader({ task, onSave }: TaskHeaderProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(task.title);
+  const isAdmin = useIsAdmin();
 
   const handleSave = () => {
     onSave(editedTitle);
@@ -43,7 +45,7 @@ export function TaskHeader({ task, onSave }: TaskHeaderProps) {
         )}
       </div>
       <div className="flex-none">
-        {!isEditing ? (
+        {!isAdmin ? null : !isEditing ? (
           <Button
             variant="ghost"
             size="icon"

@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/table";
 import configuration from "@/configuration";
 import { useListProjects } from "@/hooks/project.hooks";
+import { useIsAdmin } from "@/hooks/user.hooks";
 import { Tables } from "@/types/database.types";
 import { ProjectWithDetails } from "@/types/project.types";
 import {
@@ -49,6 +50,7 @@ const ProjectTable = () => {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [nameFilter, setNameFilter] = React.useState("");
+  const isAdmin = useIsAdmin();
 
   // Create raw filters object
   const rawFilters = React.useMemo(
@@ -275,10 +277,12 @@ const ProjectTable = () => {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <Button onClick={() => router.push(configuration.paths.project.new)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Create Project
-        </Button>
+        {isAdmin && (
+          <Button onClick={() => router.push(configuration.paths.project.new)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Create Project
+          </Button>
+        )}
       </div>
 
       <div className="rounded-md border">

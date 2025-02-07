@@ -17,14 +17,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async event => {
       if (event === "SIGNED_OUT") {
-        // Clear profile and user data from cache
         queryClient.setQueryData(["profile"], null);
         queryClient.setQueryData(["user"], null);
-        router.push("/auth");
       } else if (event === "SIGNED_IN") {
-        // Clear stale data and let hooks refetch fresh data
-        queryClient.setQueryData(["profile"], null);
-        queryClient.setQueryData(["user"], null);
+        queryClient.invalidateQueries({ queryKey: ["profile"] });
+        queryClient.invalidateQueries({ queryKey: ["user"] });
       }
     });
 

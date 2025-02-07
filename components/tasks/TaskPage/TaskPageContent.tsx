@@ -2,7 +2,7 @@
 
 import TaskPage from "@/components/tasks/TaskPage/TaskPage";
 import { useCreateComment, useUpdateComment } from "@/hooks/comment.hooks";
-import { useUpdateTask } from "@/hooks/task.hooks";
+import { useGetTask, useUpdateTask } from "@/hooks/task.hooks";
 import { TaskResult, TaskUpdateWithSubtasks } from "@/types/task.types";
 
 function TaskPageContent({
@@ -15,8 +15,12 @@ function TaskPageContent({
   initialData: TaskResult;
 }) {
   const { mutate: updateTask } = useUpdateTask();
-  const { mutate: createComment } = useCreateComment(initialData.task.id);
+  const { mutate: createComment } = useCreateComment(
+    initialData.task.id,
+    initialData.task.slug,
+  );
   const { mutate: updateComment } = useUpdateComment();
+  const { data: taskData } = useGetTask(taskSlug, { initialData });
 
   const handleUpdateTask = (updates: TaskUpdateWithSubtasks) => {
     updateTask({
@@ -35,7 +39,7 @@ function TaskPageContent({
 
   return (
     <TaskPage
-      taskData={initialData}
+      taskData={taskData}
       onUpdate={handleUpdateTask}
       onComment={handleCreateComment}
       onUpdateComment={handleUpdateComment}

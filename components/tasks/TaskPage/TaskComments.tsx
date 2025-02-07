@@ -2,6 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { useGetUser } from "@/hooks/user.hooks";
 import { TaskResult } from "@/types/task.types";
 import { format } from "date-fns";
 import { Edit2, Save } from "lucide-react";
@@ -21,6 +22,8 @@ interface CommentItemProps {
 function CommentItem({ comment, onUpdateComment }: CommentItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(comment.content || "");
+  const { data: currentUser } = useGetUser();
+  const isAuthor = currentUser?.id === comment.user_id;
 
   const handleSave = () => {
     if (onUpdateComment && editedContent.trim()) {
@@ -54,7 +57,7 @@ function CommentItem({ comment, onUpdateComment }: CommentItemProps) {
               <span className="text-sm text-muted-foreground">
                 {format(new Date(comment.created_at), "MMM d, yyyy h:mm a")}
               </span>
-              {onUpdateComment && (
+              {isAuthor && onUpdateComment && (
                 <>
                   {!isEditing ? (
                     <Button

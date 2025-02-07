@@ -9,7 +9,7 @@ import { TaskResult, TaskUpdateWithSubtasks } from "@/types/task.types";
 import { TerminalIcon } from "lucide-react";
 
 interface TaskPageProps {
-  taskData: TaskResult;
+  taskData?: TaskResult | null;
   onUpdate: (updates: TaskUpdateWithSubtasks) => void;
   onComment?: (content: string) => void;
   onUpdateComment?: (commentId: string, content: string) => void;
@@ -21,6 +21,7 @@ export function TaskPage({
   onComment,
   onUpdateComment,
 }: TaskPageProps) {
+  if (!taskData) return null;
   const isDraft = taskData.task?.status === "draft";
 
   const handlePublish = () => {

@@ -10,7 +10,7 @@ import { conditionalLog } from "@/lib/log.utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToastQueue } from "./useToastQueue";
 
-export const useCreateComment = (contentId = "") => {
+export const useCreateComment = (contentId = "", taskSlug = "") => {
   const hookName = "useCreateComment";
   const queryClient = useQueryClient();
   const { toast } = useToastQueue();
@@ -27,7 +27,10 @@ export const useCreateComment = (contentId = "") => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["task"] });
+      // Invalidate both the task query and the project tasks query if available
+      if (taskSlug)
+        queryClient.invalidateQueries({ queryKey: ["task", taskSlug] });
+
       toast({
         title: "Comment added successfully",
       });

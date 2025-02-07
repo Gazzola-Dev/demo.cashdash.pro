@@ -49,7 +49,6 @@ export const useGetTask = (
     initialData,
   });
 };
-
 // List tasks hook
 export const useListTasks = (filters?: TaskFilters) => {
   const hookName = "useListTasks";

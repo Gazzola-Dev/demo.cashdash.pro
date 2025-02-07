@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { useCreateSubtask } from "@/hooks/task.hooks";
+import { useIsAdmin } from "@/hooks/user.hooks";
 import { cn } from "@/lib/utils";
 import { Tables } from "@/types/database.types";
 import { TaskResult } from "@/types/task.types";
@@ -25,6 +26,7 @@ export function SubtaskSidebar({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editedTitle, setEditedTitle] = useState("");
   const { mutate: createSubtask } = useCreateSubtask();
+  const isAdmin = useIsAdmin();
 
   const handleEdit = (subtask: Subtask) => {
     setEditingId(subtask.id);
@@ -70,22 +72,24 @@ export function SubtaskSidebar({
       <CardContent className="space-y-4">
         {subtasks.map((subtask, index) => (
           <div key={subtask.id} className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() =>
-                editingId === subtask.id
-                  ? handleSave(subtask)
-                  : handleEdit(subtask)
-              }
-            >
-              {editingId === subtask.id ? (
-                <Save className="h-4 w-4" />
-              ) : (
-                <Edit2 className="h-4 w-4" />
-              )}
-            </Button>
+            {isAdmin && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() =>
+                  editingId === subtask.id
+                    ? handleSave(subtask)
+                    : handleEdit(subtask)
+                }
+              >
+                {editingId === subtask.id ? (
+                  <Save className="h-4 w-4" />
+                ) : (
+                  <Edit2 className="h-4 w-4" />
+                )}
+              </Button>
+            )}
             <div className="flex items-center flex-1 gap-2">
               <Checkbox
                 id={subtask.id}

@@ -143,31 +143,31 @@ export function ProjectSwitcher() {
               ))}
             </TooltipProvider>
             <DropdownMenuSeparator className="dark:border-gray-700" />
-            {isAdmin && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <DropdownMenuItem
-                      className="cursor-pointer dark:hover:bg-gray-800 dark:focus:bg-gray-800"
-                      asChild
-                    >
-                      <Link
-                        href={configuration.paths.project.all}
-                        className="dark:text-gray-100"
-                      >
-                        <ListFilter className="mr-2 size-4 dark:text-gray-400" />
-                        All Projects
-                      </Link>
-                    </DropdownMenuItem>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="right"
-                    className="dark:bg-gray-800 dark:text-gray-100"
-                  >
-                    View and manage all projects
-                  </TooltipContent>
-                </Tooltip>
 
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenuItem
+                    className="cursor-pointer dark:hover:bg-gray-800 dark:focus:bg-gray-800"
+                    asChild
+                  >
+                    <Link
+                      href={configuration.paths.project.all}
+                      className="dark:text-gray-100"
+                    >
+                      <ListFilter className="mr-2 size-4 dark:text-gray-400" />
+                      All Projects
+                    </Link>
+                  </DropdownMenuItem>
+                </TooltipTrigger>
+                <TooltipContent
+                  side="right"
+                  className="dark:bg-gray-800 dark:text-gray-100"
+                >
+                  View and manage all projects
+                </TooltipContent>
+              </Tooltip>
+              {isAdmin && (
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <DropdownMenuItem
@@ -190,8 +190,8 @@ export function ProjectSwitcher() {
                     Create a new project
                   </TooltipContent>
                 </Tooltip>
-              </TooltipProvider>
-            )}
+              )}
+            </TooltipProvider>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

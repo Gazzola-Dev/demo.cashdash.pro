@@ -44,6 +44,7 @@ import {
 import configuration from "@/configuration";
 import { useListMembers } from "@/hooks/member.hooks";
 import { useToastQueue } from "@/hooks/useToastQueue";
+import { useIsAdmin } from "@/hooks/user.hooks";
 import { Tables } from "@/types/database.types";
 import {
   PRIORITY_OPTIONS,
@@ -63,6 +64,8 @@ const TaskTable = ({ projectId, projectSlug }: TaskTableProps) => {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [titleFilter, setTitleFilter] = React.useState("");
+
+  const isAdmin = useIsAdmin();
 
   // Create raw filters object
   const rawFilters = React.useMemo(
@@ -375,16 +378,18 @@ const TaskTable = ({ projectId, projectSlug }: TaskTableProps) => {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <Button
-          onClick={() =>
-            router.push(
-              configuration.paths.tasks.new({ project_slug: projectSlug }),
-            )
-          }
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Create Task
-        </Button>
+        {isAdmin && (
+          <Button
+            onClick={() =>
+              router.push(
+                configuration.paths.tasks.new({ project_slug: projectSlug }),
+              )
+            }
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Create Task
+          </Button>
+        )}
       </div>
 
       <div className="rounded-md border">

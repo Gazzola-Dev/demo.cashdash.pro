@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToastQueue } from "@/hooks/useToastQueue";
+import { useIsAdmin } from "@/hooks/user.hooks";
 import { cn } from "@/lib/utils";
 import { TaskResult } from "@/types/task.types";
 import { format } from "date-fns";
@@ -54,8 +55,10 @@ export function TaskSidebar({
     start_date: taskSchedule?.start_date || null,
     due_date: taskSchedule?.due_date || null,
   });
+  const isAdmin = useIsAdmin();
 
   const handleIsOpenChange = (open: boolean) => {
+    if (!isAdmin) return;
     if (!open) {
       // Store current times before closing
       setPrevTimes({
@@ -167,6 +170,7 @@ export function TaskSidebar({
           <div>
             <label className="text-sm font-medium">Assignee</label>
             <Select
+              disabled={!isAdmin}
               value={task.assignee || "unassigned"}
               onValueChange={value =>
                 onUpdateTask({
@@ -227,6 +231,7 @@ export function TaskSidebar({
           <div>
             <label className="text-sm font-medium">Status</label>
             <Select
+              disabled={!isAdmin}
               value={task.status}
               onValueChange={value => onUpdateTask({ status: value })}
             >
@@ -247,6 +252,7 @@ export function TaskSidebar({
           <div>
             <label className="text-sm font-medium">Priority</label>
             <Select
+              disabled={!isAdmin}
               value={task.priority}
               onValueChange={value => onUpdateTask({ priority: value })}
             >
@@ -291,8 +297,9 @@ export function TaskSidebar({
               <div>
                 <label className="text-sm font-medium">Start Date</label>
                 <Popover>
-                  <PopoverTrigger asChild>
+                  <PopoverTrigger asChild disabled={!isAdmin}>
                     <Button
+                      disabled={!isAdmin}
                       variant="outline"
                       className={cn(
                         "w-full justify-start text-left font-normal",
@@ -312,7 +319,7 @@ export function TaskSidebar({
                       mode="single"
                       selected={currentStartDate}
                       onSelect={date => handleDateChange(date, "start_date")}
-                      disabled={date => date < disableBefore}
+                      disabled={date => date < disableBefore || !isAdmin}
                       initialFocus
                     />
                   </PopoverContent>
@@ -323,8 +330,9 @@ export function TaskSidebar({
               <div>
                 <label className="text-sm font-medium">Due Date</label>
                 <Popover>
-                  <PopoverTrigger asChild>
+                  <PopoverTrigger asChild disabled={!isAdmin}>
                     <Button
+                      disabled={!isAdmin}
                       variant="outline"
                       className={cn(
                         "w-full justify-start text-left font-normal",
@@ -344,7 +352,7 @@ export function TaskSidebar({
                       mode="single"
                       selected={currentDueDate}
                       onSelect={date => handleDateChange(date, "due_date")}
-                      disabled={date => date < disableBefore}
+                      disabled={date => date < disableBefore || !isAdmin}
                       initialFocus
                     />
                   </PopoverContent>

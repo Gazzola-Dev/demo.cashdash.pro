@@ -34,7 +34,6 @@ export default function HomePage() {
     useSignInWithMagicLink();
   const { mutate: signOut, isPending: isSigningOut } = useSignOut();
   const { data: user } = useGetUser();
-
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {

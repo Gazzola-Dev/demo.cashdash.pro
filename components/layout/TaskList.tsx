@@ -13,6 +13,7 @@ import {
 import configuration from "@/configuration";
 import { useGetProfile } from "@/hooks/profile.hooks";
 import { useListTasks } from "@/hooks/task.hooks";
+import { useIsAdmin } from "@/hooks/user.hooks";
 import { cn } from "@/lib/utils";
 import {
   CalendarRange,
@@ -73,6 +74,7 @@ const TaskList = () => {
     order: "desc",
   });
 
+  const isAdmin = useIsAdmin();
   const getPriorityValue = (priority: string) => {
     const priorityMap = { urgent: 4, high: 3, medium: 2, low: 1 };
     return priorityMap[priority as keyof typeof priorityMap] || 0;
@@ -223,28 +225,30 @@ const TaskList = () => {
             </TooltipContent>
           </Tooltip>
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                asChild
-                className={getIconStyles(pathname === newTaskPath).button}
+          {isAdmin && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  asChild
+                  className={getIconStyles(pathname === newTaskPath).button}
+                >
+                  <Link href={newTaskPath}>
+                    <Plus
+                      className={getIconStyles(pathname === newTaskPath).icon}
+                    />
+                  </Link>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent
+                side="top"
+                className="dark:bg-gray-800 dark:text-gray-100"
               >
-                <Link href={newTaskPath}>
-                  <Plus
-                    className={getIconStyles(pathname === newTaskPath).icon}
-                  />
-                </Link>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent
-              side="top"
-              className="dark:bg-gray-800 dark:text-gray-100"
-            >
-              Create new task
-            </TooltipContent>
-          </Tooltip>
+                Create new task
+              </TooltipContent>
+            </Tooltip>
+          )}
         </TooltipProvider>
       </div>
 
