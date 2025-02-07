@@ -49,6 +49,7 @@ export function ProjectSwitcher() {
 
     if (
       !firstSegment ||
+      !projects.some(p => p.slug === firstSegment) ||
       !currentProject?.slug ||
       firstSegment === currentProject?.slug ||
       firstSegment === "projects"
