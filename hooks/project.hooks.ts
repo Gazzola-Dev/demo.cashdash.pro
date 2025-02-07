@@ -8,6 +8,7 @@ import {
   listProjectsAction,
   updateProjectAction,
 } from "@/actions/project.actions";
+import { useGetProfile } from "@/hooks/profile.hooks";
 import { conditionalLog } from "@/lib/log.utils";
 import { Tables, TablesInsert, TablesUpdate } from "@/types/database.types";
 import { HookOptions } from "@/types/db.types";
@@ -41,17 +42,20 @@ export const useListProjects = (filters?: {
   });
 };
 
-export const useGetProject = (projectSlug: string) => {
+export const useGetProject = (projectSlug?: string) => {
   const hookName = "useGetProject";
+  const { data: profile } = useGetProfile();
+  const slug = projectSlug || profile?.current_project?.slug || "";
 
   return useQuery({
     queryKey: ["project", projectSlug],
     queryFn: async () => {
-      const { data, error } = await getProjectAction(projectSlug);
+      if (!slug) throw new Error("No project slug provided");
+      const { data, error } = await getProjectAction(slug);
       conditionalLog(hookName, { data, error }, false);
       return data;
     },
-    enabled: !!projectSlug,
+    enabled: !!slug,
   });
 };
 

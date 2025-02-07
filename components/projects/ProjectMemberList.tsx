@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useGetProject } from "@/hooks/project.hooks";
 import { AlertCircle, UserPlus } from "lucide-react";
 
 const placeholderMembers = [
@@ -38,6 +39,8 @@ interface ProjectMemberListProps {
 }
 
 export function ProjectMemberList({ isDraft = false }: ProjectMemberListProps) {
+  const { data: project } = useGetProject();
+
   return (
     <Card className="relative">
       {isDraft && (
@@ -63,19 +66,23 @@ export function ProjectMemberList({ isDraft = false }: ProjectMemberListProps) {
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {placeholderMembers.map(member => (
+        {project?.project_members?.map(member => (
           <div
             key={member.id}
             className="flex items-center gap-4 p-2 rounded-lg hover:bg-muted/50"
           >
             <Avatar className="h-10 w-10">
-              <AvatarImage src={member.avatar_url || undefined} />
-              <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+              <AvatarImage src={member.profile?.avatar_url || undefined} />
+              <AvatarFallback>
+                {member.profile?.display_name?.charAt(0)}
+              </AvatarFallback>
             </Avatar>
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <p className="text-sm font-medium truncate">{member.name}</p>
+                <p className="text-sm font-medium truncate">
+                  {member.profile?.display_name}
+                </p>
                 <span className="text-xs text-muted-foreground capitalize px-2 py-0.5 rounded-full bg-muted">
                   {member.role}
                 </span>
