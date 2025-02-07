@@ -10,9 +10,8 @@ import {
 import configuration from "@/configuration";
 import { useGetProfile } from "@/hooks/profile.hooks";
 import { useListTasks } from "@/hooks/task.hooks";
-import { useGetUser } from "@/hooks/user.hooks";
 import { capitalizeFirstLetter, truncateString } from "@/lib/string.util";
-import { Home } from "lucide-react";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
@@ -21,34 +20,41 @@ export default function RouteBreadcrumb() {
   const pathname = usePathname();
   const segments = pathname.split("/").filter(Boolean);
   const { data } = useGetProfile();
-  const { data: user } = useGetUser();
-  const { data: profileData } = useGetProfile();
   const { data: tasks } = useListTasks({
     projectSlug: segments[0],
     sort: "ordinal_id",
     order: "asc",
   });
 
+  const homeBreadcrumb = (
+    <BreadcrumbItem className="h-full p-2">
+      <BreadcrumbLink
+        href={configuration.paths.appHome}
+        className="h-full flex items-center justify-center"
+      >
+        <Image
+          className="w-8 z-10 -mr-1 dark:hidden"
+          src="/svg/brand/logo-light.svg"
+          width={473}
+          height={293}
+          alt="Cash Dash Pro Logo"
+        />
+        <Image
+          className="w-8 z-10 -mr-1 hidden dark:block"
+          src="/svg/brand/logo-dark.svg"
+          width={473}
+          height={293}
+          alt="Cash Dash Pro Logo"
+        />
+      </BreadcrumbLink>
+    </BreadcrumbItem>
+  );
+
   if (!segments.length)
     return (
       <Breadcrumb className="flex-grow">
         <BreadcrumbList className="h-full !gap-0">
-          <BreadcrumbItem className="h-full">
-            <BreadcrumbLink
-              href={configuration.paths.appHome}
-              className="h-full flex items-center px-3"
-            >
-              <Home className="size-[1.1rem]" />
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator className="h-full flex items-center" />
-          <BreadcrumbItem className="h-full">
-            <BreadcrumbPage className="capitalize h-full flex items-center px-2">
-              {profileData?.profile.display_name ||
-                user?.email?.split("@")[0] ||
-                "Sign in"}
-            </BreadcrumbPage>
-          </BreadcrumbItem>
+          {homeBreadcrumb}
         </BreadcrumbList>
       </Breadcrumb>
     );
@@ -66,14 +72,7 @@ export default function RouteBreadcrumb() {
     return (
       <Breadcrumb className="flex-grow">
         <BreadcrumbList className="h-full !gap-0">
-          <BreadcrumbItem className="h-full">
-            <BreadcrumbLink
-              href={configuration.paths.appHome}
-              className="h-full flex items-center px-3"
-            >
-              <Home className="size-[1.1rem]" />
-            </BreadcrumbLink>
-          </BreadcrumbItem>
+          {homeBreadcrumb}
           <BreadcrumbSeparator className="h-full flex items-center" />
           <BreadcrumbItem className="h-full">
             <BreadcrumbPage className="capitalize h-full flex items-center px-2">
@@ -90,14 +89,7 @@ export default function RouteBreadcrumb() {
     return (
       <Breadcrumb className="flex-grow">
         <BreadcrumbList className="h-full !gap-0">
-          <BreadcrumbItem className="h-full">
-            <BreadcrumbLink
-              href={configuration.paths.appHome}
-              className="h-full flex items-center px-3"
-            >
-              <Home className="size-[1.1rem]" />
-            </BreadcrumbLink>
-          </BreadcrumbItem>
+          {homeBreadcrumb}
           <BreadcrumbSeparator className="h-full flex items-center" />
           <BreadcrumbItem className="h-full">
             {segments.length === 1 ? (
@@ -133,14 +125,7 @@ export default function RouteBreadcrumb() {
     return (
       <Breadcrumb className="flex-grow">
         <BreadcrumbList className="h-full !gap-0">
-          <BreadcrumbItem className="h-full">
-            <BreadcrumbLink
-              href={configuration.paths.appHome}
-              className="h-full flex items-center px-3"
-            >
-              <Home className="size-[1.1rem]" />
-            </BreadcrumbLink>
-          </BreadcrumbItem>
+          {homeBreadcrumb}
           <BreadcrumbSeparator className="h-full flex items-center" />
           <BreadcrumbItem className="h-full">
             {segments.length === 1 ? (
@@ -180,57 +165,51 @@ export default function RouteBreadcrumb() {
     );
 
     // Handle task view route
-    // Handle project-specific routes
-    if (segments.length >= 1) {
-      const projectSlug = segments[0];
-      const project = data?.projects.find(p => p.project.slug === projectSlug);
-      const projectName = truncateString(
-        capitalize(project ? project.project.name : projectSlug),
+    if (
+      segments.length === 2 &&
+      !["timeline", "kanban", "tasks"].includes(segments[1])
+    ) {
+      const task = tasks?.find(t => t.task?.slug.includes(segments[1]));
+      return (
+        <Breadcrumb className="flex-grow">
+          <BreadcrumbList className="h-full !gap-0">
+            {homeBreadcrumb}
+            <BreadcrumbSeparator className="h-full flex items-center" />
+            <BreadcrumbItem className="h-full">
+              <BreadcrumbLink
+                href={`/${projectSlug}`}
+                className="h-full flex items-center px-2"
+              >
+                {projectName}
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator className="h-full flex items-center" />
+            <BreadcrumbItem className="h-full">
+              <BreadcrumbLink
+                href={`/${projectSlug}/tasks`}
+                className="h-full flex items-center px-2"
+              >
+                Tasks
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator className="h-full flex items-center" />
+            <BreadcrumbItem className="h-full">
+              <BreadcrumbPage className="h-full flex items-center px-2">
+                {task
+                  ? `${project?.project.prefix || "Task"}-${task.task?.ordinal_id}: ${capitalizeFirstLetter(task.task.title)}`
+                  : segments[1]}
+              </BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
       );
-
-      // Handle task view route
-      if (
-        segments.length === 2 &&
-        !["timeline", "kanban", "tasks"].includes(segments[1])
-      ) {
-        const task = tasks?.find(t => t.task?.slug.includes(segments[1]));
-        return (
-          <Breadcrumb className="flex-grow">
-            <BreadcrumbList className="h-full !gap-0">
-              <BreadcrumbItem className="h-full">
-                <BreadcrumbLink
-                  href={`/${projectSlug}`}
-                  className="h-full flex items-center px-2"
-                >
-                  {projectName}
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator className="h-full flex items-center" />
-              <BreadcrumbItem className="h-full">
-                <BreadcrumbLink
-                  href={`/${projectSlug}/tasks`}
-                  className="h-full flex items-center px-2"
-                >
-                  Tasks
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator className="h-full flex items-center" />
-              <BreadcrumbItem className="h-full">
-                <BreadcrumbPage className="h-full flex items-center px-2">
-                  {task
-                    ? `${project?.project.prefix || "Task"}-${task.task?.ordinal_id}: ${capitalizeFirstLetter(task.task.title)}`
-                    : segments[1]}
-                </BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-        );
-      }
     }
 
     return (
-      <Breadcrumb className="flex-grow ml-1.5">
+      <Breadcrumb className="flex-grow">
         <BreadcrumbList className="h-full !gap-0">
+          {homeBreadcrumb}
+          <BreadcrumbSeparator className="h-full flex items-center" />
           <BreadcrumbItem className="h-full">
             {segments.length === 1 ? (
               <BreadcrumbPage className="h-full flex items-center px-2">

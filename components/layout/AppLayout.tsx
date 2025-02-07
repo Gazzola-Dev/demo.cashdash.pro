@@ -15,7 +15,6 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarProvider,
-  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 import {
@@ -32,7 +31,6 @@ import {
   Kanban,
   LayoutDashboard,
   LifeBuoy,
-  Menu,
   Send,
   Settings2,
 } from "lucide-react";
@@ -53,34 +51,8 @@ export function AppLayout({ children, projectSlug }: AppLayoutProps) {
       <div className="flex min-h-screen w-full">
         <AppSidebar profileData={profileData} projectSlug={projectSlug} />
         <SidebarInset>
-          <header className="flex h-12 shrink-0 items-start justify-between gap-2">
-            <div className="flex">
-              <div className="relative">
-                <Link
-                  href={configuration.paths.about}
-                  className="absolute inset-0 flex items-center justify-center"
-                >
-                  <Image
-                    className="w-8 z-10 -mr-1 dark:hidden"
-                    src="/svg/brand/logo-light.svg"
-                    width={473}
-                    height={293}
-                    alt="Cash Dash Pro Logo"
-                  />
-                  <Image
-                    className="w-8 z-10 -mr-1 hidden dark:block"
-                    src="/svg/brand/logo-dark.svg"
-                    width={473}
-                    height={293}
-                    alt="Cash Dash Pro Logo"
-                  />
-                </Link>
-                <SidebarTrigger className="p-6 hover:bg-gray-100 rounded-t-none rounded-l-none opacity-0 pointer-events-none">
-                  <Menu className="size-4" />
-                </SidebarTrigger>
-              </div>
-              <RouteBreadcrumb />
-            </div>
+          <header className="flex h-12 shrink-0 items-center justify-between gap-2">
+            <RouteBreadcrumb />
             <div className="flex items-center justify-center gap-2 h-full pr-[1.1rem]">
               <Image
                 className="w-24 z-10 -mr-1 pt-0.5 dark:hidden"
