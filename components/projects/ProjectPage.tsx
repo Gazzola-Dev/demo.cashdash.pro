@@ -1,19 +1,9 @@
-"use client";
-
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { useGetProjectSlug } from "@/hooks/project.hooks";
+import { useIsAdmin } from "@/hooks/user.hooks";
 import { ProjectWithDetails } from "@/types/project.types";
 import { LoaderCircle, Save, TerminalIcon } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -35,6 +25,7 @@ export function ProjectPage({
   onUpdate,
   isPending = false,
 }: ProjectPageProps) {
+  const isAdmin = useIsAdmin();
   const [formData, setFormData] = useState<Partial<ProjectWithDetails>>(
     isNew
       ? {
@@ -51,7 +42,6 @@ export function ProjectPage({
   );
 
   const [hasChanges, setHasChanges] = useState(false);
-  const { mutate: getSlug, isPending: isSlugPending } = useGetProjectSlug();
   const [debouncedName] = useDebounce(formData.name, 500);
 
   useEffect(() => {
@@ -61,22 +51,12 @@ export function ProjectPage({
     }
   }, [isNew, projectData]);
 
-  useEffect(() => {
-    if (isNew && debouncedName) {
-      getSlug(debouncedName, {
-        onSuccess: slug => {
-          if (slug) {
-            setFormData(prev => ({ ...prev, slug }));
-          }
-        },
-      });
-    }
-  }, [debouncedName, isNew, getSlug]);
-
   const handleChange = (
     field: keyof ProjectWithDetails,
     value: string | ProjectWithDetails["status"],
   ) => {
+    if (!isAdmin) return;
+
     if (isNew) {
       setFormData(prev => ({ ...prev, [field]: value }));
     } else {
@@ -104,6 +84,49 @@ export function ProjectPage({
     displayData?.name && displayData?.prefix && displayData?.slug,
   );
 
+  const renderField = (
+    label: string,
+    value: string | null | undefined,
+    field: keyof ProjectWithDetails,
+  ) => {
+    if (isAdmin) {
+      return (
+        <Input
+          value={value || ""}
+          onChange={e => handleChange(field, e.target.value)}
+          placeholder={`Enter ${label.toLowerCase()}`}
+        />
+      );
+    }
+    return (
+      <div className="p-2 bg-muted rounded-md">
+        {value || `No ${label.toLowerCase()} set`}
+      </div>
+    );
+  };
+
+  const renderTextArea = (
+    label: string,
+    value: string | null | undefined,
+    field: keyof ProjectWithDetails,
+  ) => {
+    if (isAdmin) {
+      return (
+        <Textarea
+          value={value || ""}
+          onChange={e => handleChange(field, e.target.value)}
+          placeholder={`Enter ${label.toLowerCase()}`}
+          className="min-h-[100px]"
+        />
+      );
+    }
+    return (
+      <div className="p-2 bg-muted rounded-md min-h-[100px] whitespace-pre-line">
+        {value || `No ${label.toLowerCase()} set`}
+      </div>
+    );
+  };
+
   return (
     <div className="relative w-full max-w-6xl mx-auto">
       {isNew && (
@@ -123,7 +146,7 @@ export function ProjectPage({
                 size="sm"
                 className="ml-4 border-amber-500 text-amber-700 hover:bg-amber-100 hover:text-amber-800"
                 onClick={handleCreate}
-                disabled={!isValid || isPending}
+                disabled={!isValid || isPending || !isAdmin}
               >
                 <div className="relative flex items-center">
                   Publish Project
@@ -146,7 +169,7 @@ export function ProjectPage({
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Project Information</CardTitle>
-              {!isNew && hasChanges && (
+              {!isNew && hasChanges && isAdmin && (
                 <Button
                   variant="outline"
                   size="sm"
@@ -170,69 +193,33 @@ export function ProjectPage({
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Project Name</label>
-                <Input
-                  value={displayData?.name || ""}
-                  onChange={e => handleChange("name", e.target.value)}
-                  placeholder="My Awesome Project"
-                />
+                {renderField("Project Name", displayData?.name, "name")}
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Project Slug</label>
                 <div className="flex items-center space-x-2">
                   <div className="flex-1 p-2 bg-muted rounded-md text-muted-foreground">
-                    {isNew && isSlugPending ? (
-                      <LoaderCircle className="h-4 w-4 animate-spin" />
-                    ) : (
-                      displayData?.slug || "project-slug"
-                    )}
+                    {displayData?.slug || "project-slug"}
                   </div>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Description</label>
-                <Textarea
-                  value={displayData?.description || ""}
-                  onChange={e => handleChange("description", e.target.value)}
-                  placeholder="Project description..."
-                  className="min-h-[100px]"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Project Status</label>
-                <Select
-                  value={displayData?.status || "active"}
-                  onValueChange={value => handleChange("status", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="archived">Archived</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
                 <label className="text-sm font-medium">Project Prefix</label>
-                <Input
-                  value={displayData?.prefix || ""}
-                  onChange={e =>
-                    handleChange("prefix", e.target.value.toUpperCase())
-                  }
-                  placeholder="PRJ"
-                  maxLength={5}
-                />
+                {renderField("Project Prefix", displayData?.prefix, "prefix")}
                 <p className="text-xs text-muted-foreground">
                   Used for task IDs (e.g., PRJ-123)
                 </p>
               </div>
-
-              <Separator className="my-6" />
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Description</label>
+                {renderTextArea(
+                  "Description",
+                  displayData?.description,
+                  "description",
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>
