@@ -1,19 +1,16 @@
-import { useSidebar } from "@/components/ui/sidebar";
 import { Switch } from "@/components/ui/switch";
 import useDarkMode from "@/hooks/useDarkMode";
 import { cn } from "@/lib/utils";
-import { Moon, Sun } from "lucide-react";
+import { Eclipse, Moon, Sun } from "lucide-react";
 
 export function ThemeSwitcher() {
-  const { open } = useSidebar();
   const [isDarkMode, toggleDarkMode] = useDarkMode();
 
   return (
     <div
       className={cn(
-        "flex items-center px-3 py-2 mb-2 cursor-pointer",
-        "transition-all duration-200 ease-in-out",
-        open ? "justify-between w-full" : "flex-col gap-2",
+        "flex items-center px-3 pb-2 pt-4 cursor-pointer",
+        "transition-all duration-200 ease-in-out justify-between w-full",
       )}
       onClick={toggleDarkMode}
       role="button"
@@ -25,9 +22,11 @@ export function ThemeSwitcher() {
         }
       }}
     >
-      {open && (
+      <div className="flex items-center gap-4">
+        <Eclipse className={cn("size-4 text-gray-500 dark:text-gray-300")} />
         <span className="text-sm text-gray-700 dark:text-gray-300">Theme</span>
-      )}
+      </div>
+
       <div className={cn("flex items-center gap-2", !open && "flex-col")}>
         <Switch
           checked={isDarkMode}

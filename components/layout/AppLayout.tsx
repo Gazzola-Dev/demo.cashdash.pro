@@ -25,15 +25,7 @@ import {
 } from "@/components/ui/tooltip";
 import configuration from "@/configuration";
 import { useGetProfile } from "@/hooks/profile.hooks";
-import {
-  Clock,
-  Dot,
-  Kanban,
-  LayoutDashboard,
-  LifeBuoy,
-  Send,
-  Settings2,
-} from "lucide-react";
+import { Clock, Dot, Kanban, LayoutDashboard } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
@@ -176,75 +168,11 @@ function AppSidebar({
           </>
         )}
 
-        <NavSecondary />
         <SidebarFooter>
           <NavUser />
         </SidebarFooter>
       </SidebarContent>
     </Sidebar>
-  );
-}
-
-export function NavSecondary() {
-  const { open } = useSidebar();
-
-  return (
-    <SidebarGroup className="mt-auto relative">
-      <SidebarMenu>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger>
-              <SidebarMenuItem>
-                <SidebarButton
-                  href={configuration.paths.settings.all}
-                  matchPattern="^/settings"
-                >
-                  <Settings2 className="size-4" />
-                  <span>Settings</span>
-                </SidebarButton>
-              </SidebarMenuItem>
-            </TooltipTrigger>
-            <TooltipContent side="right">
-              {open ? "Configure your account and preferences" : "Settings"}
-            </TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger>
-              <SidebarMenuItem>
-                <SidebarButton
-                  href={configuration.paths.feedback}
-                  matchPattern="^/feedback"
-                >
-                  <Send className="size-4" />
-                  <span>Feedback</span>
-                </SidebarButton>
-              </SidebarMenuItem>
-            </TooltipTrigger>
-            <TooltipContent side="right">
-              {open ? "Share your feedback with us" : "Feedback"}
-            </TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger>
-              <SidebarMenuItem>
-                <SidebarButton
-                  href={configuration.paths.support}
-                  matchPattern="^/support"
-                >
-                  <LifeBuoy className="size-4" />
-                  <span>Support</span>
-                </SidebarButton>
-              </SidebarMenuItem>
-            </TooltipTrigger>
-            <TooltipContent side="right">
-              {open ? "Get help and support" : "Support"}
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </SidebarMenu>
-    </SidebarGroup>
   );
 }
 

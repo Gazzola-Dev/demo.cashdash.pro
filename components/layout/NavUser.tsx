@@ -24,14 +24,7 @@ import configuration from "@/configuration";
 import { useGetProfile } from "@/hooks/profile.hooks";
 import { useSignOut } from "@/hooks/user.hooks";
 import { cn } from "@/lib/utils";
-import {
-  Bell,
-  ChevronsUpDown,
-  CircleUser,
-  CreditCard,
-  LogOut,
-  UsersRound,
-} from "lucide-react";
+import { Bell, ChevronsUpDown, CreditCard, Settings2 } from "lucide-react";
 import Link from "next/link";
 import ThemeSwitcher from "./ThemeSwitcher";
 
@@ -83,85 +76,50 @@ export function NavUser() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-56 rounded-lg dark:bg-gray-900 dark:border-gray-800"
+            className="w-56 rounded-lg dark:bg-gray-900 dark:border-gray-800 select-none"
             side={isMobile ? "bottom" : "right"}
             align="end"
             sideOffset={4}
           >
-            <DropdownMenuLabel>
-              <Link
-                href={configuration.paths.settings.profile}
-                className="flex items-center gap-2 p-1 cursor-pointer dark:hover:bg-gray-800 rounded-md"
-              >
-                <Avatar className="size-8 rounded-lg">
-                  <AvatarImage
-                    src={profileData.profile.avatar_url ?? ""}
-                    alt={profileData.profile.display_name ?? "User"}
-                  />
-                  <AvatarFallback className="rounded-lg dark:bg-gray-700 dark:text-gray-100">
-                    {profileData.profile.display_name?.charAt(0) ?? "?"}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="grid flex-1 text-left text-sm">
-                  <span className="font-semibold dark:text-gray-100">
-                    {profileData.profile.display_name ?? "Unnamed User"}
-                  </span>
-                  <span className="text-xs dark:text-gray-400">
-                    {profileData.profile.professional_title ?? "No title set"}
-                  </span>
-                </div>
-              </Link>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator className="dark:border-gray-700" />
-            <ThemeSwitcher />
-            <DropdownMenuGroup>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <DropdownMenuItem
-                      className="cursor-pointer dark:hover:bg-gray-800 dark:focus:bg-gray-800"
-                      asChild
+            {" "}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenuLabel>
+                    <Link
+                      href={configuration.paths.settings.profile}
+                      className="flex items-center gap-2 p-1 cursor-pointer dark:hover:bg-gray-800 rounded-md"
                     >
-                      <Link
-                        href={configuration.paths.settings.profile}
-                        className="dark:text-gray-100"
-                      >
-                        <CircleUser className="mr-2 size-4 dark:text-gray-400" />
-                        Profile
-                      </Link>
-                    </DropdownMenuItem>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="right"
-                    className="dark:bg-gray-800 dark:text-gray-100"
-                  >
-                    Manage your personal profile and settings
-                  </TooltipContent>
-                </Tooltip>
-
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <DropdownMenuItem
-                      className="cursor-pointer dark:hover:bg-gray-800 dark:focus:bg-gray-800"
-                      asChild
-                    >
-                      <Link
-                        href={configuration.paths.settings.team}
-                        className="dark:text-gray-100"
-                      >
-                        <UsersRound className="mr-2 size-4 dark:text-gray-400" />
-                        Team
-                      </Link>
-                    </DropdownMenuItem>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="right"
-                    className="dark:bg-gray-800 dark:text-gray-100"
-                  >
-                    Manage team members and permissions
-                  </TooltipContent>
-                </Tooltip>
-
+                      <Avatar className="size-8 rounded-lg">
+                        <AvatarImage
+                          src={profileData.profile.avatar_url ?? ""}
+                          alt={profileData.profile.display_name ?? "User"}
+                        />
+                        <AvatarFallback className="rounded-lg dark:bg-gray-700 dark:text-gray-100">
+                          {profileData.profile.display_name?.charAt(0) ?? "?"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="grid flex-1 text-left text-sm">
+                        <span className="font-semibold dark:text-gray-100">
+                          {profileData.profile.display_name ?? "Unnamed User"}
+                        </span>
+                        <span className="text-xs dark:text-gray-400">
+                          {profileData.profile.professional_title ??
+                            "No title set"}
+                        </span>
+                      </div>
+                    </Link>
+                  </DropdownMenuLabel>
+                </TooltipTrigger>
+                <TooltipContent
+                  side="right"
+                  className="dark:bg-gray-800 dark:text-gray-100"
+                >
+                  Manage your personal profile and settings
+                </TooltipContent>
+              </Tooltip>
+              <DropdownMenuSeparator className="dark:border-gray-700" />
+              <DropdownMenuGroup>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <DropdownMenuItem
@@ -207,28 +165,32 @@ export function NavUser() {
                     Manage your subscription and billing details
                   </TooltipContent>
                 </Tooltip>
-              </TooltipProvider>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator className="dark:border-gray-700" />
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <DropdownMenuItem
-                    className="cursor-pointer dark:text-gray-100 dark:hover:bg-gray-800 dark:focus:bg-gray-800"
-                    onClick={handleSignOut}
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuItem
+                      className="cursor-pointer dark:hover:bg-gray-800 dark:focus:bg-gray-800"
+                      asChild
+                    >
+                      <Link
+                        href={configuration.paths.settings.all}
+                        className="dark:text-gray-100"
+                      >
+                        <Settings2 className="mr-2 size-4 dark:text-gray-400" />
+                        All Settings
+                      </Link>
+                    </DropdownMenuItem>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="right"
+                    className="dark:bg-gray-800 dark:text-gray-100"
                   >
-                    <LogOut className="mr-2 size-4 dark:text-gray-400" />
-                    Log out
-                  </DropdownMenuItem>
-                </TooltipTrigger>
-                <TooltipContent
-                  side="right"
-                  className="dark:bg-gray-800 dark:text-gray-100"
-                >
-                  Sign out of your account
-                </TooltipContent>
-              </Tooltip>
+                    Manage all settings
+                  </TooltipContent>
+                </Tooltip>
+              </DropdownMenuGroup>
             </TooltipProvider>
+            <ThemeSwitcher />
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
