@@ -23,6 +23,7 @@ import {
 import configuration from "@/configuration";
 import { useGetProfile } from "@/hooks/profile.hooks";
 import { useListProjects } from "@/hooks/project.hooks";
+import { useIsAdmin } from "@/hooks/user.hooks";
 import { cn } from "@/lib/utils";
 import { ChevronsUpDown, Code2, ListFilter, Plus } from "lucide-react";
 import Link from "next/link";
@@ -30,6 +31,7 @@ import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
 export function ProjectSwitcher() {
+  const isAdmin = useIsAdmin();
   const pathname = usePathname();
   const { isMobile, open } = useSidebar();
   const {
@@ -141,53 +143,55 @@ export function ProjectSwitcher() {
               ))}
             </TooltipProvider>
             <DropdownMenuSeparator className="dark:border-gray-700" />
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <DropdownMenuItem
-                    className="cursor-pointer dark:hover:bg-gray-800 dark:focus:bg-gray-800"
-                    asChild
-                  >
-                    <Link
-                      href={configuration.paths.project.all}
-                      className="dark:text-gray-100"
+            {isAdmin && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuItem
+                      className="cursor-pointer dark:hover:bg-gray-800 dark:focus:bg-gray-800"
+                      asChild
                     >
-                      <ListFilter className="mr-2 size-4 dark:text-gray-400" />
-                      All Projects
-                    </Link>
-                  </DropdownMenuItem>
-                </TooltipTrigger>
-                <TooltipContent
-                  side="right"
-                  className="dark:bg-gray-800 dark:text-gray-100"
-                >
-                  View and manage all projects
-                </TooltipContent>
-              </Tooltip>
+                      <Link
+                        href={configuration.paths.project.all}
+                        className="dark:text-gray-100"
+                      >
+                        <ListFilter className="mr-2 size-4 dark:text-gray-400" />
+                        All Projects
+                      </Link>
+                    </DropdownMenuItem>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="right"
+                    className="dark:bg-gray-800 dark:text-gray-100"
+                  >
+                    View and manage all projects
+                  </TooltipContent>
+                </Tooltip>
 
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <DropdownMenuItem
-                    className="cursor-pointer dark:hover:bg-gray-800 dark:focus:bg-gray-800"
-                    asChild
-                  >
-                    <Link
-                      href={configuration.paths.project.new}
-                      className="dark:text-gray-100"
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuItem
+                      className="cursor-pointer dark:hover:bg-gray-800 dark:focus:bg-gray-800"
+                      asChild
                     >
-                      <Plus className="mr-2 size-4 dark:text-gray-400" />
-                      New Project
-                    </Link>
-                  </DropdownMenuItem>
-                </TooltipTrigger>
-                <TooltipContent
-                  side="right"
-                  className="dark:bg-gray-800 dark:text-gray-100"
-                >
-                  Create a new project
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+                      <Link
+                        href={configuration.paths.project.new}
+                        className="dark:text-gray-100"
+                      >
+                        <Plus className="mr-2 size-4 dark:text-gray-400" />
+                        New Project
+                      </Link>
+                    </DropdownMenuItem>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="right"
+                    className="dark:bg-gray-800 dark:text-gray-100"
+                  >
+                    Create a new project
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

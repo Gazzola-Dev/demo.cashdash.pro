@@ -66,7 +66,7 @@ async function userMiddleware(request: NextRequest, response: NextResponse) {
       );
     }
     if (pathname === configuration.paths.project.new) return response;
-
+    if (pathname === configuration.paths.appHome) return response;
     return NextResponse.redirect(
       new URL(configuration.paths.appHome, request.url),
     );
