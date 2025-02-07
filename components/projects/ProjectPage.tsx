@@ -1,4 +1,5 @@
-import ProjectMemberList from "@/components/projects/ProjectMemberList";
+"use client";
+
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,9 +13,12 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import { useGetProjectSlug } from "@/hooks/project.hooks";
 import { ProjectWithDetails } from "@/types/project.types";
 import { LoaderCircle, Save, TerminalIcon } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useDebounce } from "use-debounce";
+import ProjectMemberList from "./ProjectMemberList";
 
 interface ProjectPageProps {
   projectData?: ProjectWithDetails | null;
@@ -47,6 +51,8 @@ export function ProjectPage({
   );
 
   const [hasChanges, setHasChanges] = useState(false);
+  const { mutate: getSlug, isPending: isSlugPending } = useGetProjectSlug();
+  const [debouncedName] = useDebounce(formData.name, 500);
 
   useEffect(() => {
     if (!isNew && projectData) {
@@ -54,6 +60,18 @@ export function ProjectPage({
       setHasChanges(false);
     }
   }, [isNew, projectData]);
+
+  useEffect(() => {
+    if (isNew && debouncedName) {
+      getSlug(debouncedName, {
+        onSuccess: slug => {
+          if (slug) {
+            setFormData(prev => ({ ...prev, slug }));
+          }
+        },
+      });
+    }
+  }, [debouncedName, isNew, getSlug]);
 
   const handleChange = (
     field: keyof ProjectWithDetails,
@@ -160,6 +178,19 @@ export function ProjectPage({
               </div>
 
               <div className="space-y-2">
+                <label className="text-sm font-medium">Project Slug</label>
+                <div className="flex items-center space-x-2">
+                  <div className="flex-1 p-2 bg-muted rounded-md text-muted-foreground">
+                    {isNew && isSlugPending ? (
+                      <LoaderCircle className="h-4 w-4 animate-spin" />
+                    ) : (
+                      displayData?.slug || "project-slug"
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
                 <label className="text-sm font-medium">Description</label>
                 <Textarea
                   value={displayData?.description || ""}
@@ -201,91 +232,13 @@ export function ProjectPage({
                 </p>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Project Slug</label>
-                <Input
-                  value={displayData?.slug || ""}
-                  onChange={e =>
-                    handleChange("slug", e.target.value.toLowerCase())
-                  }
-                  placeholder="my-awesome-project"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Used in URLs (e.g., /my-awesome-project)
-                </p>
-              </div>
-
               <Separator className="my-6" />
-
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">GitHub Integration</h3>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Repository URL</label>
-                  <Input
-                    value={displayData?.github_repo_url || ""}
-                    onChange={e =>
-                      handleChange("github_repo_url", e.target.value)
-                    }
-                    placeholder="https://github.com/owner/repo"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">
-                    Repository Owner
-                  </label>
-                  <Input
-                    value={displayData?.github_owner || ""}
-                    onChange={e => handleChange("github_owner", e.target.value)}
-                    placeholder="owner"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Repository Name</label>
-                  <Input
-                    value={displayData?.github_repo || ""}
-                    onChange={e => handleChange("github_repo", e.target.value)}
-                    placeholder="repository-name"
-                  />
-                </div>
-              </div>
             </CardContent>
           </Card>
         </div>
 
         <div className="w-80 space-y-6">
           <ProjectMemberList isDraft={isNew} />
-
-          {!isNew &&
-            projectData?.project_metrics &&
-            projectData.project_metrics.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Project Metrics</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {projectData.project_metrics.map((metric, i) => (
-                      <div key={metric.id + i} className="space-y-2">
-                        <div className="text-sm font-medium">
-                          {new Date(metric.date).toLocaleDateString()}
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 text-sm">
-                          <div>Velocity</div>
-                          <div>{metric.velocity}</div>
-                          <div>Completion</div>
-                          <div>{metric.completion_percentage}%</div>
-                          <div>Burn Rate</div>
-                          <div>${(metric?.burn_rate_cents || 0) / 100}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
         </div>
       </div>
     </div>

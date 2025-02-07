@@ -4,6 +4,7 @@ import {
   createProjectAction,
   deleteProjectAction,
   getProjectAction,
+  getProjectSlugAction,
   listProjectsAction,
   updateProjectAction,
 } from "@/actions/project.actions";
@@ -148,6 +149,28 @@ export const useDeleteProject = ({
       toast({
         title: errorMessage || error.message,
         description: "Failed to delete project",
+      });
+    },
+  });
+};
+
+export const useGetProjectSlug = () => {
+  const hookName = "useGetProjectSlug";
+  const { toast } = useToastQueue();
+
+  return useMutation({
+    mutationFn: async (projectName: string) => {
+      const { data, error } = await getProjectSlugAction(projectName);
+      conditionalLog(hookName, { data, error }, false);
+      if (error) throw error;
+      return data;
+    },
+    onError: (error: Error) => {
+      conditionalLog(hookName, { error }, false);
+      toast({
+        title: error.message,
+        description: "Failed to generate project slug",
+        variant: "destructive",
       });
     },
   });

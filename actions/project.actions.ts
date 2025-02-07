@@ -6,6 +6,7 @@ import { conditionalLog } from "@/lib/log.utils";
 import { ActionResponse } from "@/types/action.types";
 import { Tables, TablesInsert, TablesUpdate } from "@/types/database.types";
 import { ProjectWithDetails } from "@/types/project.types";
+import slugify from "slugify";
 
 type Project = Tables<"projects">;
 
@@ -229,6 +230,28 @@ export const listProjectsAction = async (filters?: {
     });
   } catch (error) {
     conditionalLog(actionName, { error });
+    return getActionResponse({ error });
+  }
+};
+
+export const getProjectSlugAction = async (
+  projectName: string,
+): Promise<ActionResponse<string>> => {
+  const actionName = "getProjectSlugAction";
+  const supabase = await getSupabaseServerActionClient();
+
+  try {
+    const { data, error } = await supabase.rpc("generate_unique_slug", {
+      base_slug: slugify(projectName).toLowerCase(),
+      table_name: "projects",
+    });
+
+    conditionalLog(actionName, { data, error }, true);
+
+    if (error) throw error;
+    return getActionResponse({ data });
+  } catch (error) {
+    conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });
   }
 };
