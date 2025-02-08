@@ -5,7 +5,7 @@ import getActionResponse from "@/lib/action.util";
 import { conditionalLog } from "@/lib/log.utils";
 import { ActionResponse } from "@/types/action.types";
 import { Tables, TablesInsert, TablesUpdate } from "@/types/database.types";
-import { ProjectWithDetails } from "@/types/project.types";
+import { InvitationResponse, ProjectWithDetails } from "@/types/project.types";
 import slugify from "slugify";
 
 type Project = Tables<"projects">;
@@ -250,6 +250,61 @@ export const getProjectSlugAction = async (
 
     if (error) throw error;
     return getActionResponse({ data });
+  } catch (error) {
+    conditionalLog(actionName, { error }, true);
+    return getActionResponse({ error });
+  }
+};
+
+export const inviteMemberAction = async (
+  invitation: TablesInsert<"project_invitations">,
+): Promise<InvitationResponse> => {
+  const actionName = "inviteMemberAction";
+  const supabase = await getSupabaseServerActionClient();
+
+  try {
+    const { data: memberData, error: memberError } = await supabase
+      .from("project_members")
+      .select("*")
+      .eq("project_id", invitation.project_id)
+      .single();
+
+    conditionalLog(actionName, { memberData, memberError }, true);
+
+    if (memberError || !["owner", "admin"].includes(memberData.role)) {
+      throw new Error("Permission denied");
+    }
+
+    const { data, error } = await supabase
+      .from("project_invitations")
+      .insert(invitation)
+      .select(
+        `
+        *,
+        inviter:profiles!invited_by(*),
+        project:projects(*)
+      `,
+      )
+      .single();
+
+    conditionalLog(actionName, { data, error }, true);
+
+    if (error) throw error;
+    if (!data.project) throw new Error("Project not found");
+    if (
+      !data.inviter ||
+      (Array.isArray(data.inviter) && !data.inviter.length)
+    ) {
+      throw new Error("Inviter not found");
+    }
+
+    const transformedData = {
+      ...data,
+      inviter: Array.isArray(data.inviter) ? data.inviter[0] : data.inviter,
+      project: data.project,
+    };
+
+    return getActionResponse({ data: transformedData });
   } catch (error) {
     conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });

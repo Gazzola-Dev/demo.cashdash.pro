@@ -197,6 +197,7 @@ export type Database = {
           created_at: string
           current_project_id: string | null
           display_name: string | null
+          email: string
           github_username: string | null
           id: string
           invited: boolean
@@ -213,6 +214,7 @@ export type Database = {
           created_at?: string
           current_project_id?: string | null
           display_name?: string | null
+          email: string
           github_username?: string | null
           id: string
           invited?: boolean
@@ -229,6 +231,7 @@ export type Database = {
           created_at?: string
           current_project_id?: string | null
           display_name?: string | null
+          email?: string
           github_username?: string | null
           id?: string
           invited?: boolean
@@ -631,6 +634,55 @@ export type Database = {
           requested_permission: Database["public"]["Enums"]["app_permission"]
         }
         Returns: boolean
+      }
+      citext:
+        | {
+            Args: {
+              "": boolean
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              "": string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              "": unknown
+            }
+            Returns: string
+          }
+      citext_hash: {
+        Args: {
+          "": string
+        }
+        Returns: number
+      }
+      citextin: {
+        Args: {
+          "": unknown
+        }
+        Returns: string
+      }
+      citextout: {
+        Args: {
+          "": string
+        }
+        Returns: unknown
+      }
+      citextrecv: {
+        Args: {
+          "": unknown
+        }
+        Returns: string
+      }
+      citextsend: {
+        Args: {
+          "": string
+        }
+        Returns: string
       }
       create_comment_data: {
         Args: {

@@ -35,6 +35,11 @@ export interface ProjectInvitationWithProfile extends ProjectInvitation {
   inviter: Profile | null;
 }
 
+// Profile with email
+export interface ProfileWithEmail extends Profile {
+  email: string;
+}
+
 // Project with all relationships
 export interface ProjectWithDetails {
   id: Project["id"];
@@ -55,10 +60,19 @@ export interface ProjectWithDetails {
   project_metrics: ProjectMetrics[];
 }
 
+// Input types for invitations
+export interface InvitationInput {
+  email: string;
+  projectId: string;
+  role?: "admin" | "member";
+}
+
 // Response types
 export interface ProjectResponse extends ActionResponse<ProjectWithDetails> {}
 export interface ProjectListResponse
   extends ActionResponse<ProjectWithDetails[]> {}
+export interface InvitationResponse
+  extends ActionResponse<ProjectInvitationWithProfile> {}
 
 // Filter types for listing projects
 export interface ProjectFilters {

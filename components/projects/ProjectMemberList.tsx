@@ -1,3 +1,4 @@
+import ActionButton from "@/components/shared/ActionButton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -7,39 +8,62 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useGetProject } from "@/hooks/project.hooks";
-import { AlertCircle, UserPlus } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { Input } from "@/components/ui/input";
+import { useGetProject, useInviteMember } from "@/hooks/project.hooks";
+import { useGetUser, useIsAdmin } from "@/hooks/user.hooks";
+import { cn } from "@/lib/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { AlertCircle, ChevronUp, UserPlus } from "lucide-react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
-const placeholderMembers = [
-  {
-    id: "1",
-    name: "John Doe",
-    role: "owner",
-    avatar_url: null,
-    professional_title: "Project Lead",
-  },
-  {
-    id: "2",
-    name: "Jane Smith",
-    role: "admin",
-    avatar_url: null,
-    professional_title: "Senior Developer",
-  },
-  {
-    id: "3",
-    name: "Mike Johnson",
-    role: "member",
-    avatar_url: null,
-    professional_title: "Frontend Engineer",
-  },
-];
+const inviteSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+});
 
-interface ProjectMemberListProps {
-  isDraft?: boolean;
-}
+type InviteFormValues = z.infer<typeof inviteSchema>;
 
-export function ProjectMemberList({ isDraft = false }: ProjectMemberListProps) {
+export function ProjectMemberList({ isDraft = false }: { isDraft?: boolean }) {
+  const [isInviteOpen, setIsInviteOpen] = useState(false);
+  const isAdmin = useIsAdmin();
+  const { mutate: inviteMember, isPending } = useInviteMember();
   const { data: project } = useGetProject();
+  const { data: user } = useGetUser();
+
+  const form = useForm<InviteFormValues>({
+    resolver: zodResolver(inviteSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
+
+  const handleSubmit = (data: InviteFormValues) => {
+    if (user?.id && project?.id)
+      inviteMember(
+        {
+          email: data.email,
+          project_id: project.id,
+          role: "member",
+          status: "pending",
+          invited_by: user.id,
+          expires_at: new Date(
+            Date.now() + 7 * 24 * 60 * 60 * 1000,
+          ).toISOString(),
+        },
+        {
+          onSuccess: () => {
+            setIsInviteOpen(false);
+            form.reset();
+          },
+        },
+      );
+  };
 
   return (
     <Card className="relative">
@@ -59,13 +83,51 @@ export function ProjectMemberList({ isDraft = false }: ProjectMemberListProps) {
           <CardTitle>Team Members</CardTitle>
           <CardDescription>Manage your project team</CardDescription>
         </div>
-        <Button variant="outline" size="sm" disabled={isDraft}>
-          <UserPlus className="w-4 h-4 mr-2" />
-          Invite
-        </Button>
       </CardHeader>
 
       <CardContent className="space-y-4">
+        {isAdmin && (
+          <Collapsible open={isInviteOpen} onOpenChange={setIsInviteOpen}>
+            <CollapsibleTrigger asChild>
+              <Button variant="outline" size="sm" disabled={isDraft}>
+                {isInviteOpen ? (
+                  <ChevronUp className="w-4 h-4 mr-2" />
+                ) : (
+                  <UserPlus className="w-4 h-4 mr-2" />
+                )}
+                {isInviteOpen ? "Cancel" : "Invite"}
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-4">
+              <form
+                onSubmit={form.handleSubmit(handleSubmit)}
+                className="flex items-center gap-2"
+              >
+                <Input
+                  placeholder="Email address"
+                  {...form.register("email")}
+                  className={cn(
+                    "flex-1",
+                    form.formState.errors.email && "border-destructive",
+                  )}
+                />
+                <ActionButton
+                  type="submit"
+                  size="sm"
+                  loading={isPending}
+                  disabled={!form.formState.isValid}
+                >
+                  Send Invite
+                </ActionButton>
+              </form>
+              {form.formState.errors.email && (
+                <p className="text-sm text-destructive mt-1">
+                  {form.formState.errors.email.message}
+                </p>
+              )}
+            </CollapsibleContent>
+          </Collapsible>
+        )}
         {project?.project_members?.map(member => (
           <div
             key={member.id}
@@ -87,6 +149,11 @@ export function ProjectMemberList({ isDraft = false }: ProjectMemberListProps) {
                   {member.role}
                 </span>
               </div>
+              {member.profile?.professional_title && (
+                <p className="text-sm text-muted-foreground truncate">
+                  {member.profile.professional_title}
+                </p>
+              )}
             </div>
           </div>
         ))}

@@ -5,6 +5,7 @@ import {
   deleteProjectAction,
   getProjectAction,
   getProjectSlugAction,
+  inviteMemberAction,
   listProjectsAction,
   updateProjectAction,
 } from "@/actions/project.actions";
@@ -12,7 +13,10 @@ import { useGetProfile } from "@/hooks/profile.hooks";
 import { conditionalLog } from "@/lib/log.utils";
 import { Tables, TablesInsert, TablesUpdate } from "@/types/database.types";
 import { HookOptions } from "@/types/db.types";
-import { ProjectWithDetails } from "@/types/project.types";
+import {
+  ProjectInvitationWithProfile,
+  ProjectWithDetails,
+} from "@/types/project.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToastQueue } from "./useToastQueue";
 
@@ -174,6 +178,38 @@ export const useGetProjectSlug = () => {
       toast({
         title: error.message,
         description: "Failed to generate project slug",
+        variant: "destructive",
+      });
+    },
+  });
+};
+
+export const useInviteMember = ({
+  errorMessage,
+  successMessage,
+}: HookOptions<ProjectInvitationWithProfile> = {}) => {
+  const hookName = "useInviteMember";
+  const queryClient = useQueryClient();
+  const { toast } = useToastQueue();
+
+  return useMutation({
+    mutationFn: async (invitation: TablesInsert<"project_invitations">) => {
+      const { data, error } = await inviteMemberAction(invitation);
+      conditionalLog(hookName, { data, error }, false);
+      return data;
+    },
+    onSuccess: data => {
+      conditionalLog(hookName, { success: data }, false);
+      queryClient.invalidateQueries({ queryKey: ["project-invitations"] });
+      toast({
+        title: successMessage || "Invitation sent successfully",
+      });
+    },
+    onError: (error: Error) => {
+      conditionalLog(hookName, { error }, false);
+      toast({
+        title: errorMessage || error.message,
+        description: "Failed to send invitation",
         variant: "destructive",
       });
     },
