@@ -128,6 +128,47 @@ export function ProjectMemberList({ isDraft = false }: { isDraft?: boolean }) {
             </CollapsibleContent>
           </Collapsible>
         )}
+        {/* Pending Invitations */}
+        {project?.project_invitations?.map(invite => (
+          <div
+            key={invite.id}
+            className="flex items-center gap-4 p-2 rounded-lg hover:bg-muted/50 border border-dashed border-muted-foreground/20"
+          >
+            <Avatar className="h-10 w-10 opacity-50">
+              <AvatarImage src={undefined} />
+              <AvatarFallback>
+                {invite.email.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-medium truncate text-muted-foreground">
+                  {invite.email}
+                </p>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground capitalize px-2 py-0.5 rounded-full bg-muted/50">
+                    {invite.role}
+                  </span>
+                  <span className="text-xs text-amber-500 dark:text-amber-400 bg-amber-500/10 capitalize px-2 py-0.5 rounded-full">
+                    Pending
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 mt-1">
+                <p className="text-xs text-muted-foreground">
+                  Invited by {invite.inviter?.display_name || "Unknown"}
+                </p>
+                <span className="text-xs text-muted-foreground">•</span>
+                <p className="text-xs text-muted-foreground">
+                  Expires {new Date(invite.expires_at).toLocaleDateString()}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {/* Active Members */}
         {project?.project_members?.map(member => (
           <div
             key={member.id}
@@ -139,7 +180,6 @@ export function ProjectMemberList({ isDraft = false }: { isDraft?: boolean }) {
                 {member.profile?.display_name?.charAt(0)}
               </AvatarFallback>
             </Avatar>
-
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <p className="text-sm font-medium truncate">

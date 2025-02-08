@@ -25,19 +25,22 @@ export interface RequiredProject extends Project {
   updated_at: NonNullable<Project["updated_at"]>;
 }
 
+// Profile with required email
+export interface ProfileWithEmail extends Profile {
+  email: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  professional_title: string | null;
+}
+
 // Member with profile relationship
 export interface ProjectMemberWithProfile extends ProjectMember {
-  profile: Profile | null;
+  profile: ProfileWithEmail | null;
 }
 
 // Invitation with inviter profile relationship
 export interface ProjectInvitationWithProfile extends ProjectInvitation {
-  inviter: Profile | null;
-}
-
-// Profile with email
-export interface ProfileWithEmail extends Profile {
-  email: string;
+  inviter: ProfileWithEmail | null;
 }
 
 // Project with all relationships
