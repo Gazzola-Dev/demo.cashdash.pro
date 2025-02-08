@@ -5,7 +5,11 @@ import getActionResponse from "@/lib/action.util";
 import { conditionalLog } from "@/lib/log.utils";
 import { ActionResponse } from "@/types/action.types";
 import { Tables, TablesInsert, TablesUpdate } from "@/types/database.types";
-import { InvitationResponse, ProjectWithDetails } from "@/types/project.types";
+import {
+  InvitationResponse,
+  ProjectInvitationWithProfile,
+  ProjectWithDetails,
+} from "@/types/project.types";
 import slugify from "slugify";
 
 type Project = Tables<"projects">;
@@ -256,6 +260,10 @@ export const getProjectSlugAction = async (
   }
 };
 
+// actions/project.actions.ts
+
+// actions/project.actions.ts
+
 export const inviteMemberAction = async (
   invitation: TablesInsert<"project_invitations">,
 ): Promise<InvitationResponse> => {
@@ -263,48 +271,30 @@ export const inviteMemberAction = async (
   const supabase = await getSupabaseServerActionClient();
 
   try {
-    const { data: memberData, error: memberError } = await supabase
-      .from("project_members")
-      .select("*")
-      .eq("project_id", invitation.project_id)
-      .single();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-    conditionalLog(actionName, { memberData, memberError }, true);
+    conditionalLog(actionName, { user, userError }, true);
+    if (userError || !user) throw new Error("Not authenticated");
 
-    if (memberError || !["owner", "admin"].includes(memberData.role)) {
-      throw new Error("Permission denied");
-    }
-
-    const { data, error } = await supabase
-      .from("project_invitations")
-      .insert(invitation)
-      .select(
-        `
-        *,
-        inviter:profiles!invited_by(*),
-        project:projects(*)
-      `,
-      )
-      .single();
+    const { data, error } = await supabase.rpc("invite_member_to_project", {
+      p_project_id: invitation.project_id,
+      p_inviter_id: user.id,
+      p_email: invitation.email,
+      p_role: invitation.role,
+      p_expires_at:
+        invitation.expires_at ||
+        new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    });
 
     conditionalLog(actionName, { data, error }, true);
-
     if (error) throw error;
-    if (!data.project) throw new Error("Project not found");
-    if (
-      !data.inviter ||
-      (Array.isArray(data.inviter) && !data.inviter.length)
-    ) {
-      throw new Error("Inviter not found");
-    }
 
-    const transformedData = {
-      ...data,
-      inviter: Array.isArray(data.inviter) ? data.inviter[0] : data.inviter,
-      project: data.project,
-    };
-
-    return getActionResponse({ data: transformedData });
+    return getActionResponse({
+      data: data as any as ProjectInvitationWithProfile,
+    });
   } catch (error) {
     conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });

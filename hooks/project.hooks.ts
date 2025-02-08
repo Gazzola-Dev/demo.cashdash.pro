@@ -195,7 +195,8 @@ export const useInviteMember = ({
   return useMutation({
     mutationFn: async (invitation: TablesInsert<"project_invitations">) => {
       const { data, error } = await inviteMemberAction(invitation);
-      conditionalLog(hookName, { data, error }, false);
+      conditionalLog(hookName, { data, error }, false, null);
+      if (error) throw new Error(error);
       return data;
     },
     onSuccess: data => {

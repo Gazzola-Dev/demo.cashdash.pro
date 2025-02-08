@@ -749,6 +749,16 @@ export type Database = {
         }
         Returns: Json
       }
+      invite_member_to_project: {
+        Args: {
+          p_project_id: string
+          p_inviter_id: string
+          p_email: string
+          p_role: string
+          p_expires_at?: string
+        }
+        Returns: Json
+      }
       list_project_members: {
         Args: {
           project_slug: string
