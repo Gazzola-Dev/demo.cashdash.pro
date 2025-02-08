@@ -15,6 +15,7 @@ import {
   useSignInWithMagicLink,
   useSignOut,
 } from "@/hooks/user.hooks";
+import { redactEmail } from "@/lib/string.util";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LogOut, MailOpen } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -51,17 +52,6 @@ export default function HomePage() {
 
   const handleSignOut = () => {
     signOut();
-  };
-
-  // Redact email for display, keeping first 2 and last 2 chars visible
-  const redactEmail = (email: string) => {
-    const [localPart, domain] = email.split("@");
-    const redactedLocal =
-      localPart.slice(0, 2) + "*".repeat(localPart.length - 2);
-    const [domainName, tld] = domain.split(".");
-    const redactedDomain =
-      domainName.slice(0, 2) + "*".repeat(domainName.length - 2);
-    return `${redactedLocal}@${redactedDomain}.${tld}`;
   };
 
   return (
