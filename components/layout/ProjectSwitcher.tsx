@@ -83,19 +83,27 @@ export function ProjectSwitcher() {
               variant="ghost"
               className={cn(
                 "h-auto flex items-center justify-between w-full space-x-1 hover:bg-gray-100 dark:hover:bg-gray-800 relative",
+                !currentProject && "border border-blue-300",
               )}
             >
               <div
                 className={cn(
-                  "flex aspect-square size-8 items-center justify-center rounded-lg bg-gray-200 dark:bg-gray-700",
+                  "flex aspect-square size-8 items-center justify-center rounded-lg",
                   !open && "ml-1.5 mt-1.5",
+                  currentProject
+                    ? "bg-gray-200 dark:bg-gray-700"
+                    : "border border-blue-500",
                 )}
               >
-                <Code2 className="size-4 dark:text-gray-100" />
+                {currentProject ? (
+                  <Code2 className="size-4 dark:text-gray-100" />
+                ) : (
+                  <MailPlus className="text-blue-500" />
+                )}
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold dark:text-gray-100">
-                  {currentProject?.name}
+                  {currentProject ? currentProject?.name : "View invitations"}
                 </span>
               </div>
               {!open && hasPendingInvites && (
@@ -150,14 +158,28 @@ export function ProjectSwitcher() {
                       href={`/${invite.project.slug}/invite`}
                       className="relative"
                     >
-                      <DropdownMenuItem className="cursor-pointer dark:hover:bg-gray-800 dark:focus:bg-gray-800">
-                        <div className="flex size-6 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-700">
-                          <Code2 className="size-4 shrink-0 dark:text-gray-100" />
+                      <DropdownMenuItem
+                        className={cn(
+                          "cursor-pointer dark:hover:bg-gray-800 dark:focus:bg-gray-800 rounded",
+                          !currentProject &&
+                            "bg-blue-500/5 border border-blue-200",
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            "flex size-6 items-center justify-center rounded-lg",
+                            currentProject && "bg-gray-100 dark:bg-gray-700",
+                          )}
+                        >
+                          {currentProject ? (
+                            <Code2 className="size-4 shrink-0 dark:text-gray-100" />
+                          ) : (
+                            <MailPlus className="size-4 shrink-0 text-blue-500" />
+                          )}
                         </div>
                         <div className="ml-2 flex-1 truncate dark:text-gray-100">
                           {invite.project.name}
                         </div>
-                        <MailPlus className="ml-2 h-4 w-4 text-primary" />
                       </DropdownMenuItem>
                     </Link>
                   </TooltipTrigger>

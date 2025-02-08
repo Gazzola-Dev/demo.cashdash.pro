@@ -99,7 +99,7 @@ function AppSidebar({
         <SidebarHeader>
           <ProjectSwitcher />
         </SidebarHeader>
-
+        {!currentProject && <div className="flex-grow"></div>}
         {currentProject && (
           <>
             <SidebarGroup>
