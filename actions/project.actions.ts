@@ -260,10 +260,6 @@ export const getProjectSlugAction = async (
   }
 };
 
-// actions/project.actions.ts
-
-// actions/project.actions.ts
-
 export const inviteMemberAction = async (
   invitation: TablesInsert<"project_invitations">,
 ): Promise<InvitationResponse> => {

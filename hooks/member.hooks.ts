@@ -2,14 +2,13 @@
 
 import {
   acceptInvitationAction,
-  inviteMemberAction,
   listInvitationsAction,
   listMembersAction,
   removeMemberAction,
   updateMemberRoleAction,
 } from "@/actions/member.actions";
 import { conditionalLog } from "@/lib/log.utils";
-import { Tables, TablesInsert } from "@/types/database.types";
+import { Tables } from "@/types/database.types";
 import { HookOptions } from "@/types/db.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToastQueue } from "./useToastQueue";
@@ -48,38 +47,6 @@ export const useListInvitations = (projectId: string) => {
       const { data, error } = await listInvitationsAction(projectId);
       conditionalLog(hookName, { data, error }, false);
       return data || [];
-    },
-  });
-};
-
-// Invite member hook
-export const useInviteMember = ({
-  errorMessage,
-  successMessage,
-}: HookOptions<ProjectInvitation> = {}) => {
-  const hookName = "useInviteMember";
-  const queryClient = useQueryClient();
-  const { toast } = useToastQueue();
-
-  return useMutation({
-    mutationFn: async (invitation: TablesInsert<"project_invitations">) => {
-      const { data, error } = await inviteMemberAction(invitation);
-      conditionalLog(hookName, { data, error }, false);
-      return data;
-    },
-    onSuccess: data => {
-      conditionalLog(hookName, { success: data }, false);
-      queryClient.invalidateQueries({ queryKey: ["project-invitations"] });
-      toast({
-        title: successMessage || SuccessMessages.INVITE,
-      });
-    },
-    onError: (error: Error) => {
-      conditionalLog(hookName, { error }, false);
-      toast({
-        title: errorMessage || error.message,
-        description: "Failed to send invitation",
-      });
     },
   });
 };

@@ -21,11 +21,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import configuration from "@/configuration";
+import { useGetUserInvites } from "@/hooks/invite.hooks";
 import { useGetProfile } from "@/hooks/profile.hooks";
 import { useListProjects } from "@/hooks/project.hooks";
 import { useIsAdmin } from "@/hooks/user.hooks";
 import { cn } from "@/lib/utils";
-import { Code2, ListFilter, Plus } from "lucide-react";
+import { Code2, ListFilter, MailPlus, Plus } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
@@ -44,6 +45,7 @@ export function ProjectSwitcher() {
     isFetching: listProjectsIsFetching,
     refetch: refetchProjects,
   } = useListProjects();
+  const { data: invites } = useGetUserInvites();
   const currentProject = profileData?.current_project;
 
   useEffect(() => {
@@ -70,6 +72,8 @@ export function ProjectSwitcher() {
     refetchProjects,
   ]);
 
+  const hasPendingInvites = !!invites?.invitations?.length;
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -78,7 +82,7 @@ export function ProjectSwitcher() {
             <Button
               variant="ghost"
               className={cn(
-                "h-auto flex items-center justify-between w-full space-x-1 hover:bg-gray-100 dark:hover:bg-gray-800",
+                "h-auto flex items-center justify-between w-full space-x-1 hover:bg-gray-100 dark:hover:bg-gray-800 relative",
               )}
             >
               <div
@@ -94,6 +98,11 @@ export function ProjectSwitcher() {
                   {currentProject?.name}
                 </span>
               </div>
+              {!open && hasPendingInvites && (
+                <div className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary">
+                  <MailPlus className="h-3 w-3 text-primary-foreground" />
+                </div>
+              )}
             </Button>
           </DropdownMenuTrigger>
 
@@ -130,6 +139,33 @@ export function ProjectSwitcher() {
                     className="dark:bg-gray-800 dark:text-gray-100"
                   >
                     {project.name}
+                  </TooltipContent>
+                </Tooltip>
+              ))}
+
+              {invites?.invitations.map(invite => (
+                <Tooltip key={invite.id}>
+                  <TooltipTrigger asChild>
+                    <Link
+                      href={`/${invite.project.slug}/invite`}
+                      className="relative"
+                    >
+                      <DropdownMenuItem className="cursor-pointer dark:hover:bg-gray-800 dark:focus:bg-gray-800">
+                        <div className="flex size-6 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-700">
+                          <Code2 className="size-4 shrink-0 dark:text-gray-100" />
+                        </div>
+                        <div className="ml-2 flex-1 truncate dark:text-gray-100">
+                          {invite.project.name}
+                        </div>
+                        <MailPlus className="ml-2 h-4 w-4 text-primary" />
+                      </DropdownMenuItem>
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="right"
+                    className="dark:bg-gray-800 dark:text-gray-100"
+                  >
+                    You&apos;ve been invited to join this project
                   </TooltipContent>
                 </Tooltip>
               ))}

@@ -4,70 +4,11 @@ import getSupabaseServerActionClient from "@/clients/action-client";
 import getActionResponse from "@/lib/action.util";
 import { conditionalLog } from "@/lib/log.utils";
 import { ActionResponse } from "@/types/action.types";
-import { Tables, TablesInsert } from "@/types/database.types";
-import {
-  InvitationResponse,
-  MemberListResponse,
-  MemberResponse,
-} from "@/types/member.types";
+import { Tables } from "@/types/database.types";
+import { MemberListResponse, MemberResponse } from "@/types/member.types";
 
 type ProjectMember = Tables<"project_members">;
 type ProjectInvitation = Tables<"project_invitations">;
-
-export const inviteMemberAction = async (
-  invitation: TablesInsert<"project_invitations">,
-): Promise<InvitationResponse> => {
-  const actionName = "inviteMemberAction";
-  const supabase = await getSupabaseServerActionClient();
-
-  try {
-    const { data: memberData, error: memberError } = await supabase
-      .from("project_members")
-      .select("*")
-      .eq("project_id", invitation.project_id)
-      .single();
-
-    conditionalLog(actionName, { memberData, memberError }, true);
-
-    if (memberError || !["owner", "admin"].includes(memberData.role)) {
-      throw new Error("Permission denied");
-    }
-
-    const { data, error } = await supabase
-      .from("project_invitations")
-      .insert(invitation)
-      .select(
-        `
-        *,
-        inviter:profiles!invited_by(*),
-        project:projects(*)
-      `,
-      )
-      .single();
-
-    conditionalLog(actionName, { data, error }, true);
-
-    if (error) throw error;
-    if (!data.project) throw new Error("Project not found");
-    if (
-      !data.inviter ||
-      (Array.isArray(data.inviter) && !data.inviter.length)
-    ) {
-      throw new Error("Inviter not found");
-    }
-
-    const transformedData = {
-      ...data,
-      inviter: Array.isArray(data.inviter) ? data.inviter[0] : data.inviter,
-      project: data.project,
-    };
-
-    return getActionResponse({ data: transformedData });
-  } catch (error) {
-    conditionalLog(actionName, { error }, true);
-    return getActionResponse({ error });
-  }
-};
 
 export const acceptInvitationAction = async (
   invitationId: string,

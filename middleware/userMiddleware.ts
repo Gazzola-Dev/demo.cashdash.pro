@@ -87,18 +87,10 @@ async function userMiddleware(request: NextRequest, response: NextResponse) {
     if (shouldLog) {
       conditionalLog(hookName, { error: "No profile found" }, true);
     }
+    // Sign out the user if they don't have a profile
+    await supabase.auth.signOut();
     return NextResponse.redirect(
       new URL(configuration.paths.appHome, request.url),
-    );
-  }
-
-  // Check if user has been invited
-  if (!profile.invited) {
-    if (shouldLog) {
-      conditionalLog(hookName, { error: "User not invited" }, true);
-    }
-    return NextResponse.redirect(
-      new URL(configuration.paths.invite, request.url),
     );
   }
 

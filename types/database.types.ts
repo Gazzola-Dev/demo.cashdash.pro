@@ -635,6 +635,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_profile_exists: {
+        Args: {
+          p_email: string
+        }
+        Returns: boolean
+      }
       citext:
         | {
             Args: {
@@ -746,6 +752,12 @@ export type Database = {
       get_task_data: {
         Args: {
           task_slug: string
+        }
+        Returns: Json
+      }
+      get_user_invites: {
+        Args: {
+          p_email: string
         }
         Returns: Json
       }

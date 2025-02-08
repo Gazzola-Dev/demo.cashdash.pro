@@ -19,6 +19,7 @@ const configuration = {
       overview: ({ project_slug = "" }: Slugs) => `/${project_slug}`,
       timeline: ({ project_slug = "" }: Slugs) => `/${project_slug}/timeline`,
       kanban: ({ project_slug = "" }: Slugs) => `/${project_slug}/kanban`,
+      invite: ({ project_slug = "" }: Slugs) => `/${project_slug}/invite`,
       all: "/projects",
       new: "/projects/new",
     },
@@ -42,7 +43,6 @@ const configuration = {
     terms: "/terms",
     notFound: "/404",
     about: "/about",
-    invite: "/invite",
   },
   production,
 };

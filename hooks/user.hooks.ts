@@ -1,8 +1,15 @@
 "use client";
+import {
+  inviteMemberAction,
+  isProfileWithEmail,
+} from "@/actions/profile.actions";
 import useSupabase from "@/hooks/useSupabase";
 import { useToastQueue } from "@/hooks/useToastQueue";
-import { Tables } from "@/types/database.types";
+import { conditionalLog } from "@/lib/log.utils";
+import { Tables, TablesInsert } from "@/types/database.types";
 import { HookOptions } from "@/types/db.types";
+import { ProjectWithDetails } from "@/types/project.types";
+import { UserWithProfile } from "@/types/user.types";
 import { User } from "@supabase/supabase-js";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -13,20 +20,75 @@ enum SuccessMessages {
   SIGN_OUT_SUCCESS = "Sign out successful",
 }
 
-export const useGetUser = ({ initialData }: HookOptions<User> = {}) => {
-  const supabase = useSupabase();
+export const useInviteMember = ({
+  errorMessage,
+  successMessage,
+}: HookOptions<ProjectWithDetails> = {}) => {
+  const hookName = "useInviteMember";
+  const queryClient = useQueryClient();
+  const { toast } = useToastQueue();
 
-  return useQuery<User | null, Error>({
+  return useMutation({
+    mutationFn: async (invitation: TablesInsert<"project_invitations">) => {
+      const { data, error } = await inviteMemberAction(invitation);
+      conditionalLog(hookName, { data, error }, false);
+      if (error) throw new Error(error);
+      return data;
+    },
+    onSuccess: data => {
+      conditionalLog(hookName, { success: data }, false);
+      // Invalidate both project and profile queries since a new profile might have been created
+      queryClient.invalidateQueries({ queryKey: ["project"] });
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      toast({
+        title: successMessage || "Invitation sent successfully",
+      });
+    },
+    onError: (error: Error) => {
+      conditionalLog(hookName, { error }, false);
+      toast({
+        title: errorMessage || error.message,
+        description: "Failed to send invitation",
+        variant: "destructive",
+      });
+    },
+  });
+};
+
+export const useGetUser = ({
+  initialData,
+}: { initialData?: UserWithProfile } = {}) => {
+  const supabase = useSupabase();
+  const hookName = "useGetUser";
+
+  return useQuery<UserWithProfile | null, Error>({
     queryKey: ["user"],
     queryFn: async () => {
       const {
         data: { user },
-        error,
+        error: userError,
       } = await supabase.auth.getUser();
-      if (error) throw error;
-      return user;
+
+      conditionalLog(hookName, { user, userError }, false);
+      if (userError) throw userError;
+      if (!user) return null;
+
+      // Get user profile
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      conditionalLog(hookName, { profile, profileError }, false);
+      if (profileError) throw profileError;
+
+      return {
+        ...user,
+        profile,
+      };
     },
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 5, // 5 minutes
     initialData,
   });
 };
@@ -110,28 +172,39 @@ export const useDeleteUser = ({
 export const useSignInWithMagicLink = ({
   errorMessage,
   successMessage,
-}: HookOptions<User> = {}) => {
+}: {
+  errorMessage?: string;
+  successMessage?: string;
+} = {}) => {
+  const hookName = "useSignInWithMagicLink";
   const queryClient = useQueryClient();
   const { toast } = useToastQueue();
   const supabase = useSupabase();
 
-  return useMutation<{ user: User | null; session: unknown }, Error, string>({
+  return useMutation({
     mutationFn: async (email: string) => {
-      const { data, error } = await supabase.auth.signInWithOtp({ email });
-      if (error) throw error;
-      return data;
+      const { data: isValidProfileEmail, error: profileError } =
+        await isProfileWithEmail(email);
+      if (!isValidProfileEmail)
+        throw new Error("An invitation is required for sign in");
+      const { error } = await supabase.auth.signInWithOtp({ email });
+      conditionalLog(hookName, { error }, false, null);
+      if (profileError) throw profileError;
+      if (error) throw new Error(error.message);
+      return null;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user"] });
       toast({
-        title: successMessage || SuccessMessages.SIGN_IN_SUCCESS,
+        title: successMessage || "Sign in link sent! Check your email :)",
       });
     },
     onError: (error: Error) => {
+      conditionalLog(hookName, { error }, false);
       toast({
         title: errorMessage || error.message,
-        description: "Failed to sign in",
-        open: true,
+        description: "Failed to send sign in link",
+        variant: "destructive",
       });
     },
   });
