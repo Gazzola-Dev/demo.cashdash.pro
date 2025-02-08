@@ -1,3 +1,4 @@
+import { getUserInvitesAction } from "@/actions/invite.actions";
 import createMiddlewareClient from "@/clients/middleware-client";
 import configuration from "@/configuration";
 import { conditionalLog } from "@/lib/log.utils";
@@ -94,6 +95,8 @@ async function userMiddleware(request: NextRequest, response: NextResponse) {
     );
   }
 
+  const { data: invites, error: invitesError } = await getUserInvitesAction();
+
   // Get user's project memberships
   const { data: memberships, error: membershipError } = await supabase
     .from("project_members")
@@ -112,15 +115,14 @@ async function userMiddleware(request: NextRequest, response: NextResponse) {
     return response;
   }
 
-  // If no memberships, redirect to new project page
-  if (membershipError || !memberships?.length) {
-    if (shouldLog) {
-      conditionalLog(hookName, { error: "No project memberships found" }, true);
-    }
+  if (!memberships?.length && !invites?.invitations.length) {
+    await supabase.auth.signOut();
     return NextResponse.redirect(
-      new URL(configuration.paths.project.new, request.url),
+      new URL(configuration.paths.appHome, request.url),
     );
   }
+
+  if (!memberships?.length) return response;
 
   // Extract project slugs and find current project
   const projects = memberships

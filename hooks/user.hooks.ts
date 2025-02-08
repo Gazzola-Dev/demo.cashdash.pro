@@ -1,8 +1,5 @@
 "use client";
-import {
-  inviteMemberAction,
-  isProfileWithEmail,
-} from "@/actions/profile.actions";
+import { inviteMemberAction } from "@/actions/profile.actions";
 import useSupabase from "@/hooks/useSupabase";
 import { useToastQueue } from "@/hooks/useToastQueue";
 import { conditionalLog } from "@/lib/log.utils";
@@ -183,13 +180,8 @@ export const useSignInWithMagicLink = ({
 
   return useMutation({
     mutationFn: async (email: string) => {
-      const { data: isValidProfileEmail, error: profileError } =
-        await isProfileWithEmail(email);
-      if (!isValidProfileEmail)
-        throw new Error("An invitation is required for sign in");
       const { error } = await supabase.auth.signInWithOtp({ email });
       conditionalLog(hookName, { error }, false, null);
-      if (profileError) throw profileError;
       if (error) throw new Error(error.message);
       return null;
     },
