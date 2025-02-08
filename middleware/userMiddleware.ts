@@ -8,13 +8,13 @@ import { NextRequest, NextResponse } from "next/server";
 type Profile = Tables<"profiles">;
 type Project = Tables<"projects">;
 
-async function userMiddleware(request: NextRequest, response: NextResponse) {
-  const hookName = "userMiddleware";
-  const supabase = createMiddlewareClient(request, response);
+async function middleware(request: NextRequest, response: NextResponse) {
+  const hookName = "middleware";
   const pathname = request.nextUrl.pathname;
   const pathSegments = pathname.split("/").filter(Boolean);
+  const supabase = createMiddlewareClient(request, response);
 
-  // Determine if we should log this request
+  // Skip logging for static assets and API routes
   const shouldLog =
     process.env.SERVER_DEBUG === "true" &&
     !pathname.startsWith("/_next/") &&
@@ -27,6 +27,7 @@ async function userMiddleware(request: NextRequest, response: NextResponse) {
     pathname.startsWith("/api/") ||
     pathname.includes(".") // Skip files with extensions
   ) {
+    conditionalLog(hookName, { status: "bypassed", pathname }, shouldLog);
     return response;
   }
 
@@ -43,6 +44,7 @@ async function userMiddleware(request: NextRequest, response: NextResponse) {
   ];
 
   if (publicPaths.includes(pathSegments[0])) {
+    conditionalLog(hookName, { status: "public_path", pathname }, shouldLog);
     return response;
   }
 
@@ -52,25 +54,59 @@ async function userMiddleware(request: NextRequest, response: NextResponse) {
     error: sessionError,
   } = await supabase.auth.getUser();
 
-  if (shouldLog) {
-    conditionalLog(hookName, { user, sessionError }, true);
+  if (sessionError || !user) {
+    const redirectUrl =
+      pathSegments[0] === "projects" && pathSegments[1] !== "new"
+        ? configuration.paths.project.new
+        : pathname === configuration.paths.project.new ||
+            pathname === configuration.paths.appHome
+          ? pathname
+          : configuration.paths.appHome;
+
+    conditionalLog(
+      hookName,
+      { status: "unauthenticated", redirectUrl, sessionError },
+      shouldLog,
+    );
+
+    return redirectUrl === pathname
+      ? response
+      : NextResponse.redirect(new URL(redirectUrl, request.url));
   }
 
-  if (sessionError || !user) {
-    if (shouldLog) {
-      conditionalLog(hookName, { error: "No authenticated user" }, true);
-    }
+  // Check if route requires admin access
+  const isProtectedRoute =
+    pathname.endsWith("/projects/new") || pathname.endsWith("/tasks/new");
 
-    if (pathSegments[0] === "projects" && pathSegments[1] !== "new") {
-      return NextResponse.redirect(
-        new URL(configuration.paths.project.new, request.url),
+  if (isProtectedRoute) {
+    const { data: roles, error: rolesError } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin");
+
+    if (rolesError || !roles.length) {
+      let redirectUrl = configuration.paths.appHome;
+
+      if (pathname.endsWith("/projects/new")) {
+        redirectUrl = configuration.paths.project.all;
+      } else {
+        // For /tasks/new, extract project slug to redirect to project tasks
+        const projectSlug = pathSegments[0];
+        if (projectSlug) {
+          redirectUrl = configuration.paths.tasks.all({
+            project_slug: projectSlug,
+          });
+        }
+      }
+
+      conditionalLog(
+        hookName,
+        { status: "admin_required", redirectUrl, rolesError },
+        shouldLog,
       );
+      return NextResponse.redirect(new URL(redirectUrl, request.url));
     }
-    if (pathname === configuration.paths.project.new) return response;
-    if (pathname === configuration.paths.appHome) return response;
-    return NextResponse.redirect(
-      new URL(configuration.paths.appHome, request.url),
-    );
   }
 
   // Get user profile with current project
@@ -80,49 +116,61 @@ async function userMiddleware(request: NextRequest, response: NextResponse) {
     .eq("id", user.id)
     .single();
 
-  if (shouldLog) {
-    conditionalLog(hookName, { profile, profileError }, true);
-  }
-
   if (profileError || !profile) {
-    if (shouldLog) {
-      conditionalLog(hookName, { error: "No profile found" }, true);
-    }
-    // Sign out the user if they don't have a profile
+    conditionalLog(
+      hookName,
+      { status: "no_profile", user_id: user.id, profileError },
+      shouldLog,
+    );
     await supabase.auth.signOut();
     return NextResponse.redirect(
       new URL(configuration.paths.appHome, request.url),
     );
   }
 
-  const { data: invites, error: invitesError } = await getUserInvitesAction();
-
-  // Get user's project memberships
-  const { data: memberships, error: membershipError } = await supabase
+  const { data: invites } = await getUserInvitesAction();
+  const { data: memberships } = await supabase
     .from("project_members")
     .select("project_id, projects(id, slug)")
     .eq("user_id", user.id);
-
-  if (shouldLog) {
-    conditionalLog(hookName, { memberships, membershipError }, true);
-  }
 
   // Allow access to projects list and new project page for authenticated users
   if (
     pathname === configuration.paths.project.all ||
     pathname === configuration.paths.project.new
   ) {
+    conditionalLog(
+      hookName,
+      { status: "project_access_allowed", pathname, user_id: user.id },
+      shouldLog,
+    );
     return response;
   }
 
   if (!memberships?.length && !invites?.invitations.length) {
+    conditionalLog(
+      hookName,
+      { status: "no_memberships_or_invites", user_id: user.id },
+      shouldLog,
+    );
     await supabase.auth.signOut();
     return NextResponse.redirect(
       new URL(configuration.paths.appHome, request.url),
     );
   }
 
-  if (!memberships?.length) return response;
+  if (!memberships?.length) {
+    conditionalLog(
+      hookName,
+      {
+        status: "has_invites_only",
+        user_id: user.id,
+        invites_count: invites?.invitations.length,
+      },
+      shouldLog,
+    );
+    return response;
+  }
 
   // Extract project slugs and find current project
   const projects = memberships
@@ -131,21 +179,15 @@ async function userMiddleware(request: NextRequest, response: NextResponse) {
   const projectSlugs = projects.map(p => p.slug);
   const urlProjectSlug = pathSegments[0];
 
-  if (shouldLog) {
-    conditionalLog(
-      hookName,
-      { projects, projectSlugs, urlProjectSlug, pathSegments },
-      true,
-    );
-  }
-
   // If no current project, assign first available project
   if (!profile.current_project_id) {
     const firstProject = projects[0];
     if (!firstProject) {
-      if (shouldLog) {
-        conditionalLog(hookName, { error: "No projects available" }, true);
-      }
+      conditionalLog(
+        hookName,
+        { status: "no_projects_available", user_id: user.id },
+        shouldLog,
+      );
       return NextResponse.redirect(
         new URL(configuration.paths.project.new, request.url),
       );
@@ -157,11 +199,17 @@ async function userMiddleware(request: NextRequest, response: NextResponse) {
       .update({ current_project_id: firstProject.id })
       .eq("id", user.id);
 
-    if (shouldLog) {
-      conditionalLog(hookName, { updateError, firstProject }, true);
-    }
+    conditionalLog(
+      hookName,
+      {
+        status: "assigned_first_project",
+        user_id: user.id,
+        project_id: firstProject.id,
+        updateError,
+      },
+      shouldLog,
+    );
 
-    // Redirect to overview of first project
     return NextResponse.redirect(
       new URL(
         configuration.paths.project.overview({
@@ -177,21 +225,19 @@ async function userMiddleware(request: NextRequest, response: NextResponse) {
     p => p.id === profile.current_project_id,
   );
 
-  if (shouldLog) {
-    conditionalLog(hookName, { currentProject }, true);
-  }
-
   // If URL project slug doesn't match any user projects
   if (urlProjectSlug && !projectSlugs.includes(urlProjectSlug)) {
-    if (shouldLog) {
-      conditionalLog(
-        hookName,
-        { error: "URL project slug not found in user projects" },
-        true,
-      );
-    }
-    // Redirect to current project overview (or first project if current not found)
     const redirectProject = currentProject || projects[0];
+    conditionalLog(
+      hookName,
+      {
+        status: "invalid_project_slug",
+        user_id: user.id,
+        attempted_slug: urlProjectSlug,
+        redirect_to: redirectProject.slug,
+      },
+      shouldLog,
+    );
     return NextResponse.redirect(
       new URL(
         configuration.paths.project.overview({
@@ -216,17 +262,32 @@ async function userMiddleware(request: NextRequest, response: NextResponse) {
         .update({ current_project_id: newCurrentProject.id })
         .eq("id", user.id);
 
-      if (shouldLog) {
-        conditionalLog(
-          hookName,
-          { updateError, newCurrentProject, currentProject },
-          true,
-        );
-      }
+      conditionalLog(
+        hookName,
+        {
+          status: "project_switch",
+          user_id: user.id,
+          old_project: currentProject.slug,
+          new_project: newCurrentProject.slug,
+          updateError,
+        },
+        shouldLog,
+      );
     }
+  } else {
+    conditionalLog(
+      hookName,
+      {
+        status: "normal_access",
+        user_id: user.id,
+        current_project: currentProject?.slug,
+        pathname,
+      },
+      shouldLog,
+    );
   }
 
   return response;
 }
 
-export default userMiddleware;
+export default middleware;

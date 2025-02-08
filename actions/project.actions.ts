@@ -189,7 +189,6 @@ export const getProjectAction = async (
     const { data, error } = await supabase.rpc("get_project_data", {
       project_slug: projectSlug,
     });
-
     conditionalLog(actionName, { data, error }, true);
 
     if (error) {
@@ -224,7 +223,7 @@ export const listProjectsAction = async (filters?: {
       p_sort_order: filters?.order || undefined,
     });
 
-    conditionalLog(actionName, { data, error });
+    conditionalLog(actionName, { data, error }, true, null);
 
     if (error) throw error;
 

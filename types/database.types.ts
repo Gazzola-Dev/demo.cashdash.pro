@@ -200,7 +200,6 @@ export type Database = {
           email: string
           github_username: string | null
           id: string
-          invited: boolean
           notification_preferences: Json | null
           professional_title: string | null
           timezone: string | null
@@ -217,7 +216,6 @@ export type Database = {
           email: string
           github_username?: string | null
           id: string
-          invited?: boolean
           notification_preferences?: Json | null
           professional_title?: string | null
           timezone?: string | null
@@ -234,7 +232,6 @@ export type Database = {
           email?: string
           github_username?: string | null
           id?: string
-          invited?: boolean
           notification_preferences?: Json | null
           professional_title?: string | null
           timezone?: string | null

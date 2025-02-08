@@ -60,6 +60,7 @@ export const useGetProject = (projectSlug?: string) => {
       return data;
     },
     enabled: !!slug,
+    staleTime: 1000 * 60 * 5,
   });
 };
 
