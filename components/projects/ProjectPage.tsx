@@ -1,3 +1,4 @@
+import ActionButton from "@/components/shared/ActionButton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -161,24 +162,15 @@ export function ProjectPage({
                 This project is currently in draft mode and is only visible to
                 you.
               </AlertDescription>
-              <Button
+              <ActionButton
                 variant="outline"
                 size="sm"
                 className="ml-4 border-amber-500 text-amber-700 hover:bg-amber-100 hover:text-amber-800"
                 onClick={handleCreate}
                 disabled={!isValid || isPending || !isAdmin}
               >
-                <div className="relative flex items-center">
-                  Publish Project
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div
-                      className={`scale-0 transition-all duration-500 ease-out ${isPending ? "scale-100" : ""}`}
-                    >
-                      <LoaderCircle className="h-4 w-4 animate-spin" />
-                    </div>
-                  </div>
-                </div>
-              </Button>
+                Publish Project
+              </ActionButton>
             </div>
           </Alert>
         </div>
@@ -227,7 +219,7 @@ export function ProjectPage({
                   <div className="flex-1 bg-muted rounded-md dark:text-gray-200 text-gray-900 italic relative">
                     <span className="py-2 px-3 bg-gray-50 dark:bg-gray-900 rounded-md flex items-center tracking-wide">
                       <span className="px-1 text-gray-500 tracking-normal">
-                        CashDash.Pro/
+                        cashdash.pro/
                       </span>{" "}
                       {isSlugPending ? (
                         <LoaderCircle className="h-4 w-4 animate-spin" />

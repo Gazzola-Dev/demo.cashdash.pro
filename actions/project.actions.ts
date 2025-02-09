@@ -14,75 +14,42 @@ import slugify from "slugify";
 
 type Project = Tables<"projects">;
 
+interface CreateProjectInput {
+  name: string;
+  description?: string | null;
+  prefix: string;
+  slug: string;
+}
+
 export const createProjectAction = async (
-  project: TablesInsert<"projects">,
+  project: CreateProjectInput,
 ): Promise<ActionResponse<ProjectWithDetails>> => {
   const actionName = "createProjectAction";
   const supabase = await getSupabaseServerActionClient();
 
   try {
-    const { data: userData, error: userError } = await supabase.auth.getUser();
-    conditionalLog(actionName, { userData, userError }, true);
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-    if (!userData.user) throw new Error("User not authenticated");
+    conditionalLog(actionName, { userData: user, userError }, true);
+    if (!user) throw new Error("User not authenticated");
 
-    const { data: projectData, error: projectError } = await supabase.rpc(
-      "create_project_with_owner",
-      {
-        project_data: project,
-        owner_id: userData.user.id,
-      },
-    );
+    const { data, error } = await supabase.rpc("create_project_with_owner", {
+      p_name: project.name,
+      p_description: project.description || "",
+      p_prefix: project.prefix,
+      p_slug: project.slug,
+      p_owner_id: user.id,
+    });
 
-    conditionalLog(actionName, { projectData, projectError }, true);
-    if (projectError) throw projectError;
+    conditionalLog(actionName, { data, error }, true);
+    if (error) throw error;
 
-    const { data: fullProject, error: fetchError } = await supabase
-      .from("projects")
-      .select(
-        `
-        *,
-        project_members (
-          *,
-          profile:profiles!user_id(*)
-        ),
-        project_invitations (
-          *,
-          inviter:profiles!invited_by(*)
-        ),
-        tasks (*),
-        external_integrations (*),
-        project_metrics (*)
-      `,
-      )
-      .eq("id", projectData.id)
-      .single();
-
-    conditionalLog(actionName, { fullProject, fetchError }, true);
-    if (fetchError) throw fetchError;
-
-    // Transform nested objects
-    const transformedProject = {
-      ...fullProject,
-      project_members: fullProject.project_members?.map(member => ({
-        ...member,
-        profile: member.profile?.[0] || null,
-      })),
-      project_invitations: fullProject.project_invitations?.map(invitation => ({
-        ...invitation,
-        inviter: invitation.inviter?.[0] || null,
-      })),
-    };
-
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .update({ current_project_id: projectData.id })
-      .eq("id", userData.user.id);
-
-    conditionalLog(actionName, { profileError }, true);
-    if (profileError) throw profileError;
-
-    return getActionResponse({ data: transformedProject });
+    return getActionResponse({
+      data: data as any as ProjectWithDetails,
+    });
   } catch (error) {
     conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });

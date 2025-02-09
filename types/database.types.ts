@@ -698,22 +698,13 @@ export type Database = {
       }
       create_project_with_owner: {
         Args: {
-          project_data: Json
-          owner_id: string
+          p_name: string
+          p_description: string
+          p_prefix: string
+          p_slug: string
+          p_owner_id: string
         }
-        Returns: {
-          created_at: string
-          description: string | null
-          github_owner: string | null
-          github_repo: string | null
-          github_repo_url: string | null
-          id: string
-          name: string
-          prefix: string
-          slug: string
-          status: Database["public"]["Enums"]["project_status"]
-          updated_at: string
-        }
+        Returns: Json
       }
       custom_access_token_hook: {
         Args: {

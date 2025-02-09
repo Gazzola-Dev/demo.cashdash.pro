@@ -156,7 +156,9 @@ async function middleware(request: NextRequest, response: NextResponse) {
       .select("role")
       .eq("user_id", user.id)
       .eq("role", "admin");
-    if (rolesError || !roles.length) {
+    const isAdmin = !!roles?.length;
+    if (isAdmin) return response;
+    if (!isAdmin) {
       conditionalLog(
         hookName,
         { status: "no_memberships_or_invites", user_id: user.id },

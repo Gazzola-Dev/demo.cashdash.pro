@@ -64,6 +64,13 @@ export const useGetProject = (projectSlug?: string) => {
   });
 };
 
+interface CreateProjectInput {
+  name: string;
+  description?: string | null;
+  prefix: string;
+  slug: string;
+}
+
 export const useCreateProject = ({
   errorMessage,
   successMessage,
@@ -73,23 +80,27 @@ export const useCreateProject = ({
   const { toast } = useToastQueue();
 
   return useMutation({
-    mutationFn: async (project: TablesInsert<"projects">) => {
+    mutationFn: async (
+      project: CreateProjectInput,
+    ): Promise<ProjectWithDetails> => {
       const { data, error } = await createProjectAction(project);
-      conditionalLog(hookName, { data, error }, false);
+      if (error) throw new Error(error);
+      if (!data) throw new Error("No data returned from server");
       return data;
     },
     onSuccess: data => {
-      conditionalLog(hookName, { success: data }, false);
       queryClient.invalidateQueries({ queryKey: ["projects"] });
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+
       toast({
         title: successMessage || SuccessMessages.CREATE,
       });
     },
     onError: (error: Error) => {
-      conditionalLog(hookName, { error }, false);
       toast({
         title: errorMessage || error.message,
         description: "Failed to create project",
+        variant: "destructive",
       });
     },
   });
