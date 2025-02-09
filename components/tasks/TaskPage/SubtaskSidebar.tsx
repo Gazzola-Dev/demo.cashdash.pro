@@ -62,7 +62,8 @@ export function SubtaskSidebar({
 
   // Check if we should show the Add Subtask button
   const showAddButton =
-    subtasks.length === 0 || subtasks[subtasks.length - 1].title.trim() !== "";
+    subtasks.length === 0 ||
+    (subtasks[subtasks.length - 1].title.trim() !== "" && isAdmin);
 
   return (
     <Card className="mt-6">

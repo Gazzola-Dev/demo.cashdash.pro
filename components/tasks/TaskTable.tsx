@@ -1,8 +1,10 @@
 "use client";
 
-import AssigneeSelect from "@/components/tasks/AssigneeSelect";
-import PrioritySelect from "@/components/tasks/PrioritySelect";
-import StatusSelect from "@/components/tasks/StatusSelect";
+import {
+  AssigneeSelect,
+  PrioritySelect,
+  StatusSelect,
+} from "@/components/tasks/TaskSelectComponents";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -49,7 +51,12 @@ const TaskTable = ({ projectId, projectSlug }: TaskTableProps) => {
   const { mutate: updateTask } = useUpdateTask();
   const { data: projectData } = useGetProject();
   const members = projectData?.project_members ?? [];
-  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [sorting, setSorting] = React.useState<SortingState>([
+    {
+      id: "priority",
+      desc: true,
+    },
+  ]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     [],
   );

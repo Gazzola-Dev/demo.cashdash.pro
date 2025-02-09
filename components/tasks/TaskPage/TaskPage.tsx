@@ -82,7 +82,6 @@ export function TaskPage({
             task={taskData?.task}
             taskSchedule={taskData?.task_schedule}
             assigneeProfile={taskData?.assignee_profile}
-            members={[]} // TODO: Pass project members
             onUpdateTask={onUpdate}
           />
 

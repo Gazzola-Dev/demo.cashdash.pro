@@ -37,9 +37,9 @@ interface Comment extends BaseComment {
 
 // Updated TaskSchedule type to explicitly handle timestamps
 export interface TaskScheduleWithTimestamps
-  extends Omit<TaskSchedule, "start_date" | "due_date"> {
-  start_date: string | null; // ISO timestamp string
-  due_date: string | null; // ISO timestamp string
+  extends Partial<Omit<TaskSchedule, "start_date" | "due_date">> {
+  start_date?: string | null; // ISO timestamp string
+  due_date?: string | null; // ISO timestamp string
 }
 
 // Task with base data and all relationships

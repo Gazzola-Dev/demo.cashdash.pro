@@ -1,4 +1,8 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  AssigneeSelect,
+  PrioritySelect,
+  StatusSelect,
+} from "@/components/tasks/TaskSelectComponents";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,27 +16,21 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { useGetProject } from "@/hooks/project.hooks";
 import { useToastQueue } from "@/hooks/useToastQueue";
 import { useIsAdmin } from "@/hooks/user.hooks";
 import { cn } from "@/lib/utils";
-import { TaskResult } from "@/types/task.types";
+import { Tables } from "@/types/database.types";
+import { TaskResult, TaskUpdateWithSubtasks } from "@/types/task.types";
 import { format } from "date-fns";
 import { CalendarIcon, ChevronDown, ChevronUp } from "lucide-react";
 import { useMemo, useState } from "react";
 
 interface TaskSidebarProps {
   task: TaskResult["task"];
-  members: any[];
   assigneeProfile: TaskResult["assignee_profile"];
   taskSchedule: TaskResult["task_schedule"] | null;
-  onUpdateTask: (updates: any) => void;
+  onUpdateTask: (updates: TaskUpdateWithSubtasks) => void;
 }
 
 interface PrevTimes {
@@ -42,11 +40,11 @@ interface PrevTimes {
 
 export function TaskSidebar({
   task,
-  members,
-  assigneeProfile,
   taskSchedule,
   onUpdateTask,
 }: TaskSidebarProps) {
+  const { data: projectData } = useGetProject();
+  const members = projectData?.project_members || [];
   const { toast } = useToastQueue();
   const [isOpen, setIsOpen] = useState(
     !!taskSchedule?.start_date || !!taskSchedule?.due_date,
@@ -57,15 +55,25 @@ export function TaskSidebar({
   });
   const isAdmin = useIsAdmin();
 
+  const handleStatusChange = (value: Tables<"tasks">["status"]) => {
+    onUpdateTask({ status: value });
+  };
+
+  const handlePriorityChange = (value: Tables<"tasks">["priority"]) => {
+    onUpdateTask({ priority: value });
+  };
+
+  const handleAssigneeChange = (value: string | null) => {
+    onUpdateTask({ assignee: value });
+  };
+
   const handleIsOpenChange = (open: boolean) => {
     if (!isAdmin) return;
     if (!open) {
-      // Store current times before closing
       setPrevTimes({
         start_date: taskSchedule?.start_date || null,
         due_date: taskSchedule?.due_date || null,
       });
-      // Clear dates in DB
       onUpdateTask({
         task_schedule: {
           start_date: null,
@@ -73,7 +81,6 @@ export function TaskSidebar({
         },
       });
     } else {
-      // Restore previous times if they exist
       if (prevTimes.start_date || prevTimes.due_date) {
         onUpdateTask({
           task_schedule: {
@@ -92,7 +99,6 @@ export function TaskSidebar({
   ) => {
     if (!date) return;
 
-    // Set time to noon UTC to avoid timezone issues
     const utcDate = new Date(
       Date.UTC(
         date.getFullYear(),
@@ -116,7 +122,6 @@ export function TaskSidebar({
       },
     };
 
-    // Validate date range
     const startDate =
       type === "start_date"
         ? utcDate
@@ -157,7 +162,6 @@ export function TaskSidebar({
     return isNaN(date.getTime()) ? undefined : date;
   }, [taskSchedule?.due_date]);
 
-  // Disable past dates
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const disableBefore = today;
@@ -169,103 +173,29 @@ export function TaskSidebar({
           {/* Assignee */}
           <div>
             <label className="text-sm font-medium">Assignee</label>
-            <Select
-              disabled={!isAdmin}
-              value={task.assignee || "unassigned"}
-              onValueChange={value =>
-                onUpdateTask({
-                  assignee: value === "unassigned" ? null : value,
-                })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue>
-                  {assigneeProfile ? (
-                    <div className="flex items-center gap-2">
-                      <Avatar className="h-6 w-6">
-                        <AvatarImage
-                          src={assigneeProfile.avatar_url || undefined}
-                        />
-                        <AvatarFallback>
-                          {assigneeProfile.display_name?.charAt(0) || "?"}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span>
-                        {assigneeProfile.display_name || "Unnamed User"}
-                      </span>
-                    </div>
-                  ) : (
-                    "Unassigned"
-                  )}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem key="unassigned" value="unassigned">
-                  Unassigned
-                </SelectItem>
-                {members.map((member, index) => (
-                  <SelectItem
-                    key={`${member.user_id}-${index}`}
-                    value={member.user_id}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Avatar className="h-6 w-6">
-                        <AvatarImage
-                          src={member.profile?.avatar_url || undefined}
-                        />
-                        <AvatarFallback>
-                          {member.profile?.display_name?.charAt(0) || "?"}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span>
-                        {member.profile?.display_name || "Unnamed User"}
-                      </span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <AssigneeSelect
+              value={task.assignee}
+              onValueChange={handleAssigneeChange}
+              members={members}
+            />
           </div>
 
           {/* Status */}
           <div>
             <label className="text-sm font-medium">Status</label>
-            <Select
-              disabled={!isAdmin}
+            <StatusSelect
               value={task.status}
-              onValueChange={value => onUpdateTask({ status: value })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="backlog">Backlog</SelectItem>
-                <SelectItem value="todo">To Do</SelectItem>
-                <SelectItem value="in_progress">In Progress</SelectItem>
-                <SelectItem value="in_review">In Review</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-              </SelectContent>
-            </Select>
+              onValueChange={handleStatusChange}
+            />
           </div>
 
           {/* Priority */}
           <div>
             <label className="text-sm font-medium">Priority</label>
-            <Select
-              disabled={!isAdmin}
+            <PrioritySelect
               value={task.priority}
-              onValueChange={value => onUpdateTask({ priority: value })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="low">Low</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-                <SelectItem value="urgent">Urgent</SelectItem>
-              </SelectContent>
-            </Select>
+              onValueChange={handlePriorityChange}
+            />
           </div>
 
           {/* Created */}
@@ -277,7 +207,12 @@ export function TaskSidebar({
 
           {/* Dates Collapsible */}
           <Collapsible open={isOpen} onOpenChange={handleIsOpenChange}>
-            <CollapsibleTrigger className="flex w-full items-center gap-2">
+            <CollapsibleTrigger
+              className={cn(
+                "flex w-full items-center gap-2",
+                !isAdmin && "cursor-not-allowed opacity-80",
+              )}
+            >
               {isOpen ? (
                 <ChevronUp className="h-4 w-4" />
               ) : (

@@ -139,7 +139,7 @@ export function ProjectMemberList({ isDraft = false }: { isDraft?: boolean }) {
             <Avatar className="h-10 w-10">
               <AvatarImage src={member.profile?.avatar_url || undefined} />
               <AvatarFallback>
-                {member.profile?.display_name?.charAt(0)}
+                {member.profile?.display_name?.charAt(0) || "?"}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
