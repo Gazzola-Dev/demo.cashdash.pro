@@ -1,23 +1,10 @@
 "use client";
-import { useListTasks, useUpdateTask } from "@/hooks/task.hooks";
-import {
-  ColumnDef,
-  ColumnFiltersState,
-  SortingState,
-  VisibilityState,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
-import { ArrowUpDown, GitBranch, Plus } from "lucide-react";
-import { useRouter } from "next/navigation";
-import React from "react";
-import { useDebounce } from "use-debounce";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  PriorityIcon,
+  priorityOrder,
+  statusOrder,
+} from "@/components/tasks/StatusPriorityIcons";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -43,31 +30,49 @@ import {
 } from "@/components/ui/table";
 import configuration from "@/configuration";
 import { useGetProject } from "@/hooks/project.hooks";
+import { useListTasks, useUpdateTask } from "@/hooks/task.hooks";
 import { useToastQueue } from "@/hooks/useToastQueue";
 import { useIsAdmin } from "@/hooks/user.hooks";
 import { Tables } from "@/types/database.types";
 import {
   PRIORITY_OPTIONS,
-  STATUS_OPTIONS,
   TaskResult,
   TaskTableProps,
 } from "@/types/task.types";
+import {
+  ColumnDef,
+  ColumnFiltersState,
+  SortingState,
+  VisibilityState,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
+import { ArrowUpDown, GitBranch, Plus } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import React from "react";
+import { useDebounce } from "use-debounce";
+import { AssigneeSelect } from "./AssigneeSelect";
 
 const TaskTable = ({ projectId, projectSlug }: TaskTableProps) => {
   const router = useRouter();
-  const { toast } = useToastQueue();
-  const { mutate: updateTask } = useUpdateTask();
-  const { data: projectData } = useGetProject();
-  const members = projectData?.project_members ?? [];
-  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [sorting, setSorting] = React.useState<SortingState>([
+    { id: "priority", desc: true }, // Default sort by priority
+  ]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     [],
   );
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
-  const [titleFilter, setTitleFilter] = React.useState("");
-
+  const [nameFilter, setNameFilter] = React.useState("");
   const isAdmin = useIsAdmin();
+  const { toast } = useToastQueue();
+  const { data: projectData } = useGetProject(projectSlug);
+  const members = projectData?.project_members ?? [];
 
   // Create raw filters object
   const rawFilters = React.useMemo(
@@ -75,33 +80,20 @@ const TaskTable = ({ projectId, projectSlug }: TaskTableProps) => {
       projectSlug,
       sort: sorting[0]?.id as keyof Tables<"tasks"> | undefined,
       order: (sorting[0]?.desc ? "desc" : "asc") as "desc" | "asc" | undefined,
+      search: nameFilter,
     }),
-    [projectSlug, sorting],
+    [sorting, nameFilter, projectSlug],
   );
 
   // Debounce the filters
   const [debouncedFilters] = useDebounce(rawFilters, 300);
 
   const { data: tasks = [] } = useListTasks(debouncedFilters);
-
-  const handleRowClick = React.useCallback(
-    (task: TaskResult, event: React.MouseEvent<HTMLTableRowElement>) => {
-      if ((event.target as HTMLElement).closest("button, select")) {
-        return;
-      }
-      router.push(
-        configuration.paths.tasks.view({
-          project_slug: projectSlug,
-          task_slug: task.task.slug,
-        }),
-      );
-    },
-    [router, projectSlug],
-  );
+  const { mutate: updateTask } = useUpdateTask();
 
   const copyBranchName = React.useCallback(
     (task: TaskResult) => {
-      const branchName = `${task.project?.prefix}-${task.task.ordinal_id}-${task.task.slug}`;
+      const branchName = `${task.project?.prefix}-${task.task.ordinal_id}`;
       navigator.clipboard.writeText(branchName);
       toast({
         title: "Branch name copied to clipboard",
@@ -134,7 +126,15 @@ const TaskTable = ({ projectId, projectSlug }: TaskTableProps) => {
           );
         },
         cell: ({ row }) => (
-          <span className="font-normal">{row.getValue("title")}</span>
+          <Link
+            href={configuration.paths.tasks.view({
+              project_slug: projectSlug,
+              task_slug: row.original.task.slug,
+            })}
+            className="hover:underline cursor-pointer"
+          >
+            {row.getValue("title")}
+          </Link>
         ),
       },
       {
@@ -158,27 +158,22 @@ const TaskTable = ({ projectId, projectSlug }: TaskTableProps) => {
           );
         },
         cell: ({ row }) => (
-          <Select
-            value={row.getValue("status")}
+          <AssigneeSelect
+            value={row.original.task.assignee}
             onValueChange={value => {
               updateTask({
                 slug: row.original.task.slug,
-                updates: { status: value as Tables<"tasks">["status"] },
+                updates: { assignee: value === "unassigned" ? null : value },
               });
             }}
-          >
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {STATUS_OPTIONS.map(status => (
-                <SelectItem key={status} value={status}>
-                  {status.toLowerCase().replace("_", " ")}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            members={members}
+          />
         ),
+        sortingFn: (rowA, rowB) => {
+          const statusA = rowA.original.task.status;
+          const statusB = rowB.original.task.status;
+          return statusOrder.indexOf(statusA) - statusOrder.indexOf(statusB);
+        },
       },
       {
         id: "priority",
@@ -211,96 +206,34 @@ const TaskTable = ({ projectId, projectSlug }: TaskTableProps) => {
             }}
           >
             <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {PRIORITY_OPTIONS.map(priority => (
-                <SelectItem key={priority} value={priority}>
-                  {priority}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ),
-      },
-      {
-        id: "assignee",
-        accessorFn: row => row.assignee_profile?.display_name ?? "",
-        header: ({ column }) => {
-          const isSorted = column.getIsSorted();
-          return (
-            <Button
-              variant="ghost"
-              onClick={() =>
-                column.toggleSorting(column.getIsSorted() === "asc")
-              }
-              className={isSorted ? "text-blue-600" : ""}
-            >
-              Assignee
-              <ArrowUpDown
-                className={`ml-2 h-4 w-4 ${isSorted ? "text-blue-600" : ""}`}
-              />
-            </Button>
-          );
-        },
-        cell: ({ row }) => (
-          <Select
-            value={row.original.task.assignee || "unassigned"}
-            onValueChange={value => {
-              updateTask({
-                slug: row.original.task.slug,
-                updates: { assignee: value === "unassigned" ? null : value },
-              });
-            }}
-          >
-            <SelectTrigger className="w-48">
               <SelectValue>
-                {row.original.assignee_profile ? (
-                  <div className="flex items-center gap-2">
-                    <Avatar className="h-6 w-6">
-                      <AvatarImage
-                        src={
-                          row.original.assignee_profile.avatar_url || undefined
-                        }
-                      />
-                      <AvatarFallback>
-                        {row.original.assignee_profile.display_name?.charAt(
-                          0,
-                        ) || "?"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span>
-                      {row.original.assignee_profile.display_name ||
-                        "Unnamed User"}
-                    </span>
-                  </div>
-                ) : (
-                  "Unassigned"
-                )}
+                <div className="flex items-center gap-2">
+                  <PriorityIcon priority={row.getValue("priority")} />
+                  <span className="capitalize">{row.getValue("priority")}</span>
+                </div>
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="unassigned">Unassigned</SelectItem>
-              {members.map(member => (
-                <SelectItem key={member.user_id} value={member.user_id}>
+              {PRIORITY_OPTIONS.sort(
+                (a, b) => priorityOrder.indexOf(a) - priorityOrder.indexOf(b),
+              ).map(priority => (
+                <SelectItem key={priority} value={priority}>
                   <div className="flex items-center gap-2">
-                    <Avatar className="h-6 w-6">
-                      <AvatarImage
-                        src={member.profile?.avatar_url || undefined}
-                      />
-                      <AvatarFallback>
-                        {member.profile?.display_name?.charAt(0) || "?"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span>
-                      {member.profile?.display_name || "Unnamed User"}
-                    </span>
+                    <PriorityIcon priority={priority} />
+                    <span className="capitalize">{priority}</span>
                   </div>
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         ),
+        sortingFn: (rowA, rowB) => {
+          const priorityA = rowA.original.task.priority;
+          const priorityB = rowB.original.task.priority;
+          return (
+            priorityOrder.indexOf(priorityB) - priorityOrder.indexOf(priorityA)
+          );
+        },
       },
       {
         id: "branch",
@@ -320,7 +253,7 @@ const TaskTable = ({ projectId, projectSlug }: TaskTableProps) => {
         ),
       },
     ],
-    [updateTask, members, copyBranchName],
+    [projectSlug, members, copyBranchName, updateTask],
   );
 
   const table = useReactTable({
@@ -340,9 +273,9 @@ const TaskTable = ({ projectId, projectSlug }: TaskTableProps) => {
     },
   });
 
-  const handleTitleFilterChange = React.useCallback(
+  const handleNameFilterChange = React.useCallback(
     (value: string) => {
-      setTitleFilter(value);
+      setNameFilter(value);
       table.getColumn("title")?.setFilterValue(value);
     },
     [table],
@@ -354,8 +287,8 @@ const TaskTable = ({ projectId, projectSlug }: TaskTableProps) => {
         <div className="flex items-center gap-4">
           <Input
             placeholder="Filter tasks..."
-            value={titleFilter}
-            onChange={e => handleTitleFilterChange(e.target.value)}
+            value={nameFilter}
+            onChange={e => handleNameFilterChange(e.target.value)}
             className="max-w-sm"
           />
           <DropdownMenu>
@@ -417,8 +350,6 @@ const TaskTable = ({ projectId, projectSlug }: TaskTableProps) => {
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className="cursor-pointer"
-                  onClick={e => handleRowClick(row.original, e)}
                 >
                   {row.getVisibleCells().map(cell => (
                     <TableCell key={cell.id}>

@@ -112,6 +112,7 @@ export const STATUS_OPTIONS: Tables<"tasks">["status"][] = [
   "in_progress",
   "in_review",
   "completed",
+  "draft",
 ];
 
 export const PRIORITY_OPTIONS: Tables<"tasks">["priority"][] = [

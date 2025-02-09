@@ -20,11 +20,12 @@ async function middleware(request: NextRequest, response: NextResponse) {
     !pathname.startsWith("/_next/") &&
     !pathname.startsWith("/api/");
 
-  // Allow public assets and API routes to bypass middleware
+  // Allow public assets, API routes, and Next.js internal routes to bypass middleware
   if (
     pathname.startsWith("/svg/") ||
     pathname.startsWith("/_next/") ||
     pathname.startsWith("/api/") ||
+    pathname.startsWith("/__nextjs") || // Add this line to handle Next.js internal routes
     pathname.includes(".") // Skip files with extensions
   ) {
     conditionalLog(hookName, { status: "bypassed", pathname }, shouldLog);
@@ -180,6 +181,11 @@ async function middleware(request: NextRequest, response: NextResponse) {
     .filter((p): p is Project => !!p);
   const projectSlugs = projects.map(p => p.slug);
   const urlProjectSlug = pathSegments[0];
+
+  // Skip project slug validation for Next.js internal routes
+  if (urlProjectSlug?.startsWith("__nextjs")) {
+    return response;
+  }
 
   // If no current project, assign first available project
   if (!profile.current_project_id) {

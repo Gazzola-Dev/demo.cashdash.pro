@@ -3,51 +3,32 @@ const path = require("path");
 
 // Whitelist of directories that contain reference-worthy code
 const whitelistedDirs = [
-  "actions", // Core business logic and data mutations
-  "hooks", // Custom React hooks for reusable logic
-  "types", // Type definitions useful for understanding data structures
-  "components", // All component directories
-  "configuration.ts", // Configuration constants
-  "constants", // Application constants
-  "middleware", // Authentication and routing middleware
-  "lib",
-  "app",
-  "supabase",
-  "styles",
+  "actions", // Core business logic
+  "hooks", // Custom React hooks
+  "types", // Core type definitions
+  "components", // Only key component directories
+  "lib", // Utility functions
+  "app", // Page components and routing
+  "supabase/migrations", // Database schema and functions
 ];
 
-// Blacklist of directories that should be excluded even if under whitelisted directories
+// Specific subdirectories to exclude even if under whitelisted directories
 const blacklistedDirs = [
-  "ui", // Exclude components/ui directory
+  "components/ui", // Exclude shadcn components
 ];
 
 // Whitelist of specific files that should be included when in repo root
 const whitelistedRootFiles = [
-  // Configuration files
+  // Core configuration files only
   "tailwind.config.ts",
-  "components.json",
   "next.config.mjs",
-  "tsconfig.json",
-  "package.json",
   "configuration.ts",
-  ".prettierrc.json",
-  ".eslintrc.json",
 
-  // Environment files
-  ".env.local",
+  // Environment examples
   ".env.local.example",
-  ".env.development",
-  ".env.production",
 
   // Documentation
   "README.md",
-
-  // Development utilities
-  "makeAdmin.js",
-  "getChanges.js",
-  "generateTypes.js",
-  "getIndex.js",
-  "seed.js",
 ];
 
 // System files to ignore
@@ -57,9 +38,16 @@ const ignoredFiles = [
   ".directory",
   "desktop.ini",
   ".localized",
+  ".gitignore",
+  ".temp_gotrue-version",
+  ".temp_pooler-url",
+  ".temp_postgres-version",
+  ".temp_project-ref",
+  ".temp_rest-version",
+  ".temp_storage-version",
 ];
 
-// Development warning header to prepend to files
+// Development warning header
 const devWarningHeader = `/*
  * ⚠️ DEVELOPMENT USE ONLY ⚠️
  *
@@ -82,28 +70,35 @@ function clearDirectory(dirPath) {
   fs.mkdirSync(dirPath, { recursive: true });
 }
 
-// Function to check if a file should be included based on whitelist rules
+// Function to check if a file should be included
+// Function to check if a file should be included
 function shouldIncludeFile(filePath) {
-  // Normalize path for consistent comparison
   const normalizedPath = filePath.replace(/\\/g, "/");
-
-  // Check if file is in ignored list
   const fileName = path.basename(normalizedPath);
+
+  // Check system files
   if (ignoredFiles.includes(fileName)) {
     return false;
   }
 
-  // Check if file is in or under a blacklisted directory
-  if (blacklistedDirs.some(dir => normalizedPath.includes(`/${dir}/`))) {
+  // Check blacklisted directories - look for both middle and start of path
+  if (
+    blacklistedDirs.some(
+      dir =>
+        normalizedPath.includes(`/${dir}/`) ||
+        normalizedPath.startsWith(dir + "/") ||
+        normalizedPath === dir,
+    )
+  ) {
     return false;
   }
 
-  // If file is in repo root, check against whitelistedRootFiles
+  // For root files, check whitelist
   if (!normalizedPath.includes("/")) {
     return whitelistedRootFiles.includes(normalizedPath);
   }
 
-  // Check if file is in or under a whitelisted directory
+  // Check whitelisted directories
   return whitelistedDirs.some(dir => {
     const normalizedDir = dir.replace(/\\/g, "/");
     return (
@@ -113,7 +108,7 @@ function shouldIncludeFile(filePath) {
   });
 }
 
-// Function to extract SQL statements
+// Function to extract SQL statements by type
 function extractStatements(sql, type) {
   const statements = sql.split(/;(?=(?:[^'"]*["'][^'"]*["'])*[^'"]*$)/g);
   return statements
@@ -141,7 +136,7 @@ function extractStatements(sql, type) {
     .filter(stmt => stmt.length > 0);
 }
 
-// Function to create squashed migration
+// Create squashed migration from all migrations
 function createSquashedMigration(migrationsDir, outputDir) {
   try {
     const files = fs
@@ -155,19 +150,14 @@ function createSquashedMigration(migrationsDir, outputDir) {
 
     files.forEach(file => {
       const content = fs.readFileSync(path.join(migrationsDir, file), "utf-8");
-
-      // Extract and add CREATE statements
       extractStatements(content, "create").forEach(stmt =>
         createStatements.add(stmt + ";"),
       );
-
-      // Extract and add INSERT statements
       extractStatements(content, "insert").forEach(stmt =>
         insertStatements.add(stmt + ";"),
       );
     });
 
-    // Combine statements in logical order with development warning header
     const combinedContent = [
       devWarningHeader,
       "-- Squashed migration combining all changes",
@@ -203,26 +193,21 @@ function createSquashedMigration(migrationsDir, outputDir) {
   }
 }
 
-// Function to transform file path to flattened name
+// Transform file path to flattened name
 function getFlattenedFileName(sourcePath) {
   return sourcePath.replace(/[\/\\]/g, "_").replace(/[^a-zA-Z0-9._-]/g, "_");
 }
 
-// Function to copy file with flattened structure and add development warning header
+// Copy file with development warning header
 function copyFile(sourcePath, targetDir) {
   const flattenedName = getFlattenedFileName(sourcePath);
   const targetPath = path.join(targetDir, flattenedName);
-
-  // Read the source file
   const content = fs.readFileSync(sourcePath, "utf8");
-
-  // Write the file with the development warning header
   fs.writeFileSync(targetPath, devWarningHeader + content);
-
   return flattenedName;
 }
 
-// Function to get all whitelisted files recursively
+// Get all whitelisted files recursively
 function getAllFiles(dirPath, arrayOfFiles = []) {
   const files = fs
     .readdirSync(dirPath)
@@ -242,7 +227,7 @@ function getAllFiles(dirPath, arrayOfFiles = []) {
   return arrayOfFiles;
 }
 
-// Function to read llm-files.txt
+// Read llm-files.txt for specific files to include
 function getLLMFiles() {
   try {
     if (fs.existsSync("llm-files.txt")) {
@@ -255,10 +240,10 @@ function getLLMFiles() {
   return [];
 }
 
-// Function to write index files
+// Write index file
 function writeIndexFile(mappings, outputDir, isDev = false) {
   const indexContent = mappings
-    .map(({ originalPath, outputFileName }) => `${originalPath}`)
+    .map(({ originalPath }) => originalPath)
     .sort()
     .join("\n");
 
@@ -272,11 +257,10 @@ function main() {
   clearDirectory(".llm");
   clearDirectory(".llm-dev");
 
-  // Arrays to store file mappings
   const llmMappings = [];
   const llmDevMappings = [];
 
-  // Create squashed migration if migrations directory exists
+  // Create squashed migration if exists
   if (fs.existsSync("supabase/migrations")) {
     const migrationMapping = createSquashedMigration(
       "supabase/migrations",
@@ -294,7 +278,7 @@ function main() {
   const llmFiles = getLLMFiles();
 
   if (llmFiles.length > 0) {
-    // Copy files listed in llm-files.txt to .llm-dev
+    // Copy specified files to .llm-dev
     llmFiles.forEach(file => {
       if (allFiles.includes(file)) {
         const outputFileName = copyFile(file, ".llm-dev");
@@ -311,7 +295,7 @@ function main() {
       console.log(`.llm: ${outputFileName}`);
     });
   } else {
-    // Copy all files to .llm if no files are specified in llm-files.txt
+    // Copy all files to .llm if no specific files specified
     allFiles.forEach(file => {
       const outputFileName = copyFile(file, ".llm");
       llmMappings.push({ originalPath: file, outputFileName });
