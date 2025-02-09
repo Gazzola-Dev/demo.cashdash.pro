@@ -76,7 +76,9 @@ async function middleware(request: NextRequest, response: NextResponse) {
 
   // Check if route requires admin access
   const isProtectedRoute =
-    pathname.endsWith("/projects/new") || pathname.endsWith("/tasks/new");
+    pathname.endsWith("/projects/new") ||
+    pathname.endsWith("/tasks/new") ||
+    pathname.endsWith("/projects/all");
 
   if (isProtectedRoute) {
     const { data: roles, error: rolesError } = await supabase

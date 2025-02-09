@@ -209,7 +209,8 @@ export function ProjectPage({
                 <label className="text-sm font-medium">Project Prefix</label>
                 {renderField("Project Prefix", displayData?.prefix, "prefix")}
                 <p className="text-xs text-muted-foreground">
-                  Used for task IDs (e.g., PRJ-123)
+                  Used for task IDs (e.g.,{" "}
+                  <span className="font-semibold italic">PRJ</span>-123)
                 </p>
               </div>
               <div className="space-y-2">

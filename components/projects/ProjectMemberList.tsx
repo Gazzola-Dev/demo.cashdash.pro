@@ -159,40 +159,45 @@ export function ProjectMemberList({ isDraft = false }: { isDraft?: boolean }) {
             </div>
           </div>
         ))}
-        <h3 className="text-sm font-medium text-muted-foreground">
-          {project?.project_members?.length
-            ? "Pending Invitations"
-            : "No pending invitations"}
-        </h3>
-        {/* Pending Invitations */}
-        {project?.project_invitations?.map(invite => (
-          <div
-            key={invite.id}
-            className="flex items-center gap-4 p-2 rounded-lg hover:bg-muted/50 border border-dashed border-muted-foreground/20"
-          >
-            <Avatar className="h-10 w-10 opacity-50">
-              <AvatarImage src={undefined} />
-              <AvatarFallback>
-                {invite.email.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
 
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-medium truncate text-muted-foreground">
-                  {redactEmail(invite.email)}
-                </p>
-                <div className="flex items-center gap-2"></div>
-              </div>
-              <div className="flex items-center gap-1 mt-1">
-                <div className="dark:text-gray-100 flex space-x-2 text-sm text-gray-700 items-center">
-                  <MailPlus className="size-4 dark:text-gray-400 text-gray-600" />
-                  <span>Invitation pending</span>
+        {isAdmin && (
+          <>
+            <h3 className="text-sm font-medium text-muted-foreground">
+              {project?.project_members?.length
+                ? "Pending Invitations"
+                : "No pending invitations"}
+            </h3>
+            {/* Pending Invitations */}
+            {project?.project_invitations?.map(invite => (
+              <div
+                key={invite.id}
+                className="flex items-center gap-4 p-2 rounded-lg hover:bg-muted/50 border border-dashed border-muted-foreground/20"
+              >
+                <Avatar className="h-10 w-10 opacity-50">
+                  <AvatarImage src={undefined} />
+                  <AvatarFallback>
+                    {invite.email.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium truncate text-muted-foreground">
+                      {redactEmail(invite.email)}
+                    </p>
+                    <div className="flex items-center gap-2"></div>
+                  </div>
+                  <div className="flex items-center gap-1 mt-1">
+                    <div className="dark:text-gray-100 flex space-x-2 text-sm text-gray-700 items-center">
+                      <MailPlus className="size-4 dark:text-gray-400 text-gray-600" />
+                      <span>Invitation pending</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-        ))}
+            ))}
+          </>
+        )}
       </CardContent>
     </Card>
   );

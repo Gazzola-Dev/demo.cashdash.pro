@@ -42,7 +42,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import configuration from "@/configuration";
-import { useListMembers } from "@/hooks/member.hooks";
+import { useGetProject } from "@/hooks/project.hooks";
 import { useToastQueue } from "@/hooks/useToastQueue";
 import { useIsAdmin } from "@/hooks/user.hooks";
 import { Tables } from "@/types/database.types";
@@ -57,6 +57,8 @@ const TaskTable = ({ projectId, projectSlug }: TaskTableProps) => {
   const router = useRouter();
   const { toast } = useToastQueue();
   const { mutate: updateTask } = useUpdateTask();
+  const { data: projectData } = useGetProject();
+  const members = projectData?.project_members ?? [];
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     [],
@@ -81,7 +83,6 @@ const TaskTable = ({ projectId, projectSlug }: TaskTableProps) => {
   const [debouncedFilters] = useDebounce(rawFilters, 300);
 
   const { data: tasks = [] } = useListTasks(debouncedFilters);
-  const { data: members = [] } = useListMembers(projectSlug);
 
   const handleRowClick = React.useCallback(
     (task: TaskResult, event: React.MouseEvent<HTMLTableRowElement>) => {
