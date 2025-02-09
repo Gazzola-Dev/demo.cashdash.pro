@@ -758,6 +758,14 @@ export type Database = {
         }
         Returns: Json
       }
+      handle_invitation_response: {
+        Args: {
+          p_invitation_id: string
+          p_user_id: string
+          p_accept: boolean
+        }
+        Returns: Json
+      }
       invite_member_to_project: {
         Args: {
           p_project_id: string

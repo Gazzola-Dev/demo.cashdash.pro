@@ -1,8 +1,7 @@
 "use client";
 
-import { acceptInvitationAction } from "@/actions/member.actions";
+import ActionButton from "@/components/shared/ActionButton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -11,12 +10,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import configuration from "@/configuration";
-import { useGetUserInvites } from "@/hooks/invite.hooks";
-import { useGetProfile } from "@/hooks/profile.hooks";
+import {
+  useGetUserInvites,
+  useRespondToInvitation,
+} from "@/hooks/invite.hooks";
 import { useToastQueue } from "@/hooks/useToastQueue";
 import { MailPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback } from "react";
+import { useState } from "react";
 
 interface InvitePageProps {
   params: {
@@ -24,55 +25,103 @@ interface InvitePageProps {
   };
 }
 
+enum InviteAction {
+  Accept = "accept",
+  Decline = "decline",
+}
+
 export default function InvitePage({ params }: InvitePageProps) {
-  const { data: invitesData } = useGetUserInvites();
-  const { data: profileData } = useGetProfile();
+  const [isAccepted, setIsAccepted] = useState(false);
+  const { data: invitesData, isPending: getInvitesIsPending } =
+    useGetUserInvites();
+  const { mutate: respondToInvitation, isPending } = useRespondToInvitation();
   const { toast } = useToastQueue();
   const router = useRouter();
+
+  const onClick = (action: InviteAction) => {
+    const invitation = invitesData?.invitations.find(
+      inv => inv.project.slug === params.project_slug,
+    );
+
+    if (!invitation) {
+      toast({
+        title: "Error",
+        description: "Invitation not found",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    respondToInvitation(
+      {
+        invitationId: invitation.id,
+        accept: action === InviteAction.Accept,
+      },
+      {
+        onSuccess: () => {
+          if (action === InviteAction.Accept) setIsAccepted(true);
+          toast({
+            title:
+              action === InviteAction.Accept
+                ? "Invitation accepted"
+                : "Invitation declined",
+            description:
+              action === InviteAction.Accept
+                ? "You have been added to the project"
+                : "Invitation has been declined",
+          });
+
+          if (action === InviteAction.Accept) {
+            router.push(
+              configuration.paths.project.overview({
+                project_slug: params.project_slug,
+              }),
+            );
+          } else {
+            router.push(configuration.paths.project.all);
+          }
+        },
+        onError: error => {
+          toast({
+            title: "Error",
+            description: error.message,
+            variant: "destructive",
+          });
+        },
+      },
+    );
+  };
 
   const invitation = invitesData?.invitations.find(
     inv => inv.project.slug === params.project_slug,
   );
 
-  const handleAccept = useCallback(async () => {
-    if (!invitation) return;
-
-    try {
-      const { error } = await acceptInvitationAction(invitation.id);
-      if (error) throw error;
-
-      toast({
-        title: "Successfully joined project",
-        description: `You are now a member of ${invitation.project.name}`,
-      });
-
-      router.push(
-        configuration.paths.project.overview({
-          project_slug: invitation.project.slug,
-        }),
-      );
-    } catch (error) {
-      toast({
-        title: "Error accepting invitation",
-        description:
-          error instanceof Error ? error.message : "Unknown error occurred",
-        variant: "destructive",
-      });
-    }
-  }, [invitation, router, toast]);
-
-  const handleDecline = useCallback(() => {
-    router.push(configuration.paths.project.all);
-  }, [router]);
-
   if (!invitation) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Invalid Invitation</CardTitle>
-          <CardDescription>
-            This invitation may have expired or been revoked.
-          </CardDescription>
+          {isAccepted ? (
+            <>
+              <CardTitle>Invitation Accepted</CardTitle>
+              <CardDescription>
+                Please wait, you will be redirected to the project overview.
+              </CardDescription>
+            </>
+          ) : getInvitesIsPending ? (
+            <>
+              <CardTitle>Loading...</CardTitle>
+              <CardDescription>
+                Please wait while we check for your invitations.
+              </CardDescription>
+            </>
+          ) : (
+            <>
+              <CardTitle>Invalid Invitation</CardTitle>
+              <CardDescription>
+                This invitation may have expired or been revoked.
+              </CardDescription>
+            </>
+          )}
         </CardHeader>
       </Card>
     );
@@ -125,13 +174,20 @@ export default function InvitePage({ params }: InvitePageProps) {
           </div>
 
           <div className="pt-4 flex justify-end gap-4">
-            <Button variant="outline" onClick={handleDecline}>
+            <ActionButton
+              variant="outline"
+              onClick={() => onClick(InviteAction.Decline)}
+              loading={isPending}
+            >
               Decline
-            </Button>
-            <Button onClick={handleAccept}>
+            </ActionButton>
+            <ActionButton
+              onClick={() => onClick(InviteAction.Accept)}
+              loading={isPending}
+            >
               <MailPlus className="h-4 w-4 mr-2" />
               Accept Invitation
-            </Button>
+            </ActionButton>
           </div>
         </CardContent>
       </Card>
