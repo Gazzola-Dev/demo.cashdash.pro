@@ -24,7 +24,7 @@ import configuration from "@/configuration";
 import { useGetProfile } from "@/hooks/profile.hooks";
 import { useSignOut } from "@/hooks/user.hooks";
 import { cn } from "@/lib/utils";
-import { Bell, CreditCard, Settings2 } from "lucide-react";
+import { Bell, CreditCard, LogOut, Settings2, User } from "lucide-react";
 import Link from "next/link";
 import ThemeSwitcher from "./ThemeSwitcher";
 
@@ -80,7 +80,7 @@ export function NavUser() {
                 <TooltipTrigger asChild>
                   <DropdownMenuLabel>
                     <Link
-                      href={configuration.paths.settings.profile}
+                      href={configuration.paths.appHome}
                       className="flex items-center gap-2 p-1 cursor-pointer dark:hover:bg-gray-800 rounded-md space-x-1.5"
                     >
                       <Avatar className="size-8 rounded-lg">
@@ -109,6 +109,46 @@ export function NavUser() {
               </Tooltip>
               <DropdownMenuSeparator className="dark:border-gray-700" />
               <DropdownMenuGroup>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuItem
+                      className="cursor-pointer dark:hover:bg-gray-800 dark:focus:bg-gray-800 dark:text-gray-100"
+                      onClick={handleSignOut}
+                    >
+                      <LogOut className="mr-2 size-4 dark:text-gray-400" />
+                      Sign out
+                    </DropdownMenuItem>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="right"
+                    className="dark:bg-gray-800 dark:text-gray-100"
+                  >
+                    Sign out of your account
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuItem
+                      className="cursor-pointer dark:hover:bg-gray-800 dark:focus:bg-gray-800"
+                      asChild
+                    >
+                      <Link
+                        href={configuration.paths.settings.profile}
+                        className="dark:text-gray-100"
+                      >
+                        <User className="mr-2 size-4 dark:text-gray-400" />
+                        Profile
+                      </Link>
+                    </DropdownMenuItem>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="right"
+                    className="dark:bg-gray-800 dark:text-gray-100"
+                  >
+                    Update your profile information and settings
+                  </TooltipContent>
+                </Tooltip>
+
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <DropdownMenuItem
@@ -178,8 +218,20 @@ export function NavUser() {
                   </TooltipContent>
                 </Tooltip>
               </DropdownMenuGroup>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="w-full">
+                    <ThemeSwitcher />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent
+                  side="right"
+                  className="dark:bg-gray-800 dark:text-gray-100"
+                >
+                  Change theme (Dark mode is still in beta!)
+                </TooltipContent>
+              </Tooltip>
             </TooltipProvider>
-            <ThemeSwitcher />
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

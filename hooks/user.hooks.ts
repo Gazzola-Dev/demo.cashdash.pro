@@ -181,7 +181,7 @@ export const useSignInWithMagicLink = ({
   return useMutation({
     mutationFn: async (email: string) => {
       const { error } = await supabase.auth.signInWithOtp({ email });
-      conditionalLog(hookName, { error }, false, null);
+      conditionalLog(hookName, { error }, false);
       if (error) throw new Error(error.message);
       return null;
     },

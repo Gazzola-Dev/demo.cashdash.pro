@@ -223,7 +223,7 @@ export const listProjectsAction = async (filters?: {
       p_sort_order: filters?.order || undefined,
     });
 
-    conditionalLog(actionName, { data, error }, true, null);
+    conditionalLog(actionName, { data, error }, true);
 
     if (error) throw error;
 

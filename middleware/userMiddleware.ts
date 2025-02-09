@@ -151,15 +151,22 @@ async function middleware(request: NextRequest, response: NextResponse) {
   }
 
   if (!memberships?.length && !invites?.invitations.length) {
-    conditionalLog(
-      hookName,
-      { status: "no_memberships_or_invites", user_id: user.id },
-      shouldLog,
-    );
-    await supabase.auth.signOut();
-    return NextResponse.redirect(
-      new URL(configuration.paths.appHome, request.url),
-    );
+    const { data: roles, error: rolesError } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin");
+    if (rolesError || !roles.length) {
+      conditionalLog(
+        hookName,
+        { status: "no_memberships_or_invites", user_id: user.id },
+        shouldLog,
+      );
+      await supabase.auth.signOut();
+      return NextResponse.redirect(
+        new URL(configuration.paths.appHome, request.url),
+      );
+    }
   }
 
   if (!memberships?.length) {

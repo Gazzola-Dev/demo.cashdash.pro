@@ -50,7 +50,7 @@ const TaskTable = ({ projectId, projectSlug }: TaskTableProps) => {
   const { toast } = useToastQueue();
   const { mutate: updateTask } = useUpdateTask();
   const { data: projectData } = useGetProject();
-  const members = projectData?.project_members ?? [];
+
   const [sorting, setSorting] = React.useState<SortingState>([
     {
       id: "priority",
@@ -108,8 +108,9 @@ const TaskTable = ({ projectId, projectSlug }: TaskTableProps) => {
     [toast],
   );
 
-  const columns = React.useMemo<ColumnDef<TaskResult>[]>(
-    () => [
+  const columns = React.useMemo<ColumnDef<TaskResult>[]>(() => {
+    const members = projectData?.project_members ?? [];
+    return [
       {
         id: "title",
         accessorFn: row => row.task.title,
@@ -248,9 +249,8 @@ const TaskTable = ({ projectId, projectSlug }: TaskTableProps) => {
           </Button>
         ),
       },
-    ],
-    [updateTask, members, copyBranchName],
-  );
+    ];
+  }, [projectData?.project_members, updateTask, copyBranchName]);
 
   const table = useReactTable({
     data: tasks,
