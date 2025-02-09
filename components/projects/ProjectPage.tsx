@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useGetProjectSlug } from "@/hooks/project.hooks";
 import { useIsAdmin } from "@/hooks/user.hooks";
 import { ProjectWithDetails } from "@/types/project.types";
 import { LoaderCircle, Save, TerminalIcon } from "lucide-react";
@@ -43,6 +44,8 @@ export function ProjectPage({
 
   const [hasChanges, setHasChanges] = useState(false);
   const [debouncedName] = useDebounce(formData.name, 500);
+  const { mutate: getProjectSlug, isPending: isSlugPending } =
+    useGetProjectSlug();
 
   useEffect(() => {
     if (!isNew && projectData) {
@@ -50,6 +53,16 @@ export function ProjectPage({
       setHasChanges(false);
     }
   }, [isNew, projectData]);
+
+  useEffect(() => {
+    if (debouncedName && isAdmin) {
+      getProjectSlug(debouncedName, {
+        onSuccess: slug => {
+          if (slug) setFormData(prev => ({ ...prev, slug }));
+        },
+      });
+    }
+  }, [debouncedName, getProjectSlug, isAdmin]);
 
   const handleChange = (
     field: keyof ProjectWithDetails,
@@ -83,18 +96,25 @@ export function ProjectPage({
   const isValid = Boolean(
     displayData?.name && displayData?.prefix && displayData?.slug,
   );
-
   const renderField = (
     label: string,
     value: string | null | undefined,
     field: keyof ProjectWithDetails,
+    placeholder?: string,
   ) => {
     if (isAdmin) {
       return (
         <Input
           value={value || ""}
-          onChange={e => handleChange(field, e.target.value)}
-          placeholder={`Enter ${label.toLowerCase()}`}
+          onChange={e => {
+            if (field === "prefix") {
+              const lettersOnly = e.target.value.replace(/[^A-Za-z]/g, "");
+              handleChange(field, lettersOnly.toUpperCase());
+            } else {
+              handleChange(field, e.target.value);
+            }
+          }}
+          placeholder={placeholder || `Enter ${label.toLowerCase()}`}
         />
       );
     }
@@ -193,14 +213,30 @@ export function ProjectPage({
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Project Name</label>
-                {renderField("Project Name", displayData?.name, "name")}
+                {renderField(
+                  "Project Name",
+                  displayData?.name,
+                  "name",
+                  "My Project",
+                )}
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Project Slug</label>
                 <div className="flex items-center space-x-2">
-                  <div className="flex-1 p-2 bg-muted rounded-md text-muted-foreground">
-                    {displayData?.slug || "project-slug"}
+                  <div className="flex-1 bg-muted rounded-md dark:text-gray-200 text-gray-900 italic relative">
+                    <span className="py-2 px-3 bg-gray-50 dark:bg-gray-900 rounded-md flex items-center tracking-wide">
+                      <span className="px-1 text-gray-500 tracking-normal">
+                        CashDash.Pro/
+                      </span>{" "}
+                      {isSlugPending ? (
+                        <LoaderCircle className="h-4 w-4 animate-spin" />
+                      ) : !debouncedName ? (
+                        "my-project"
+                      ) : (
+                        displayData?.slug || "my-project"
+                      )}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -210,7 +246,10 @@ export function ProjectPage({
                 {renderField("Project Prefix", displayData?.prefix, "prefix")}
                 <p className="text-xs text-muted-foreground">
                   Used for task IDs (e.g.,{" "}
-                  <span className="font-semibold italic">PRJ</span>-123)
+                  <span className="font-semibold italic">
+                    {displayData?.prefix || "MYPRJ"}
+                  </span>
+                  -123)
                 </p>
               </div>
               <div className="space-y-2">
