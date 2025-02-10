@@ -22,56 +22,23 @@ import {
 } from "@/components/ui/tooltip";
 import configuration from "@/configuration";
 import { useGetUserInvites } from "@/hooks/invite.hooks";
-import { useGetProfile } from "@/hooks/profile.hooks";
 import { useListProjects } from "@/hooks/project.hooks";
 import { useIsAdmin } from "@/hooks/user.hooks";
 import { cn } from "@/lib/utils";
 import { Code2, ListFilter, MailPlus, Plus } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
 
 export function ProjectSwitcher() {
   const isAdmin = useIsAdmin();
   const pathname = usePathname();
+  const firstSegment = pathname.split("/")[1];
   const { isMobile, open } = useSidebar();
-  const {
-    data: profileData,
-    isFetching: profileDataIsFetching,
-    refetch: refetchProfile,
-  } = useGetProfile();
-  const {
-    data: projects = [],
-    isFetching: listProjectsIsFetching,
-    refetch: refetchProjects,
-  } = useListProjects();
+  const { data: projects = [] } = useListProjects();
   const { data: invites } = useGetUserInvites();
-  const currentProject = profileData?.current_project;
-
-  // TODO: Refactor this away
-  useEffect(() => {
-    const firstSegment = pathname.split("/")[1];
-
-    if (
-      !firstSegment ||
-      !projects.some(p => p.slug === firstSegment) ||
-      !currentProject?.slug ||
-      firstSegment === currentProject?.slug ||
-      firstSegment === "projects"
-    )
-      return;
-
-    if (!profileDataIsFetching) refetchProfile();
-    if (!listProjectsIsFetching) refetchProjects();
-  }, [
-    pathname,
-    profileDataIsFetching,
-    currentProject,
-    listProjectsIsFetching,
-    projects,
-    refetchProfile,
-    refetchProjects,
-  ]);
+  const currentProject = projects.find(
+    project => project.slug === firstSegment,
+  );
 
   const hasPendingInvites = !!invites?.invitations?.length;
 
