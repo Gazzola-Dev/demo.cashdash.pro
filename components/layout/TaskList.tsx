@@ -89,24 +89,26 @@ const TaskList = () => {
     order: sortConfig.order,
   });
 
-  const tasks = [...rawTasks].sort((a, b) => {
-    if (sortConfig.field === "priority") {
-      const priorityA = getPriorityValue(a.task.priority);
-      const priorityB = getPriorityValue(b.task.priority);
-      return sortConfig.order === "desc"
-        ? priorityB - priorityA
-        : priorityA - priorityB;
-    } else if (sortConfig.field === "due_date") {
-      const dateA = a.task_schedule?.due_date
-        ? new Date(a.task_schedule.due_date).getTime()
-        : Infinity;
-      const dateB = b.task_schedule?.due_date
-        ? new Date(b.task_schedule.due_date).getTime()
-        : Infinity;
-      return sortConfig.order === "desc" ? dateA - dateB : dateB - dateA;
-    }
-    return 0;
-  });
+  const tasks = [...rawTasks]
+    .filter(t => t.task.status !== "draft")
+    .sort((a, b) => {
+      if (sortConfig.field === "priority") {
+        const priorityA = getPriorityValue(a.task.priority);
+        const priorityB = getPriorityValue(b.task.priority);
+        return sortConfig.order === "desc"
+          ? priorityB - priorityA
+          : priorityA - priorityB;
+      } else if (sortConfig.field === "due_date") {
+        const dateA = a.task_schedule?.due_date
+          ? new Date(a.task_schedule.due_date).getTime()
+          : Infinity;
+        const dateB = b.task_schedule?.due_date
+          ? new Date(b.task_schedule.due_date).getTime()
+          : Infinity;
+        return sortConfig.order === "desc" ? dateA - dateB : dateB - dateA;
+      }
+      return 0;
+    });
 
   const toggleSort = (field: SortOption["field"]) => {
     setSortConfig(current => ({

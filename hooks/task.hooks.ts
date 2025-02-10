@@ -54,7 +54,7 @@ export const useListTasks = (filters?: TaskFilters) => {
   const hookName = "useListTasks";
 
   return useQuery({
-    queryKey: ["tasks", filters],
+    queryKey: ["tasks"],
     queryFn: async () => {
       const { data, error } = await listTasksAction(filters);
       conditionalLog(hookName, { data, error });
@@ -243,6 +243,7 @@ export const useCreateSubtask = ({
     onSuccess: data => {
       conditionalLog(hookName, { success: data });
       queryClient.invalidateQueries({ queryKey: ["task"] });
+      queryClient.invalidateQueries({ queryKey: ["draft-task"] });
       toast({
         title: successMessage || "Subtask created successfully",
       });
