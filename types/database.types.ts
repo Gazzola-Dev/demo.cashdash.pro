@@ -712,6 +712,12 @@ export type Database = {
         }
         Returns: Json
       }
+      delete_project_data: {
+        Args: {
+          project_id: string
+        }
+        Returns: undefined
+      }
       generate_unique_slug: {
         Args: {
           base_slug: string

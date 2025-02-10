@@ -8,12 +8,17 @@ import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
+  TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useGetProjectSlug } from "@/hooks/project.hooks";
+import configuration from "@/configuration";
+import { useDeleteProject, useGetProjectSlug } from "@/hooks/project.hooks";
+import { useDialogQueue } from "@/hooks/useDialogQueue";
+import { useToastQueue } from "@/hooks/useToastQueue";
 import { useIsAdmin } from "@/hooks/user.hooks";
+import { cn } from "@/lib/utils";
 import { ProjectWithDetails } from "@/types/project.types";
-import { TooltipTrigger } from "@radix-ui/react-tooltip";
-import { LoaderCircle, Save, TerminalIcon } from "lucide-react";
+import { LoaderCircle, Save, TerminalIcon, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useDebounce } from "use-debounce";
 import ProjectMemberList from "./ProjectMemberList";
@@ -34,6 +39,10 @@ export function ProjectPage({
   isPending = false,
 }: ProjectPageProps) {
   const isAdmin = useIsAdmin();
+  const router = useRouter();
+  const { toast } = useToastQueue();
+  const { mutate: deleteProject } = useDeleteProject();
+  const { dialog } = useDialogQueue();
   const [formData, setFormData] = useState<Partial<ProjectWithDetails>>(
     isNew
       ? {
@@ -98,6 +107,34 @@ export function ProjectPage({
       onUpdate(formData);
       setHasChanges(false);
     }
+  };
+
+  const handleDelete = () => {
+    if (!projectData?.id) return;
+    dialog({
+      title: "Delete Project",
+      description:
+        "Are you sure you want to delete this project? This action cannot be undone.",
+      variant: "destructive",
+      onConfirm: () => {
+        deleteProject(projectData.id, {
+          onSuccess: () => {
+            toast({
+              title: "Project deleted successfully",
+            });
+            router.push(configuration.paths.appHome);
+          },
+          onError: error => {
+            toast({
+              title: "Error deleting project",
+              description:
+                error instanceof Error ? error.message : "An error occurred",
+              variant: "destructive",
+            });
+          },
+        });
+      },
+    });
   };
 
   const displayData = isNew ? formData : { ...projectData, ...formData };
@@ -198,26 +235,41 @@ export function ProjectPage({
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Project Information</CardTitle>
-              {!isNew && hasChanges && isAdmin && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleSave}
-                  disabled={isPending}
-                >
-                  <div className="relative flex items-center gap-2">
-                    <Save className="h-4 w-4" />
-                    Save Changes
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div
-                        className={`scale-0 transition-all duration-500 ease-out ${isPending ? "scale-100" : ""}`}
-                      >
-                        <LoaderCircle className="h-4 w-4 animate-spin" />
+              <div className="flex gap-2">
+                {!isNew && hasChanges && isAdmin && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSave}
+                    disabled={isPending}
+                  >
+                    <div className="relative flex items-center gap-2">
+                      <Save className="h-4 w-4" />
+                      Save Changes
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div
+                          className={cn(
+                            "scale-0 transition-all duration-500 ease-out",
+                            isPending && "scale-100",
+                          )}
+                        >
+                          <LoaderCircle className="h-4 w-4 animate-spin" />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </Button>
-              )}
+                  </Button>
+                )}
+                {!isNew && isAdmin && (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleDelete}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Project
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -313,5 +365,3 @@ export function ProjectPage({
     </div>
   );
 }
-
-export default ProjectPage;

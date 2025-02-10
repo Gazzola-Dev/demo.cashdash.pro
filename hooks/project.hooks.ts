@@ -154,11 +154,13 @@ export const useDeleteProject = ({
   return useMutation({
     mutationFn: async (projectId: string) => {
       const { data, error } = await deleteProjectAction(projectId);
-      conditionalLog(hookName, { data, error }, false);
+      conditionalLog(hookName, { data, error }, false, null);
+      if (error) throw error;
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
       toast({
         title: successMessage || SuccessMessages.DELETE,
       });

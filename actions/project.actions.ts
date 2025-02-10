@@ -110,42 +110,6 @@ export const updateProjectAction = async (
   }
 };
 
-export const deleteProjectAction = async (
-  projectId: string,
-): Promise<ActionResponse<null>> => {
-  const actionName = "deleteProjectAction";
-  const supabase = await getSupabaseServerActionClient();
-
-  try {
-    const { data: memberData, error: memberError } = await supabase
-      .from("project_members")
-      .select("role")
-      .eq("project_id", projectId)
-      .eq("role", "owner")
-      .single();
-
-    conditionalLog(actionName, { memberData, memberError }, true);
-
-    if (memberError || !memberData) {
-      throw new Error("Permission denied");
-    }
-
-    const { error } = await supabase
-      .from("projects")
-      .delete()
-      .eq("id", projectId);
-
-    conditionalLog(actionName, { error }, true);
-
-    if (error) throw error;
-
-    return getActionResponse({ data: null });
-  } catch (error) {
-    conditionalLog(actionName, { error }, true);
-    return getActionResponse({ error });
-  }
-};
-
 export const getProjectAction = async (
   projectSlug: string,
 ): Promise<ActionResponse<ProjectWithDetails>> => {
@@ -258,6 +222,30 @@ export const inviteMemberAction = async (
     return getActionResponse({
       data: data as any as ProjectInvitationWithProfile,
     });
+  } catch (error) {
+    conditionalLog(actionName, { error }, true);
+    return getActionResponse({ error });
+  }
+};
+
+// actions/project.actions.ts
+
+export const deleteProjectAction = async (
+  projectId: string,
+): Promise<ActionResponse<null>> => {
+  const actionName = "deleteProjectAction";
+  const supabase = await getSupabaseServerActionClient();
+
+  try {
+    console.log("projectId", projectId);
+    const { error } = await supabase.rpc("delete_project_data", {
+      project_id: projectId,
+    });
+
+    conditionalLog(actionName, { error }, true, null);
+    if (error) throw error;
+
+    return getActionResponse({ data: null });
   } catch (error) {
     conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });
