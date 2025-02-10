@@ -67,3 +67,32 @@ export const respondToInvitationAction = async (
     return getActionResponse({ error });
   }
 };
+
+export const deleteInvitationAction = async (
+  invitationId: string,
+): Promise<ActionResponse<null>> => {
+  const actionName = "deleteInvitationAction";
+  const supabase = await getSupabaseServerActionClient();
+
+  try {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) throw new Error("Not authenticated");
+
+    const { error } = await supabase.rpc("delete_project_invitation", {
+      p_invitation_id: invitationId,
+      p_user_id: user.id,
+    });
+
+    conditionalLog(actionName, { error }, true);
+    if (error) throw error;
+
+    return getActionResponse({ data: null });
+  } catch (error) {
+    conditionalLog(actionName, { error }, true);
+    return getActionResponse({ error });
+  }
+};

@@ -289,8 +289,8 @@ export function ProjectPage({
               <div className="space-y-2">
                 <label className="text-sm font-medium">Example URL</label>
                 <div className="flex items-center space-x-2">
-                  <div className="flex-1 bg-muted rounded-md dark:text-gray-200 text-gray-900 italic relative flex items-center px-2 py-1">
-                    <span className="pl-2 py-0.5 text-gray-600 font-medium bg-gray-500/5 rounded-l-lg">
+                  <div className="flex-1 bg-muted rounded-md dark:text-gray-200 text-gray-900 italic relative flex items-center px-2 py-1 bg-gray-50">
+                    <span className="px-2 py-0.5 text-gray-600 font-semibold bg-gray-200 rounded">
                       cashdash.pro /
                     </span>
                     {!displayData?.slug && !isPending ? (
@@ -302,7 +302,7 @@ export function ProjectPage({
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <span className="cursor-help px-1.5 py-0.5 border-gray-100 hover:border-blue-900 hover:rounded hover:border-dashed shadow-inner shadow-blue-100 border mx-0.5 not-italic">
+                              <span className="cursor-help px-1.5 py-0.5 border-gray-100 hover:border-blue-900 hover:rounded hover:border-dashed border mx-0.5 not-italic">
                                 {displayProjectSlug}
                               </span>
                             </TooltipTrigger>
@@ -321,7 +321,7 @@ export function ProjectPage({
                           </Tooltip>
                         </TooltipProvider>
 
-                        <span className="px-0.5 text-gray-600 font-medium bg-gray-500/5">
+                        <span className="px-2 text-gray-600 bg-gray-200 font-semibold rounded">
                           /
                         </span>
                         {displayData.prefix && (
@@ -330,7 +330,7 @@ export function ProjectPage({
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <span className="cursor-help px-1.5 pr-0.5 py-0.5 border-gray-100 hover:border-blue-900 hover:rounded hover:border-dashed shadow-inner shadow-blue-100 border mx-0.5 not-italic">
+                                  <span className="cursor-help px-1.5 pr-0.5 py-0.5 border-gray-100 hover:border-blue-900 hover:rounded hover:border-dashed border mx-0.5 not-italic">
                                     {`${displayData.prefix}`}
                                   </span>
                                 </TooltipTrigger>
@@ -349,7 +349,7 @@ export function ProjectPage({
                                 </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
-                            <span className="px-0 text-gray-600 font-medium bg-gray-500/5">
+                            <span className="px-2 text-gray-600 font-semibold bg-gray-200 rounded">
                               -123
                             </span>
                           </>

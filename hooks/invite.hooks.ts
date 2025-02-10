@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  deleteInvitationAction,
   getUserInvitesAction,
   respondToInvitationAction,
 } from "@/actions/invite.actions";
@@ -47,6 +48,23 @@ export const useRespondToInvitation = () => {
       queryClient.invalidateQueries({ queryKey: ["user-invites"] });
       queryClient.invalidateQueries({ queryKey: ["profile"] });
       queryClient.invalidateQueries({ queryKey: ["projects"] });
+    },
+  });
+};
+
+export const useDeleteInvitation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (invitationId: string) => {
+      const { error } = await deleteInvitationAction(invitationId);
+      if (error) throw new Error(error);
+      return null;
+    },
+    onSuccess: () => {
+      // Invalidate both project and invites queries since they contain invitation data
+      queryClient.invalidateQueries({ queryKey: ["project"] });
+      queryClient.invalidateQueries({ queryKey: ["user-invites"] });
     },
   });
 };

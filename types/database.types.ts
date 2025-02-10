@@ -718,6 +718,13 @@ export type Database = {
         }
         Returns: undefined
       }
+      delete_project_invitation: {
+        Args: {
+          p_invitation_id: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       generate_unique_slug: {
         Args: {
           base_slug: string

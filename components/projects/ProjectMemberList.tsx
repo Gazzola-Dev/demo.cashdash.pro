@@ -14,12 +14,21 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
+import { useDeleteInvitation } from "@/hooks/invite.hooks";
 import { useGetProject, useInviteMember } from "@/hooks/project.hooks";
+import { useToast } from "@/hooks/use-toast";
+import { useDialogQueue } from "@/hooks/useDialogQueue";
 import { useGetUser, useIsAdmin } from "@/hooks/user.hooks";
 import { redactEmail } from "@/lib/string.util";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, ChevronUp, MailPlus, UserPlus } from "lucide-react";
+import {
+  AlertCircle,
+  ChevronUp,
+  MailPlus,
+  Trash,
+  UserPlus,
+} from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -34,8 +43,11 @@ export function ProjectMemberList({ isDraft = false }: { isDraft?: boolean }) {
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const isAdmin = useIsAdmin();
   const { mutate: inviteMember, isPending } = useInviteMember();
+  const { mutate: deleteInvite } = useDeleteInvitation();
   const { data: project } = useGetProject();
   const { data: user } = useGetUser();
+  const { dialog } = useDialogQueue();
+  const { toast } = useToast();
 
   const form = useForm<InviteFormValues>({
     resolver: zodResolver(inviteSchema),
@@ -64,6 +76,32 @@ export function ProjectMemberList({ isDraft = false }: { isDraft?: boolean }) {
           },
         },
       );
+  };
+
+  const handleDeleteInvitation = (id: string) => {
+    dialog({
+      title: "Delete Invitation",
+      description:
+        "Are you sure you want to delete this invitation? This action cannot be undone.",
+      variant: "destructive",
+      onConfirm: () => {
+        deleteInvite(id, {
+          onSuccess: () => {
+            toast({
+              title: "Invitation deleted successfully",
+            });
+          },
+          onError: error => {
+            toast({
+              title: "Error deleting invitation",
+              description:
+                error instanceof Error ? error.message : "An error occurred",
+              variant: "destructive",
+            });
+          },
+        });
+      },
+    });
   };
 
   return (
@@ -180,7 +218,14 @@ export function ProjectMemberList({ isDraft = false }: { isDraft?: boolean }) {
                   </AvatarFallback>
                 </Avatar>
 
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 relative">
+                  <Button
+                    onClick={() => handleDeleteInvitation(invite.id)}
+                    variant="ghost"
+                    className="absolute top-0 right-0"
+                  >
+                    <Trash className="h-4 w-4" />
+                  </Button>
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-medium truncate text-muted-foreground">
                       {redactEmail(invite.email)}
