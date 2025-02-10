@@ -3,11 +3,7 @@ import { listProjectsAction } from "@/actions/project.actions";
 import createMiddlewareClient from "@/clients/middleware-client";
 import configuration from "@/configuration";
 import { conditionalLog } from "@/lib/log.utils";
-import { Tables } from "@/types/database.types";
 import { NextRequest, NextResponse } from "next/server";
-
-type Profile = Tables<"profiles">;
-type Project = Tables<"projects">;
 
 async function middleware(request: NextRequest, response: NextResponse) {
   const hookName = "middleware";
@@ -26,8 +22,8 @@ async function middleware(request: NextRequest, response: NextResponse) {
     pathname.startsWith("/svg/") ||
     pathname.startsWith("/_next/") ||
     pathname.startsWith("/api/") ||
-    pathname.startsWith("/__nextjs") || // Add this line to handle Next.js internal routes
-    pathname.includes(".") // Skip files with extensions
+    pathname.startsWith("/__nextjs") ||
+    pathname.includes(".")
   ) {
     conditionalLog(hookName, { status: "bypassed", pathname }, shouldLog);
     return response;
@@ -57,32 +53,24 @@ async function middleware(request: NextRequest, response: NextResponse) {
   } = await supabase.auth.getUser();
 
   if (sessionError || !user) {
-    const redirectUrl =
-      pathSegments[0] === "projects" && pathSegments[1] !== "new"
-        ? configuration.paths.project.new
-        : pathname === configuration.paths.project.new ||
-            pathname === configuration.paths.appHome
-          ? pathname
-          : configuration.paths.appHome;
-
     conditionalLog(
       hookName,
-      { status: "unauthenticated", redirectUrl, sessionError },
+      { status: "unauthenticated", sessionError },
       shouldLog,
     );
 
-    return redirectUrl === pathname
-      ? response
-      : NextResponse.redirect(new URL(redirectUrl, request.url));
+    return NextResponse.redirect(
+      new URL(configuration.paths.appHome, request.url),
+    );
   }
 
   // Check if route requires admin access
-  const isProtectedRoute =
-    pathname.endsWith("/projects/new") ||
-    pathname.endsWith("/tasks/new") ||
-    pathname.endsWith("/projects/all");
+  const isAdminRoute =
+    pathname === configuration.paths.project.new ||
+    pathname ===
+      configuration.paths.tasks.new({ project_slug: pathSegments?.[1] });
 
-  if (isProtectedRoute) {
+  if (isAdminRoute) {
     const { data: roles, error: rolesError } = await supabase
       .from("user_roles")
       .select("role")
@@ -90,26 +78,14 @@ async function middleware(request: NextRequest, response: NextResponse) {
       .eq("role", "admin");
 
     if (rolesError || !roles.length) {
-      let redirectUrl = configuration.paths.appHome;
-
-      if (pathname.endsWith("/projects/new")) {
-        redirectUrl = configuration.paths.project.all;
-      } else {
-        // For /tasks/new, extract project slug to redirect to project tasks
-        const projectSlug = pathSegments[0];
-        if (projectSlug) {
-          redirectUrl = configuration.paths.tasks.all({
-            project_slug: projectSlug,
-          });
-        }
-      }
-
       conditionalLog(
         hookName,
-        { status: "admin_required", redirectUrl, rolesError },
+        { status: "admin_required", rolesError },
         shouldLog,
       );
-      return NextResponse.redirect(new URL(redirectUrl, request.url));
+      return NextResponse.redirect(
+        new URL(configuration.paths.appHome, request.url),
+      );
     }
   }
 
@@ -134,25 +110,8 @@ async function middleware(request: NextRequest, response: NextResponse) {
 
   const { data: invites } = await getUserInvitesAction();
   const { data: projects } = await listProjectsAction();
-  const { data: memberships } = await supabase
-    .from("project_members")
-    .select("project_id:project(id, slug)")
-    .eq("user_id", user.id);
 
-  // Allow access to projects list and new project page for authenticated users
-  if (
-    pathname === configuration.paths.project.all ||
-    pathname === configuration.paths.project.new
-  ) {
-    conditionalLog(
-      hookName,
-      { status: "project_access_allowed", pathname, user_id: user.id },
-      shouldLog,
-    );
-    return response;
-  }
-
-  if (!memberships?.length && !invites?.invitations.length) {
+  if (!projects?.length && !invites?.invitations.length) {
     const { data: roles, error: rolesError } = await supabase
       .from("user_roles")
       .select("role")
@@ -173,7 +132,7 @@ async function middleware(request: NextRequest, response: NextResponse) {
     }
   }
 
-  if (!memberships?.length) {
+  if (!projects?.length) {
     conditionalLog(
       hookName,
       {
@@ -195,7 +154,7 @@ async function middleware(request: NextRequest, response: NextResponse) {
     return response;
   }
 
-  // If no current project, assign first available project
+  // If no current project, assign first available project using SECURITY DEFINER function
   if (!profile.current_project_id) {
     const firstProject = projects?.[0];
     if (!firstProject) {
@@ -209,11 +168,14 @@ async function middleware(request: NextRequest, response: NextResponse) {
       );
     }
 
-    // Update profile with current project
-    const { error: updateError } = await supabase
-      .from("profiles")
-      .update({ current_project_id: firstProject.id })
-      .eq("id", user.id);
+    // Call the SECURITY DEFINER function to update current project
+    const { error: updateError } = await supabase.rpc(
+      "set_user_current_project",
+      {
+        p_user_id: user.id,
+        p_project_id: firstProject.id,
+      },
+    );
 
     conditionalLog(
       hookName,
@@ -226,6 +188,15 @@ async function middleware(request: NextRequest, response: NextResponse) {
       shouldLog,
     );
 
+    if (updateError) {
+      // Log error but don't fail - user can still access the app
+      conditionalLog(
+        hookName,
+        { status: "update_error", error: updateError },
+        shouldLog,
+      );
+    }
+
     return NextResponse.redirect(
       new URL(
         configuration.paths.project.overview({
@@ -236,13 +207,16 @@ async function middleware(request: NextRequest, response: NextResponse) {
     );
   }
 
-  // Find the current project from memberships
   const currentProject = projects?.find(
     p => p.id === profile.current_project_id,
   );
 
   // If URL project slug doesn't match any user projects
-  if (urlProjectSlug && !projectSlugs?.includes(urlProjectSlug)) {
+  if (
+    urlProjectSlug &&
+    !projectSlugs?.includes(urlProjectSlug) &&
+    urlProjectSlug !== "projects"
+  ) {
     const redirectProject = currentProject || projects?.[0];
     conditionalLog(
       hookName,

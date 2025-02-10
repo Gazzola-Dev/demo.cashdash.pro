@@ -806,6 +806,13 @@ export type Database = {
         }
         Returns: Json
       }
+      set_user_current_project: {
+        Args: {
+          p_user_id: string
+          p_project_id: string
+        }
+        Returns: undefined
+      }
       to_kebab_case: {
         Args: {
           text_input: string

@@ -14,6 +14,8 @@ import {
   verifyNoProjectAccess,
 } from "@/cypress/e2e/test.util.cy";
 
+// TODO: add additional project with admin, check if it shows only on certain lists
+
 // Environment Variables
 const email1 = Cypress.env("TEST_EMAIL_1");
 const email2 = Cypress.env("TEST_EMAIL_2");

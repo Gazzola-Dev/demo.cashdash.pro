@@ -10,6 +10,7 @@ const whitelistedDirs = [
   "lib", // Utility functions
   "app", // Page components and routing
   "supabase/migrations", // Database schema and functions
+  "middleware", // Middleware functions
 ];
 
 // Specific subdirectories to exclude even if under whitelisted directories
@@ -29,6 +30,7 @@ const whitelistedRootFiles = [
 
   // Documentation
   "README.md",
+  "middleware.ts",
 ];
 
 // System files to ignore

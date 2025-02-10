@@ -18,6 +18,7 @@ import {
   ProjectWithDetails,
 } from "@/types/project.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { useToastQueue } from "./useToastQueue";
 
 type Project = Tables<"projects">;
@@ -77,6 +78,7 @@ export const useCreateProject = ({
   const hookName = "useCreateProject";
   const queryClient = useQueryClient();
   const { toast } = useToastQueue();
+  const router = useRouter();
 
   return useMutation({
     mutationFn: async (
@@ -90,7 +92,6 @@ export const useCreateProject = ({
     onSuccess: data => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
       queryClient.invalidateQueries({ queryKey: ["profile"] });
-
       toast({
         title: successMessage || SuccessMessages.CREATE,
       });

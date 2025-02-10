@@ -4,7 +4,7 @@ import getSupabaseServerActionClient from "@/clients/action-client";
 import getActionResponse from "@/lib/action.util";
 import { conditionalLog } from "@/lib/log.utils";
 import { ActionResponse } from "@/types/action.types";
-import { Tables, TablesInsert } from "@/types/database.types";
+import { TablesInsert } from "@/types/database.types";
 import {
   ProfileResponse,
   ProfileWithDetails,
@@ -88,8 +88,6 @@ export const updateProfileAction = async (
   }
 };
 
-type Project = Tables<"projects">;
-
 export const createProjectAction = async (
   project: TablesInsert<"projects">,
 ): Promise<ActionResponse<ProjectWithDetails>> => {
@@ -105,10 +103,16 @@ export const createProjectAction = async (
     const { data: projectData, error: projectError } = await supabase.rpc(
       "create_project_with_owner",
       {
-        project_data: project,
-        owner_id: userData.user.id,
+        p_name: project.name,
+        p_description: project.description || "",
+        p_prefix: project.prefix,
+        p_slug: project.slug,
+        p_owner_id: userData.user.id,
       },
     );
+    const typesProjectData = projectData as any as ProjectWithDetails | null;
+
+    if (!typesProjectData) throw new Error("No data returned from server");
 
     conditionalLog(actionName, { projectData, projectError }, true);
     if (projectError) throw projectError;
@@ -131,7 +135,7 @@ export const createProjectAction = async (
         project_metrics (*)
       `,
       )
-      .eq("id", projectData.id)
+      .eq("id", typesProjectData?.id)
       .single();
 
     conditionalLog(actionName, { fullProject, fetchError }, true);
@@ -152,7 +156,7 @@ export const createProjectAction = async (
 
     const { error: profileError } = await supabase
       .from("profiles")
-      .update({ current_project_id: projectData.id })
+      .update({ current_project_id: typesProjectData.id })
       .eq("id", userData.user.id);
 
     conditionalLog(actionName, { profileError }, true);
