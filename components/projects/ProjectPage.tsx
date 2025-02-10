@@ -350,7 +350,7 @@ export function ProjectPage({
                               </Tooltip>
                             </TooltipProvider>
                             <span className="px-2 text-gray-600 font-semibold bg-gray-200 rounded">
-                              -123
+                              123
                             </span>
                           </>
                         )}
