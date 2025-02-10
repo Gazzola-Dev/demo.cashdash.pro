@@ -4,9 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+} from "@/components/ui/tooltip";
 import { useGetProjectSlug } from "@/hooks/project.hooks";
 import { useIsAdmin } from "@/hooks/user.hooks";
 import { ProjectWithDetails } from "@/types/project.types";
+import { TooltipTrigger } from "@radix-ui/react-tooltip";
 import { LoaderCircle, Save, TerminalIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDebounce } from "use-debounce";
@@ -95,6 +101,15 @@ export function ProjectPage({
   };
 
   const displayData = isNew ? formData : { ...projectData, ...formData };
+
+  const displayProjectSlug =
+    !nameIsChanged && !isNew ? (
+      projectData?.slug
+    ) : isSlugPending ? (
+      <LoaderCircle className="h-4 w-4 animate-spin" />
+    ) : (
+      displayData?.slug || "my-project"
+    );
 
   const isValid = Boolean(
     displayData?.name && displayData?.prefix && displayData?.slug,
@@ -216,37 +231,68 @@ export function ProjectPage({
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Project Slug</label>
+                <label className="text-sm font-medium">Project Prefix</label>
+                {renderField("Project Prefix", displayData?.prefix, "prefix")}
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Example URL</label>
                 <div className="flex items-center space-x-2">
                   <div className="flex-1 bg-muted rounded-md dark:text-gray-200 text-gray-900 italic relative">
-                    <span className="py-2 px-3 bg-gray-50 dark:bg-gray-900 rounded-md flex items-center tracking-wide">
-                      <span className="px-1 text-gray-500 tracking-normal">
-                        cashdash.pro/
-                      </span>{" "}
-                      {!nameIsChanged && !isNew ? (
-                        projectData?.slug
-                      ) : isSlugPending ? (
-                        <LoaderCircle className="h-4 w-4 animate-spin" />
-                      ) : !debouncedName ? (
-                        "my-project"
-                      ) : (
-                        displayData?.slug || "my-project"
-                      )}
+                    <span className="pl-2 py-0.5 text-gray-600 font-medium bg-gray-500/5 rounded-l-lg">
+                      cashdash.pro /
+                    </span>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="cursor-help px-1.5 py-0.5 border-gray-100 hover:border-blue-900 hover:rounded hover:border-dashed shadow-inner border mx-0.5 not-italic">
+                            {displayProjectSlug}
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent className="pr-0">
+                          {isSlugPending ? (
+                            "Generating slug..."
+                          ) : (
+                            <div className="py-1 px-0.5 font-bold text-sm">
+                              Your project can be accessed at:
+                              <span className="mx-2 px-1.5 py-1 bg-background text-gray-800 rounded font-bold">
+                                cashdash.pro/{displayProjectSlug}
+                              </span>
+                            </div>
+                          )}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+
+                    <span className="px-0.5 text-gray-600 font-medium bg-gray-500/5">
+                      /
+                    </span>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="cursor-help px-1.5 pr-0.5 py-0.5 border-gray-100 hover:border-blue-900 hover:rounded hover:border-dashed shadow-inner border mx-0.5 not-italic">
+                            {`${displayData.prefix?.toLowerCase()}`}
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent className="pr-0">
+                          <div className="py-1 px-0.5 font-bold text-sm ">
+                            Each task can be accessed at:
+                            <span className="mx-2 px-1.5 py-1 bg-background text-gray-800 rounded font-bold">
+                              cashdash.pro/{displayProjectSlug}/
+                              {displayData.prefix?.toLowerCase()}-
+                            </span>
+                            +
+                            <span className="mx-2 px-1.5 py-1 bg-background text-gray-800 rounded font-bold">
+                              Task number
+                            </span>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <span className="px-0 text-gray-600 font-medium bg-gray-500/5">
+                      -1
                     </span>
                   </div>
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Project Prefix</label>
-                {renderField("Project Prefix", displayData?.prefix, "prefix")}
-                <p className="text-xs text-muted-foreground">
-                  Used for task IDs (e.g.,{" "}
-                  <span className="font-semibold italic">
-                    {displayData?.prefix || "MYPRJ"}
-                  </span>
-                  -123)
-                </p>
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Description</label>
