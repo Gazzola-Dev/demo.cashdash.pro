@@ -1,7 +1,6 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -14,9 +13,9 @@
     --primary-foreground: 210 40% 98%;
     --secondary: 199 89% 48%;
     --secondary-foreground: 222 47% 11%;
-    --muted: 222 47% 95%;
-    --muted-foreground: 222 47% 40%;
-    --accent: 199 89% 85%;
+    --muted: 222 47% 92%;
+    --muted-foreground: 222 47% 35%;
+    --accent: 199 89% 80%;
     --accent-foreground: 222 47% 11%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
@@ -38,7 +37,6 @@
     --sidebar-border: 222 47% 84%;
     --sidebar-ring: 222 47% 31%;
   }
-
   .dark {
     --background: 222 47% 6%;
     --foreground: 210 40% 98%;
@@ -50,9 +48,9 @@
     --primary-foreground: 210 40% 98%;
     --secondary: 199 89% 48%;
     --secondary-foreground: 222 47% 8%;
-    --muted: 222 47% 16%;
-    --muted-foreground: 222 47% 75%;
-    --accent: 222 47% 16%;
+    --muted: 222 47% 20%;
+    --muted-foreground: 222 47% 85%;
+    --accent: 222 47% 25%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
@@ -73,15 +71,12 @@
     --sidebar-border: 222 47% 16%;
     --sidebar-ring: 222 47% 51%;
   }
-
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground;
   }
-
   #nprogress > * {
     background: hsl(var(--muted-foreground)) !important;
   }

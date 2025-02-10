@@ -50,7 +50,6 @@ export const useGetProject = (projectSlug?: string) => {
   const hookName = "useGetProject";
   const { data: profile } = useGetProfile();
   const slug = projectSlug || profile?.current_project?.slug || "";
-
   return useQuery({
     queryKey: ["project", projectSlug],
     queryFn: async () => {

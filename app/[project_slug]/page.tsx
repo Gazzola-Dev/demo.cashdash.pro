@@ -2,6 +2,14 @@
 
 import InvitePage from "@/app/[project_slug]/invite/page";
 import { ProjectPage } from "@/components/projects/ProjectPage";
+import ProjectPageSkeleton from "@/components/projects/ProjectPageSkeleton";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useGetUserInvites } from "@/hooks/invite.hooks";
 import { useGetProject, useUpdateProject } from "@/hooks/project.hooks";
 
@@ -12,8 +20,11 @@ interface ProjectPageProps {
 }
 
 export default function ProjectOverviewPage({ params }: ProjectPageProps) {
-  const { data: projectData } = useGetProject(params.project_slug);
-  const { data: invitesData } = useGetUserInvites();
+  const { data: projectData, isPending: getProjectIsPending } = useGetProject(
+    params.project_slug,
+  );
+  const { data: invitesData, isPending: getInvitesIsPending } =
+    useGetUserInvites();
   const { mutate: updateProject } = useUpdateProject();
 
   const hasInvite = invitesData?.invitations.some(
@@ -30,6 +41,24 @@ export default function ProjectOverviewPage({ params }: ProjectPageProps) {
       });
     }
   };
+
+  if (getInvitesIsPending || getProjectIsPending)
+    return <ProjectPageSkeleton />;
+
+  if (!projectData && !hasInvite)
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Project Not Found</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <CardDescription>
+            The project you are looking for does not exist or you do not have
+            access to it.
+          </CardDescription>
+        </CardContent>
+      </Card>
+    );
 
   if (hasInvite) return <InvitePage params={params} />;
 

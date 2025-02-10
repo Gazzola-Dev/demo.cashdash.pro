@@ -43,6 +43,8 @@ export function ProjectPage({
       : {},
   );
 
+  const nameIsChanged = projectData?.name !== formData.name;
+
   const [hasChanges, setHasChanges] = useState(false);
   const [debouncedName] = useDebounce(formData.name, 500);
   const { mutate: getProjectSlug, isPending: isSlugPending } =
@@ -221,7 +223,9 @@ export function ProjectPage({
                       <span className="px-1 text-gray-500 tracking-normal">
                         cashdash.pro/
                       </span>{" "}
-                      {isSlugPending ? (
+                      {!nameIsChanged && !isNew ? (
+                        projectData?.slug
+                      ) : isSlugPending ? (
                         <LoaderCircle className="h-4 w-4 animate-spin" />
                       ) : !debouncedName ? (
                         "my-project"

@@ -1,4 +1,5 @@
 import { getUserInvitesAction } from "@/actions/invite.actions";
+import { listProjectsAction } from "@/actions/project.actions";
 import createMiddlewareClient from "@/clients/middleware-client";
 import configuration from "@/configuration";
 import { conditionalLog } from "@/lib/log.utils";
@@ -132,9 +133,10 @@ async function middleware(request: NextRequest, response: NextResponse) {
   }
 
   const { data: invites } = await getUserInvitesAction();
+  const { data: projects } = await listProjectsAction();
   const { data: memberships } = await supabase
     .from("project_members")
-    .select("project_id, projects(id, slug)")
+    .select("project_id:project(id, slug)")
     .eq("user_id", user.id);
 
   // Allow access to projects list and new project page for authenticated users
@@ -185,10 +187,7 @@ async function middleware(request: NextRequest, response: NextResponse) {
   }
 
   // Extract project slugs and find current project
-  const projects = memberships
-    .map(m => m.projects as Project)
-    .filter((p): p is Project => !!p);
-  const projectSlugs = projects.map(p => p.slug);
+  const projectSlugs = projects?.map(p => p.slug);
   const urlProjectSlug = pathSegments[0];
 
   // Skip project slug validation for Next.js internal routes
@@ -198,7 +197,7 @@ async function middleware(request: NextRequest, response: NextResponse) {
 
   // If no current project, assign first available project
   if (!profile.current_project_id) {
-    const firstProject = projects[0];
+    const firstProject = projects?.[0];
     if (!firstProject) {
       conditionalLog(
         hookName,
@@ -238,28 +237,32 @@ async function middleware(request: NextRequest, response: NextResponse) {
   }
 
   // Find the current project from memberships
-  const currentProject = projects.find(
+  const currentProject = projects?.find(
     p => p.id === profile.current_project_id,
   );
 
   // If URL project slug doesn't match any user projects
-  if (urlProjectSlug && !projectSlugs.includes(urlProjectSlug)) {
-    const redirectProject = currentProject || projects[0];
+  if (urlProjectSlug && !projectSlugs?.includes(urlProjectSlug)) {
+    const redirectProject = currentProject || projects?.[0];
     conditionalLog(
       hookName,
       {
         status: "invalid_project_slug",
         user_id: user.id,
         attempted_slug: urlProjectSlug,
-        redirect_to: redirectProject.slug,
+        redirect_to: redirectProject?.slug,
+        redirectProject,
       },
       shouldLog,
     );
+
     return NextResponse.redirect(
       new URL(
-        configuration.paths.project.overview({
-          project_slug: redirectProject.slug,
-        }),
+        redirectProject
+          ? configuration.paths.project.overview({
+              project_slug: redirectProject?.slug,
+            })
+          : configuration.paths.appHome,
         request.url,
       ),
     );
@@ -272,7 +275,7 @@ async function middleware(request: NextRequest, response: NextResponse) {
     urlProjectSlug !== currentProject.slug
   ) {
     // Update current project to match URL
-    const newCurrentProject = projects.find(p => p.slug === urlProjectSlug);
+    const newCurrentProject = projects?.find(p => p.slug === urlProjectSlug);
     if (newCurrentProject) {
       const { error: updateError } = await supabase
         .from("profiles")

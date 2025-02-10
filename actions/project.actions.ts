@@ -151,6 +151,7 @@ export const getProjectAction = async (
 ): Promise<ActionResponse<ProjectWithDetails>> => {
   const actionName = "getProjectAction";
   const supabase = await getSupabaseServerActionClient();
+  console.log("projectSlug", projectSlug);
 
   try {
     const { data, error } = await supabase.rpc("get_project_data", {
