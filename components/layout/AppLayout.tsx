@@ -1,5 +1,6 @@
 "use client";
 
+import LogoText from "@/components/SVG/LogoText";
 import NavUser from "@/components/layout/NavUser";
 import { ProjectSwitcher } from "@/components/layout/ProjectSwitcher";
 import RouteBreadcrumb from "@/components/layout/RouteBreadCrumb";
@@ -50,20 +51,7 @@ export function AppLayout({ children, projectSlug }: AppLayoutProps) {
               href={configuration.paths.about}
               className="flex items-center justify-center gap-2 h-full pr-[1.1rem]"
             >
-              <img
-                className="w-24 z-10 -mr-1 pt-0.5 dark:hidden"
-                src="/svg/brand/logo-with-text-light.svg"
-                width={473}
-                height={293}
-                alt="Cash Dash Pro Logo"
-              />
-              <img
-                className="w-24 z-10 -mr-1 pt-0.5 hidden dark:block"
-                src="/svg/brand/logo-with-text-dark.svg"
-                width={473}
-                height={293}
-                alt="Cash Dash Pro Logo"
-              />
+              <LogoText className="fill-blue-700 dark:fill-blue-400 w-24 z-10 -mr-1 pt-0.5" />
             </Link>
           </header>
           <div className="flex flex-1 flex-col gap-4 p-4 justify-between w-full pb-1">

@@ -1,4 +1,5 @@
 "use client";
+import Logo from "@/components/SVG/Logo";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -31,20 +32,7 @@ export default function RouteBreadcrumb() {
         href={configuration.paths.appHome}
         className="h-full flex items-center justify-center"
       >
-        <img
-          className="w-8 z-10 -mr-1 dark:hidden"
-          src="/svg/brand/logo-light.svg"
-          width={473}
-          height={293}
-          alt="Cash Dash Pro Logo"
-        />
-        <img
-          className="w-8 z-10 -mr-1 hidden dark:block"
-          src="/svg/brand/logo-dark.svg"
-          width={473}
-          height={293}
-          alt="Cash Dash Pro Logo"
-        />
+        <Logo className="w-8 fill-blue-700 dark:fill-blue-400" />
       </BreadcrumbLink>
     </BreadcrumbItem>
   );
