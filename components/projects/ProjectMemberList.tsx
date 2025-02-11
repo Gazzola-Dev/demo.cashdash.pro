@@ -19,7 +19,6 @@ import { useGetProject, useInviteMember } from "@/hooks/project.hooks";
 import { useToast } from "@/hooks/use-toast";
 import { useDialogQueue } from "@/hooks/useDialogQueue";
 import { useGetUser, useIsAdmin } from "@/hooks/user.hooks";
-import { redactEmail } from "@/lib/string.util";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -228,7 +227,7 @@ export function ProjectMemberList({ isDraft = false }: { isDraft?: boolean }) {
                   </Button>
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-medium truncate text-muted-foreground">
-                      {redactEmail(invite.email)}
+                      {invite.email}
                     </p>
                     <div className="flex items-center gap-2"></div>
                   </div>
