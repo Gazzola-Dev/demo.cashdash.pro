@@ -23,6 +23,7 @@ import {
 import configuration from "@/configuration";
 import { useGetProfile } from "@/hooks/profile.hooks";
 import { useSignOut } from "@/hooks/user.hooks";
+import { capitalizeFirstLetter } from "@/lib/string.util";
 import { cn } from "@/lib/utils";
 import { LogOut } from "lucide-react";
 import Link from "next/link";
@@ -40,6 +41,29 @@ export function NavUser() {
 
   if (!profileData) return null;
 
+  const avatarContent = (
+    <>
+      <Avatar className="size-8 rounded-lg">
+        <AvatarImage
+          src={profileData.profile.avatar_url ?? ""}
+          alt={profileData.profile.display_name ?? "User"}
+        />
+        <AvatarFallback className="rounded-lg dark:bg-gray-700 dark:text-gray-100">
+          {profileData.profile.display_name?.charAt(0) ??
+            capitalizeFirstLetter(profileData.profile.email.slice(0, 2)) ??
+            "?"}
+        </AvatarFallback>
+      </Avatar>
+      <div className="grid flex-1 text-left text-sm leading-tight">
+        <span className="truncate font-semibold dark:text-gray-100">
+          {profileData.profile.display_name ||
+            capitalizeFirstLetter(profileData.profile.email.split("@")?.[0]) ||
+            "Unnamed User"}
+        </span>
+      </div>
+    </>
+  );
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -53,20 +77,7 @@ export function NavUser() {
                 open ? "px-1 py-2" : "p-0",
               )}
             >
-              <Avatar className="size-8 rounded-lg">
-                <AvatarImage
-                  src={profileData.profile.avatar_url ?? ""}
-                  alt={profileData.profile.display_name ?? "User"}
-                />
-                <AvatarFallback className="rounded-lg dark:bg-gray-700 dark:text-gray-100">
-                  {profileData.profile.display_name?.charAt(0) ?? "?"}
-                </AvatarFallback>
-              </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold dark:text-gray-100">
-                  {profileData.profile.display_name ?? "Unnamed User"}
-                </span>
-              </div>
+              {avatarContent}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -83,20 +94,7 @@ export function NavUser() {
                       href={configuration.paths.appHome}
                       className="flex items-center gap-2 p-1 cursor-pointer dark:hover:bg-gray-800 rounded-md space-x-1.5"
                     >
-                      <Avatar className="size-8 rounded-lg">
-                        <AvatarImage
-                          src={profileData.profile.avatar_url ?? ""}
-                          alt={profileData.profile.display_name ?? "User"}
-                        />
-                        <AvatarFallback className="rounded-lg dark:bg-gray-700 dark:text-gray-100">
-                          {profileData.profile.display_name?.charAt(0) ?? "?"}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="grid flex-1 text-left text-sm">
-                        <span className="font-semibold dark:text-gray-100">
-                          {profileData.profile.display_name ?? "Unnamed User"}
-                        </span>
-                      </div>
+                      {avatarContent}
                     </Link>
                   </DropdownMenuLabel>
                 </TooltipTrigger>

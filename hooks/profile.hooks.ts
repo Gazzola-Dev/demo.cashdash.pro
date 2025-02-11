@@ -5,10 +5,10 @@ import {
   getProfileAction,
   updateProfileAction,
 } from "@/actions/profile.actions";
+import { useToast } from "@/hooks/use-toast";
 import { conditionalLog } from "@/lib/log.utils";
 import { ProfileResponse, UpdateProfileInput } from "@/types/profile.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useToastQueue } from "./useToastQueue";
 
 enum SuccessMessages {
   UPDATE = "Profile updated successfully",
@@ -32,7 +32,7 @@ export const useGetProfile = (initialData?: ProfileResponse["data"]) => {
 export const useUpdateProfile = () => {
   const hookName = "useUpdateProfile";
   const queryClient = useQueryClient();
-  const { toast } = useToastQueue();
+  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (updates: UpdateProfileInput) => {

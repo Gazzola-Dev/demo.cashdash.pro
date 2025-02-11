@@ -34,11 +34,12 @@ export function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
   const { toast } = useToastQueue();
 
   const handleSave = () => {
+    setIsEditing(false);
+    if (displayName === user.profile.display_name) return;
     updateProfile(
       { display_name: displayName },
       {
         onSuccess: () => {
-          setIsEditing(false);
           toast({
             title: "Profile updated successfully",
           });
@@ -79,11 +80,14 @@ export function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
             ) : (
               <div
                 className={cn(
-                  "flex items-center text-sm font-light",
+                  "flex items-center text-sm pl-3",
                   !displayName && "italic text-gray-700",
                 )}
               >
-                <button onClick={() => setIsEditing(true)} className="text-xl">
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="text-base"
+                >
                   {displayName || "Enter your name here..."}
                 </button>
                 <Button
@@ -96,6 +100,7 @@ export function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
               </div>
             )}
           </div>
+          <p className="text-muted-foreground">{user.profile.email}</p>
           {isAdmin && (
             <div className="flex items-center justify-center mt-2 text-sm text-muted-foreground">
               <Shield className="h-4 w-4 mr-1" />

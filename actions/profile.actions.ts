@@ -4,7 +4,7 @@ import getSupabaseServerActionClient from "@/clients/action-client";
 import getActionResponse from "@/lib/action.util";
 import { conditionalLog } from "@/lib/log.utils";
 import { ActionResponse } from "@/types/action.types";
-import { TablesInsert } from "@/types/database.types";
+import { Json, TablesInsert } from "@/types/database.types";
 import {
   ProfileResponse,
   ProfileWithDetails,
@@ -69,19 +69,20 @@ export const updateProfileAction = async (
       error: userError,
     } = await supabase.auth.getUser();
 
-    conditionalLog(actionName, { user, userError }, true);
+    conditionalLog(actionName, { userData: user, userError }, true);
     if (userError || !user) throw new Error("Not authenticated");
 
-    const { error: updateError } = await supabase
-      .from("profiles")
-      .update(updates)
-      .eq("id", user.id);
+    const { data, error } = await supabase.rpc("update_profile_data", {
+      p_user_id: user.id,
+      p_updates: updates as Json,
+    });
 
-    conditionalLog(actionName, { updateError }, true);
-    if (updateError) throw updateError;
+    conditionalLog(actionName, { data, error }, true);
+    if (error) throw error;
 
-    // Get updated profile data
-    return getProfileAction();
+    return getActionResponse({
+      data: data as any as ProfileResponse["data"],
+    });
   } catch (error) {
     conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });
