@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { Tables } from "@/types/database.types";
 import { TaskResult } from "@/types/task.types";
 import { Edit2, Plus, Save } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type Subtask = Tables<"subtasks">;
 
@@ -16,17 +16,20 @@ interface SubtaskSidebarProps {
   subtasks: TaskResult["subtasks"];
   taskId: string;
   onUpdateSubtask: (subtaskId: string, updates: Partial<Subtask>) => void;
+  updateIsPending?: boolean;
 }
 
 export function SubtaskSidebar({
   subtasks = [],
   taskId,
   onUpdateSubtask,
+  updateIsPending = false,
 }: SubtaskSidebarProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editedTitle, setEditedTitle] = useState("");
   const { mutate: createSubtask } = useCreateSubtask();
   const isAdmin = useIsAdmin();
+  const [isLoading, setIsLoading] = useState<string | null>(null);
 
   const handleEdit = (subtask: Subtask) => {
     setEditingId(subtask.id);
@@ -41,6 +44,7 @@ export function SubtaskSidebar({
   };
 
   const handleToggleComplete = (subtask: Subtask) => {
+    setIsLoading(subtask.id);
     onUpdateSubtask(subtask.id, {
       status: subtask.status === "completed" ? "todo" : "completed",
     });
@@ -64,6 +68,10 @@ export function SubtaskSidebar({
   const showAddButton =
     subtasks.length === 0 ||
     (subtasks[subtasks.length - 1].title.trim() !== "" && isAdmin);
+
+  useEffect(() => {
+    if (!updateIsPending) setIsLoading(null);
+  }, [updateIsPending]);
 
   return (
     <Card className="mt-6">
@@ -93,10 +101,13 @@ export function SubtaskSidebar({
             )}
             <div className="flex items-center flex-1 gap-2">
               <Checkbox
+                disabled={isLoading === subtask.id}
                 id={subtask.id}
                 checked={subtask.status === "completed"}
                 onCheckedChange={() => handleToggleComplete(subtask)}
+                className={cn(isLoading === subtask.id && "opacity-0")}
               />
+
               {editingId === subtask.id ? (
                 <Input
                   value={editedTitle}
@@ -116,6 +127,7 @@ export function SubtaskSidebar({
                 <label
                   htmlFor={subtask.id}
                   className={cn(
+                    isLoading === subtask.id && "animate-pulse",
                     "text-sm cursor-pointer flex-1",
                     !subtask.title.trim() &&
                       index === subtasks.length - 1 &&

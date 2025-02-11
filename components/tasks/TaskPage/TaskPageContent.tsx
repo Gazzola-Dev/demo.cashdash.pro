@@ -14,7 +14,8 @@ function TaskPageContent({
   taskSlug: string;
   initialData: TaskResult;
 }) {
-  const { mutate: updateTask } = useUpdateTask();
+  const { mutate: updateTask, isPending: updateTaskIsPending } =
+    useUpdateTask();
   const { mutate: createComment } = useCreateComment(
     initialData.task.id,
     initialData.task.slug,
@@ -41,6 +42,7 @@ function TaskPageContent({
     <TaskPage
       taskData={taskData}
       onUpdate={handleUpdateTask}
+      updateIsPending={updateTaskIsPending}
       onComment={handleCreateComment}
       onUpdateComment={handleUpdateComment}
     />

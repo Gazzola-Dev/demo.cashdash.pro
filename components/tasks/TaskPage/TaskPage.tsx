@@ -20,6 +20,7 @@ interface TaskPageProps {
   onComment?: (content: string) => void;
   onUpdateComment?: (commentId: string, content: string) => void;
   isNew?: boolean;
+  updateIsPending?: boolean;
 }
 
 export function TaskPage({
@@ -28,6 +29,7 @@ export function TaskPage({
   onComment,
   onUpdateComment,
   isNew = false,
+  updateIsPending = false,
 }: TaskPageProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -164,6 +166,7 @@ export function TaskPage({
           />
 
           <SubtaskSidebar
+            updateIsPending={updateIsPending}
             taskId={taskData?.task?.id}
             subtasks={taskData?.subtasks}
             onUpdateSubtask={(subtaskId, updates) =>

@@ -10,7 +10,10 @@ export default function NewTaskPage() {
 
   const { data: taskData, error, isPending } = useGetDraftTask(projectSlug);
   const isDraft = true;
-  const { mutate: updateTask } = useUpdateTask({}, isDraft);
+  const { mutate: updateTask, isPending: updateTaskIsPending } = useUpdateTask(
+    {},
+    isDraft,
+  );
 
   if (isPending) return null;
 
@@ -25,5 +28,11 @@ export default function NewTaskPage() {
     });
   };
 
-  return <TaskPage taskData={taskData} onUpdate={handleUpdateTask} />;
+  return (
+    <TaskPage
+      updateIsPending={updateTaskIsPending}
+      taskData={taskData}
+      onUpdate={handleUpdateTask}
+    />
+  );
 }

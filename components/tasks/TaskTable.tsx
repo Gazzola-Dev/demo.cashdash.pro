@@ -27,6 +27,7 @@ import { useGetProject } from "@/hooks/project.hooks";
 import { useListTasks, useUpdateTask } from "@/hooks/task.hooks";
 import { useToast } from "@/hooks/use-toast";
 import { useIsAdmin } from "@/hooks/user.hooks";
+import { cn } from "@/lib/utils";
 import { Tables } from "@/types/database.types";
 import { TaskResult, TaskTableProps } from "@/types/task.types";
 import {
@@ -112,7 +113,7 @@ const TaskTable = ({ projectId, projectSlug }: TaskTableProps) => {
               onClick={() =>
                 column.toggleSorting(column.getIsSorted() === "asc")
               }
-              className={isSorted ? "text-blue-600" : ""}
+              className={cn(isSorted && "text-blue-600")}
             >
               Title
               <ArrowUpDown
@@ -122,7 +123,7 @@ const TaskTable = ({ projectId, projectSlug }: TaskTableProps) => {
           );
         },
         cell: ({ row }) => (
-          <span className="font-normal">{row.getValue("title")}</span>
+          <span className="font-normal pl-4">{row.getValue("title")}</span>
         ),
       },
       {

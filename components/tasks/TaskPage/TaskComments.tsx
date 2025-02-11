@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useGetUser } from "@/hooks/user.hooks";
+import { capitalizeFirstLetter } from "@/lib/string.util";
 import { TaskResult } from "@/types/task.types";
 import { format } from "date-fns";
 import { Edit2, Save } from "lucide-react";
@@ -44,10 +45,12 @@ function CommentItem({ comment, onUpdateComment }: CommentItemProps) {
   return (
     <div className="mb-4">
       <div className="flex items-start gap-3">
-        <Avatar className="h-8 w-8">
+        <Avatar className="h-8 w-8 ">
           <AvatarImage src={comment.user.avatar_url || ""} />
-          <AvatarFallback>
-            {comment.user.display_name?.charAt(0) || "?"}
+          <AvatarFallback className="rounded bg-gray-200 dark:bg-gray-700 dark:text-gray-100">
+            {capitalizeFirstLetter(
+              comment.user.display_name?.slice(0, 2) || "?",
+            )}
           </AvatarFallback>
         </Avatar>
         <div className="flex-1">

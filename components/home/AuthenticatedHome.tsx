@@ -1,21 +1,12 @@
 // components/home/AuthenticatedHome.tsx
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useUpdateProfile } from "@/hooks/profile.hooks";
 import { useToastQueue } from "@/hooks/useToastQueue";
 import { useIsAdmin, useSignOut } from "@/hooks/user.hooks";
 import { cn } from "@/lib/utils";
 import { UserWithProfile } from "@/types/user.types";
-import { Check, Edit2, LogOut, Shield, Trash2 } from "lucide-react";
+import { Check, Edit2, LogOut, Shield } from "lucide-react";
 import { useState } from "react";
 
 interface AuthenticatedHomeProps {
@@ -115,7 +106,7 @@ export function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
             Sign out
           </Button>
 
-          <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          {/* <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
             <DialogTrigger asChild>
               <Button variant="destructive" className="w-full">
                 <Trash2 className="mr-2 h-4 w-4" />
@@ -142,7 +133,7 @@ export function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
                 </Button>
               </DialogFooter>
             </DialogContent>
-          </Dialog>
+          </Dialog> */}
         </div>
       </div>
     </main>
