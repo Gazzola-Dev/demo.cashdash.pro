@@ -170,7 +170,6 @@ interface StatusSelectProps {
 }
 
 export const StatusSelect = ({ value, onValueChange }: StatusSelectProps) => {
-  const isAdmin = useIsAdmin();
   const statuses: TaskStatus[] = [
     "backlog",
     "todo",
@@ -181,7 +180,7 @@ export const StatusSelect = ({ value, onValueChange }: StatusSelectProps) => {
   ];
 
   return (
-    <Select value={value} onValueChange={onValueChange} disabled={!isAdmin}>
+    <Select value={value} onValueChange={onValueChange}>
       <SelectTrigger className="w-32">
         <SelectValue>
           <div className="flex items-center gap-2">
