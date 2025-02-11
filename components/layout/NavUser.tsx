@@ -24,7 +24,7 @@ import configuration from "@/configuration";
 import { useGetProfile } from "@/hooks/profile.hooks";
 import { useSignOut } from "@/hooks/user.hooks";
 import { cn } from "@/lib/utils";
-import { Bell, CreditCard, LogOut, Settings2, User } from "lucide-react";
+import { LogOut } from "lucide-react";
 import Link from "next/link";
 import ThemeSwitcher from "./ThemeSwitcher";
 
@@ -112,11 +112,13 @@ export function NavUser() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <DropdownMenuItem
-                      className="cursor-pointer dark:hover:bg-gray-800 dark:focus:bg-gray-800 dark:text-gray-100"
+                      className="cursor-pointer dark:hover:bg-gray-800 dark:focus:bg-gray-800 dark:text-gray-100 px-3"
                       onClick={handleSignOut}
                     >
-                      <LogOut className="mr-2 size-4 dark:text-gray-400" />
-                      Sign out
+                      <div className="flex items-center gap-4">
+                        <LogOut className="size-4" />
+                        <span className="text-sm"> Sign out</span>
+                      </div>
                     </DropdownMenuItem>
                   </TooltipTrigger>
                   <TooltipContent
@@ -124,97 +126,6 @@ export function NavUser() {
                     className="dark:bg-gray-800 dark:text-gray-100"
                   >
                     Sign out of your account
-                  </TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <DropdownMenuItem
-                      className="cursor-pointer dark:hover:bg-gray-800 dark:focus:bg-gray-800"
-                      asChild
-                    >
-                      <Link
-                        href={configuration.paths.settings.profile}
-                        className="dark:text-gray-100"
-                      >
-                        <User className="mr-2 size-4 dark:text-gray-400" />
-                        Profile
-                      </Link>
-                    </DropdownMenuItem>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="right"
-                    className="dark:bg-gray-800 dark:text-gray-100"
-                  >
-                    Update your profile information and settings
-                  </TooltipContent>
-                </Tooltip>
-
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <DropdownMenuItem
-                      className="cursor-pointer dark:hover:bg-gray-800 dark:focus:bg-gray-800"
-                      asChild
-                    >
-                      <Link
-                        href={configuration.paths.settings.notifications}
-                        className="dark:text-gray-100"
-                      >
-                        <Bell className="mr-2 size-4 dark:text-gray-400" />
-                        Notifications
-                      </Link>
-                    </DropdownMenuItem>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="right"
-                    className="dark:bg-gray-800 dark:text-gray-100"
-                  >
-                    Configure your notification preferences
-                  </TooltipContent>
-                </Tooltip>
-
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <DropdownMenuItem
-                      className="cursor-pointer dark:hover:bg-gray-800 dark:focus:bg-gray-800"
-                      asChild
-                    >
-                      <Link
-                        href={configuration.paths.settings.billing}
-                        className="dark:text-gray-100"
-                      >
-                        <CreditCard className="mr-2 size-4 dark:text-gray-400" />
-                        Billing
-                      </Link>
-                    </DropdownMenuItem>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="right"
-                    className="dark:bg-gray-800 dark:text-gray-100"
-                  >
-                    Manage your subscription and billing details
-                  </TooltipContent>
-                </Tooltip>
-
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <DropdownMenuItem
-                      className="cursor-pointer dark:hover:bg-gray-800 dark:focus:bg-gray-800"
-                      asChild
-                    >
-                      <Link
-                        href={configuration.paths.settings.all}
-                        className="dark:text-gray-100"
-                      >
-                        <Settings2 className="mr-2 size-4 dark:text-gray-400" />
-                        All Settings
-                      </Link>
-                    </DropdownMenuItem>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="right"
-                    className="dark:bg-gray-800 dark:text-gray-100"
-                  >
-                    Manage all settings
                   </TooltipContent>
                 </Tooltip>
               </DropdownMenuGroup>

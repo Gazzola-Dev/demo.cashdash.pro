@@ -3,6 +3,7 @@
 import {
   createProjectAction,
   deleteProjectAction,
+  deleteProjectMemberAction,
   getProjectAction,
   getProjectSlugAction,
   inviteMemberAction,
@@ -225,6 +226,33 @@ export const useInviteMember = ({
       toast({
         title: errorMessage || error.message,
         description: "Failed to send invitation",
+        variant: "destructive",
+      });
+    },
+  });
+};
+
+export const useDeleteProjectMember = () => {
+  const hookName = "useDeleteProjectMember";
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (memberId: string): Promise<void> => {
+      const { error } = await deleteProjectMemberAction(memberId);
+      if (error) throw new Error(error);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["project"] });
+      toast({
+        title: "Member removed successfully",
+      });
+    },
+    onError: (error: Error) => {
+      conditionalLog(hookName, { error }, false);
+      toast({
+        title: error.message,
+        description: "Failed to remove member",
         variant: "destructive",
       });
     },

@@ -725,6 +725,13 @@ export type Database = {
         }
         Returns: undefined
       }
+      delete_project_member: {
+        Args: {
+          p_member_id: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       generate_unique_slug: {
         Args: {
           base_slug: string

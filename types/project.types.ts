@@ -91,3 +91,6 @@ export const PROJECT_STATUS_OPTIONS: Project["status"][] = [
   "archived",
   "completed",
 ];
+
+export interface ProjectMemberResponse
+  extends ActionResponse<ProjectMemberWithProfile> {}

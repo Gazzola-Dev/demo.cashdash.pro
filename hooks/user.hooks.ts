@@ -9,6 +9,7 @@ import { ProjectWithDetails } from "@/types/project.types";
 import { UserWithProfile } from "@/types/user.types";
 import { User } from "@supabase/supabase-js";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 
 enum SuccessMessages {
   SIGN_IN_SUCCESS = "Sign in link sent! Check your email :)",
@@ -206,9 +207,9 @@ export const useSignOut = ({
   errorMessage,
   successMessage,
 }: HookOptions<User> = {}) => {
-  const queryClient = useQueryClient();
   const { toast } = useToast();
   const supabase = useSupabase();
+  const router = useRouter();
 
   return useMutation<void, Error, void>({
     mutationFn: async () => {
@@ -216,8 +217,7 @@ export const useSignOut = ({
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["user"] });
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      router.refresh();
       toast({
         title: successMessage || SuccessMessages.SIGN_OUT_SUCCESS,
       });

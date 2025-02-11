@@ -1,3 +1,4 @@
+"use client";
 import ActionButton from "@/components/shared/ActionButton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,11 @@ import {
 } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { useDeleteInvitation } from "@/hooks/invite.hooks";
-import { useGetProject, useInviteMember } from "@/hooks/project.hooks";
+import {
+  useDeleteProjectMember,
+  useGetProject,
+  useInviteMember,
+} from "@/hooks/project.hooks";
 import { useToast } from "@/hooks/use-toast";
 import { useDialogQueue } from "@/hooks/useDialogQueue";
 import { useGetUser, useIsAdmin } from "@/hooks/user.hooks";
@@ -43,6 +48,7 @@ export function ProjectMemberList({ isDraft = false }: { isDraft?: boolean }) {
   const isAdmin = useIsAdmin();
   const { mutate: inviteMember, isPending } = useInviteMember();
   const { mutate: deleteInvite } = useDeleteInvitation();
+  const { mutate: deleteMember } = useDeleteProjectMember();
   const { data: project } = useGetProject();
   const { data: user } = useGetUser();
   const { dialog } = useDialogQueue();
@@ -93,6 +99,34 @@ export function ProjectMemberList({ isDraft = false }: { isDraft?: boolean }) {
           onError: error => {
             toast({
               title: "Error deleting invitation",
+              description:
+                error instanceof Error ? error.message : "An error occurred",
+              variant: "destructive",
+            });
+          },
+        });
+      },
+    });
+  };
+
+  const handleDeleteMember = (memberId: string, memberRole: string) => {
+    dialog({
+      title: "Remove Member",
+      description:
+        memberRole === "owner"
+          ? "Are you sure you want to remove this owner? Make sure there is at least one other owner."
+          : "Are you sure you want to remove this member? This action cannot be undone.",
+      variant: "destructive",
+      onConfirm: () => {
+        deleteMember(memberId, {
+          onSuccess: () => {
+            toast({
+              title: "Member removed successfully",
+            });
+          },
+          onError: error => {
+            toast({
+              title: "Error removing member",
               description:
                 error instanceof Error ? error.message : "An error occurred",
               variant: "destructive",
@@ -194,6 +228,15 @@ export function ProjectMemberList({ isDraft = false }: { isDraft?: boolean }) {
                 </p>
               )}
             </div>
+            {isAdmin && member.user_id !== user?.id && (
+              <Button
+                variant="ghost"
+                className="px-2"
+                onClick={() => handleDeleteMember(member.id, member.role)}
+              >
+                <Trash className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         ))}
 

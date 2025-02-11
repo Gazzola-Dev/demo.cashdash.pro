@@ -23,8 +23,8 @@ export function ThemeSwitcher() {
       }}
     >
       <div className="flex items-center gap-4">
-        <Eclipse className={cn("size-4 text-gray-500 dark:text-gray-300")} />
-        <span className="text-sm text-gray-700 dark:text-gray-300">Theme</span>
+        <Eclipse className={cn("size-4 ")} />
+        <span className="text-sm ">Theme</span>
       </div>
 
       <div className={cn("flex items-center gap-2", !open && "flex-col")}>
@@ -34,12 +34,8 @@ export function ThemeSwitcher() {
           className={cn(!open && "rotate-90 my-4", "bg-blue-800")}
           onClick={e => e.stopPropagation()}
         />
-        <Sun
-          className={cn("size-4 text-gray-500", isDarkMode ? "hidden" : "")}
-        />
-        <Moon
-          className={cn("size-4 text-gray-500", isDarkMode ? "" : "hidden")}
-        />
+        <Sun className={cn("size-4 ", isDarkMode ? "hidden" : "")} />
+        <Moon className={cn("size-4 ", isDarkMode ? "" : "hidden")} />
       </div>
     </div>
   );
