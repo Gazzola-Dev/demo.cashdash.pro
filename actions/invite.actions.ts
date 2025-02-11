@@ -35,10 +35,17 @@ export const getUserInvitesAction = async (): Promise<
   }
 };
 
-export const respondToInvitationAction = async (
-  invitationId: string,
-  accept: boolean,
-): Promise<ActionResponse<ProjectInvitationWithProfile>> => {
+interface InvitationResponse {
+  invitationId: string;
+  accept: boolean;
+}
+
+export const respondToInvitationAction = async ({
+  invitationId,
+  accept,
+}: InvitationResponse): Promise<
+  ActionResponse<ProjectInvitationWithProfile>
+> => {
   const actionName = "respondToInvitationAction";
   const supabase = await getSupabaseServerActionClient();
 
@@ -50,17 +57,35 @@ export const respondToInvitationAction = async (
 
     if (userError || !user) throw new Error("Not authenticated");
 
+    // First handle the invitation response
     const { data, error } = await supabase.rpc("handle_invitation_response", {
       p_invitation_id: invitationId,
       p_user_id: user.id,
       p_accept: accept,
     });
+    const typedData = data as any as ProjectInvitationWithProfile;
 
     conditionalLog(actionName, { data, error }, true);
     if (error) throw error;
 
+    // If the invitation was accepted, update the user's current project
+    if (accept && typedData.id) {
+      const { error: updateError } = await supabase.rpc(
+        "set_user_current_project",
+        {
+          p_user_id: user.id,
+          p_project_id: typedData.id,
+        },
+      );
+
+      if (updateError) {
+        conditionalLog(actionName, { updateError }, true);
+        throw updateError;
+      }
+    }
+
     return getActionResponse({
-      data: data as any as ProjectInvitationWithProfile,
+      data: typedData,
     });
   } catch (error) {
     conditionalLog(actionName, { error }, true);

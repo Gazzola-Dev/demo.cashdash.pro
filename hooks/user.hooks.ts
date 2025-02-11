@@ -1,7 +1,7 @@
 "use client";
 import { inviteMemberAction } from "@/actions/profile.actions";
+import { useToast } from "@/hooks/use-toast";
 import useSupabase from "@/hooks/useSupabase";
-import { useToastQueue } from "@/hooks/useToastQueue";
 import { conditionalLog } from "@/lib/log.utils";
 import { Tables, TablesInsert } from "@/types/database.types";
 import { HookOptions } from "@/types/db.types";
@@ -23,7 +23,7 @@ export const useInviteMember = ({
 }: HookOptions<ProjectWithDetails> = {}) => {
   const hookName = "useInviteMember";
   const queryClient = useQueryClient();
-  const { toast } = useToastQueue();
+  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (invitation: TablesInsert<"project_invitations">) => {
@@ -95,7 +95,7 @@ export const useUpdateUser = ({
   successMessage,
 }: HookOptions<User> = {}) => {
   const queryClient = useQueryClient();
-  const { toast } = useToastQueue();
+  const { toast } = useToast();
   const supabase = useSupabase();
 
   return useMutation<
@@ -141,7 +141,7 @@ export const useDeleteUser = ({
   successMessage,
 }: HookOptions<User> = {}) => {
   const queryClient = useQueryClient();
-  const { toast } = useToastQueue();
+  const { toast } = useToast();
   const supabase = useSupabase();
 
   return useMutation<string, Error, string>({
@@ -175,13 +175,13 @@ export const useSignInWithMagicLink = ({
 } = {}) => {
   const hookName = "useSignInWithMagicLink";
   const queryClient = useQueryClient();
-  const { toast } = useToastQueue();
+  const { toast } = useToast();
   const supabase = useSupabase();
 
   return useMutation({
     mutationFn: async (email: string) => {
       const { error } = await supabase.auth.signInWithOtp({ email });
-      conditionalLog(hookName, { error }, false);
+      conditionalLog(hookName, { error }, false, null);
       if (error) throw new Error(error.message);
       return null;
     },
@@ -207,7 +207,7 @@ export const useSignOut = ({
   successMessage,
 }: HookOptions<User> = {}) => {
   const queryClient = useQueryClient();
-  const { toast } = useToastQueue();
+  const { toast } = useToast();
   const supabase = useSupabase();
 
   return useMutation<void, Error, void>({

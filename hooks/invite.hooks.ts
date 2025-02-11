@@ -35,10 +35,10 @@ export const useRespondToInvitation = () => {
       invitationId: string;
       accept: boolean;
     }): Promise<ProjectInvitationWithProfile> => {
-      const { data, error } = await respondToInvitationAction(
+      const { data, error } = await respondToInvitationAction({
         invitationId,
         accept,
-      );
+      });
       if (error) throw new Error(error);
       if (!data) throw new Error("No data returned");
       return data;
@@ -48,6 +48,7 @@ export const useRespondToInvitation = () => {
       queryClient.invalidateQueries({ queryKey: ["user-invites"] });
       queryClient.invalidateQueries({ queryKey: ["profile"] });
       queryClient.invalidateQueries({ queryKey: ["projects"] });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
     },
   });
 };

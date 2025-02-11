@@ -53,7 +53,6 @@ export function ProjectSwitcher() {
       firstSegment !== currentProjectSlug &&
       projects.some(p => p.slug === firstSegment)
     ) {
-      console.count("update profile");
       queryClient.setQueryData(["profile"], (oldData: ProfileResponse) => {
         return {
           ...oldData,
