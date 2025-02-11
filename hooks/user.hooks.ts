@@ -217,6 +217,7 @@ export const useSignOut = ({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user"] });
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
       toast({
         title: successMessage || SuccessMessages.SIGN_OUT_SUCCESS,
       });
