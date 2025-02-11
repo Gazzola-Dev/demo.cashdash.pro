@@ -11,6 +11,7 @@ const whitelistedDirs = [
   "app", // Page components and routing
   "supabase/migrations", // Database schema and functions
   "middleware", // Middleware functions
+  "styles",
 ];
 
 // Specific subdirectories to exclude even if under whitelisted directories
