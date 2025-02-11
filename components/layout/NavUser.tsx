@@ -48,17 +48,21 @@ export function NavUser() {
           src={profileData.profile.avatar_url ?? ""}
           alt={profileData.profile.display_name ?? "User"}
         />
-        <AvatarFallback className="rounded-lg dark:bg-gray-700 dark:text-gray-100">
-          {profileData.profile.display_name?.charAt(0) ??
-            capitalizeFirstLetter(profileData.profile.email.slice(0, 2)) ??
-            "?"}
+        <AvatarFallback className="rounded-lg bg-gray-200 dark:bg-gray-700 dark:text-gray-100">
+          {capitalizeFirstLetter(
+            profileData.profile.display_name?.slice(0, 2) ??
+              profileData.profile.email.slice(0, 2) ??
+              "?",
+          )}
         </AvatarFallback>
       </Avatar>
       <div className="grid flex-1 text-left text-sm leading-tight">
         <span className="truncate font-semibold dark:text-gray-100">
-          {profileData.profile.display_name ||
-            capitalizeFirstLetter(profileData.profile.email.split("@")?.[0]) ||
-            "Unnamed User"}
+          {capitalizeFirstLetter(
+            profileData.profile.display_name ||
+              profileData.profile.email.split("@")?.[0] ||
+              "Unnamed User",
+          )}
         </span>
       </div>
     </>

@@ -7,8 +7,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import configuration from "@/configuration";
 import { useDeleteTask } from "@/hooks/task.hooks";
+import { useToast } from "@/hooks/use-toast";
 import { useDialogQueue } from "@/hooks/useDialogQueue";
-import { useToastQueue } from "@/hooks/useToastQueue";
 import { useIsAdmin } from "@/hooks/user.hooks";
 import { TaskResult, TaskUpdateWithSubtasks } from "@/types/task.types";
 import { TerminalIcon, Trash2 } from "lucide-react";
@@ -30,7 +30,7 @@ export function TaskPage({
   isNew = false,
 }: TaskPageProps) {
   const router = useRouter();
-  const { toast } = useToastQueue();
+  const { toast } = useToast();
   const { dialog } = useDialogQueue();
   const { mutate: deleteTask } = useDeleteTask();
   const isAdmin = useIsAdmin();

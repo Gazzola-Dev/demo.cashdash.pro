@@ -12,8 +12,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
 import useSupabase from "@/hooks/useSupabase";
-import { useToastQueue } from "@/hooks/useToastQueue";
 import { useSignInWithMagicLink } from "@/hooks/user.hooks";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowRight, MailOpen } from "lucide-react";
@@ -30,7 +30,7 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export default function AuthLayout() {
-  const { toast } = useToastQueue();
+  const { toast } = useToast();
   const supabase = useSupabase();
 
   const form = useForm<FormValues>({

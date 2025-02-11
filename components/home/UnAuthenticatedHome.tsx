@@ -1,11 +1,6 @@
 // components/home/UnauthenticatedHome.tsx
 import { Button } from "@/components/ui/button";
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import {
   Form,
   FormControl,
   FormField,
@@ -16,7 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useSignInWithMagicLink } from "@/hooks/user.hooks";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { KeyRound, MailOpen } from "lucide-react";
+import { MailOpen } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -87,7 +82,7 @@ export function UnauthenticatedHome() {
                 )}
               />
 
-              <Collapsible
+              {/* <Collapsible
                 open={isPasswordMode}
                 onOpenChange={setIsPasswordMode}
               >
@@ -120,7 +115,7 @@ export function UnauthenticatedHome() {
                     )}
                   />
                 </CollapsibleContent>
-              </Collapsible>
+              </Collapsible> */}
 
               <Button
                 type="submit"

@@ -14,7 +14,7 @@ import {
   useGetUserInvites,
   useRespondToInvitation,
 } from "@/hooks/invite.hooks";
-import { useToastQueue } from "@/hooks/useToastQueue";
+import { useToast } from "@/hooks/use-toast";
 import { MailPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -35,7 +35,7 @@ export default function InvitePage({ params }: InvitePageProps) {
   const { data: invitesData, isPending: getInvitesIsPending } =
     useGetUserInvites();
   const { mutate: respondToInvitation, isPending } = useRespondToInvitation();
-  const { toast } = useToastQueue();
+  const { toast } = useToast();
   const router = useRouter();
 
   const onClick = (action: InviteAction) => {

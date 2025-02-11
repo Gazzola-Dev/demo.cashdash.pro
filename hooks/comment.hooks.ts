@@ -6,14 +6,14 @@ import {
   createCommentAction,
   updateCommentAction,
 } from "@/actions/comment.actions";
+import { useToast } from "@/hooks/use-toast";
 import { conditionalLog } from "@/lib/log.utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useToastQueue } from "./useToastQueue";
 
 export const useCreateComment = (contentId = "", taskSlug = "") => {
   const hookName = "useCreateComment";
   const queryClient = useQueryClient();
-  const { toast } = useToastQueue();
+  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (content: string) => {
@@ -49,7 +49,7 @@ export const useCreateComment = (contentId = "", taskSlug = "") => {
 export const useUpdateComment = () => {
   const hookName = "useUpdateComment";
   const queryClient = useQueryClient();
-  const { toast } = useToastQueue();
+  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async ({ id, content }: { id: string; content: string }) => {

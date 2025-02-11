@@ -1,5 +1,6 @@
 "use client";
 
+import GitBranchCopy from "@/components/tasks/GitBranchCopy";
 import {
   AssigneeSelect,
   PrioritySelect,
@@ -24,7 +25,7 @@ import {
 import configuration from "@/configuration";
 import { useGetProject } from "@/hooks/project.hooks";
 import { useListTasks, useUpdateTask } from "@/hooks/task.hooks";
-import { useToastQueue } from "@/hooks/useToastQueue";
+import { useToast } from "@/hooks/use-toast";
 import { useIsAdmin } from "@/hooks/user.hooks";
 import { Tables } from "@/types/database.types";
 import { TaskResult, TaskTableProps } from "@/types/task.types";
@@ -40,14 +41,14 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, GitBranch, Plus } from "lucide-react";
+import { ArrowUpDown, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React from "react";
 import { useDebounce } from "use-debounce";
 
 const TaskTable = ({ projectId, projectSlug }: TaskTableProps) => {
   const router = useRouter();
-  const { toast } = useToastQueue();
+  const { toast } = useToast();
   const { mutate: updateTask } = useUpdateTask();
   const { data: projectData } = useGetProject();
 
@@ -95,18 +96,6 @@ const TaskTable = ({ projectId, projectSlug }: TaskTableProps) => {
       );
     },
     [router, projectSlug],
-  );
-
-  const copyBranchName = React.useCallback(
-    (task: TaskResult) => {
-      const branchName = `${task.project?.prefix}-${task.task.ordinal_id}-${task.task.slug}`;
-      navigator.clipboard.writeText(branchName);
-      toast({
-        title: "Branch name copied to clipboard",
-        description: branchName,
-      });
-    },
-    [toast],
   );
 
   const columns = React.useMemo<ColumnDef<TaskResult>[]>(() => {
@@ -237,21 +226,15 @@ const TaskTable = ({ projectId, projectSlug }: TaskTableProps) => {
         id: "branch",
         accessorFn: () => null,
         cell: ({ row }) => (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={e => {
-              e.stopPropagation();
-              copyBranchName(row.original);
-            }}
-            className="h-8 w-8"
-          >
-            <GitBranch className="h-4 w-4" />
-          </Button>
+          <GitBranchCopy
+            projectPrefix={projectData?.prefix}
+            taskOrdinalId={row.original.task.ordinal_id}
+            taskTitle={row.original.task.title}
+          />
         ),
       },
     ];
-  }, [projectData?.project_members, updateTask, copyBranchName]);
+  }, [projectData?.project_members, updateTask]);
 
   const table = useReactTable({
     data: tasks,

@@ -12,8 +12,8 @@ import {
 } from "@/components/ui/tooltip";
 import configuration from "@/configuration";
 import { useDeleteProject, useGetProjectSlug } from "@/hooks/project.hooks";
+import { useToast } from "@/hooks/use-toast";
 import { useDialogQueue } from "@/hooks/useDialogQueue";
-import { useToastQueue } from "@/hooks/useToastQueue";
 import { useIsAdmin } from "@/hooks/user.hooks";
 import { cn } from "@/lib/utils";
 import { ProjectWithDetails } from "@/types/project.types";
@@ -40,7 +40,7 @@ export function ProjectPage({
 }: ProjectPageProps) {
   const isAdmin = useIsAdmin();
   const router = useRouter();
-  const { toast } = useToastQueue();
+  const { toast } = useToast();
   const { mutate: deleteProject } = useDeleteProject();
   const { dialog } = useDialogQueue();
   const [formData, setFormData] = useState<Partial<ProjectWithDetails>>(

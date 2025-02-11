@@ -9,7 +9,6 @@ import { useGetUser } from "@/hooks/user.hooks";
 import { UserInvites } from "@/types/invites.types";
 import { ProjectInvitationWithProfile } from "@/types/project.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 
 export const useGetUserInvites = () => {
   const { data: user } = useGetUser();
@@ -26,7 +25,7 @@ export const useGetUserInvites = () => {
 };
 
 export const useRespondToInvitation = () => {
-  const router = useRouter();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({
@@ -45,7 +44,12 @@ export const useRespondToInvitation = () => {
       return data;
     },
     onSuccess: () => {
-      router.refresh();
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      queryClient.invalidateQueries({ queryKey: ["project"] });
+      queryClient.invalidateQueries({ queryKey: ["user-invites"] });
+      queryClient.invalidateQueries({ queryKey: ["layout-data"] });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
     },
   });
 };

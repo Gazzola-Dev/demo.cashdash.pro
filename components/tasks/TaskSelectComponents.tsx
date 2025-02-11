@@ -84,7 +84,9 @@ export const AssigneeSelect = ({
         <SelectItem value="unassigned">
           <div className={cn("flex items-center gap-2")}>
             <Avatar className="h-6 w-6">
-              <AvatarFallback>{"UA"}</AvatarFallback>
+              <AvatarFallback>
+                <span className="line-through">UA</span>
+              </AvatarFallback>
             </Avatar>
             <span>Unassigned</span>
           </div>

@@ -8,9 +8,11 @@ export default function NewTaskPage() {
   const params = useParams();
   const projectSlug = params.project_slug as string;
 
-  const { data: taskData, error } = useGetDraftTask(projectSlug);
+  const { data: taskData, error, isPending } = useGetDraftTask(projectSlug);
   const isDraft = true;
   const { mutate: updateTask } = useUpdateTask({}, isDraft);
+
+  if (isPending) return null;
 
   if (error || !taskData) {
     return <div>Error loading task</div>;

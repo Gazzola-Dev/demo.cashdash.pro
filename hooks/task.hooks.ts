@@ -11,6 +11,7 @@ import {
   upsertDraftTaskAction,
 } from "@/actions/task.actions";
 import configuration from "@/configuration";
+import { useToast } from "@/hooks/use-toast";
 import { conditionalLog, getErrorMessage, minifyForLog } from "@/lib/log.utils";
 import { TablesInsert } from "@/types/database.types";
 import { HookOptions } from "@/types/db.types";
@@ -22,7 +23,6 @@ import {
 } from "@/types/task.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useToastQueue } from "./useToastQueue";
 
 enum SuccessMessages {
   CREATE = "Task created successfully",
@@ -71,7 +71,7 @@ export const useCreateTask = ({
 }: HookOptions<TaskResult> = {}) => {
   const hookName = "useCreateTask";
   const queryClient = useQueryClient();
-  const { toast } = useToastQueue();
+  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (task: TablesInsert<"tasks">) => {
@@ -105,7 +105,7 @@ export const useUpdateTask = (
 ) => {
   const hookName = "useUpdateTask";
   const queryClient = useQueryClient();
-  const { toast } = useToastQueue();
+  const { toast } = useToast();
   const router = useRouter();
 
   return useMutation({
@@ -159,7 +159,7 @@ export const useDeleteTask = ({
 }: HookOptions<TaskResult> = {}) => {
   const hookName = "useDeleteTask";
   const queryClient = useQueryClient();
-  const { toast } = useToastQueue();
+  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (taskSlug: string) => {
@@ -193,7 +193,7 @@ export const useReorderTasks = ({
 }: HookOptions<TaskResult> = {}) => {
   const hookName = "useReorderTasks";
   const queryClient = useQueryClient();
-  const { toast } = useToastQueue();
+  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async ({
@@ -232,7 +232,7 @@ export const useCreateSubtask = ({
 }: HookOptions<TaskResult> = {}) => {
   const hookName = "useCreateSubtask";
   const queryClient = useQueryClient();
-  const { toast } = useToastQueue();
+  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (subtask: SubtaskInput) => {
@@ -266,7 +266,7 @@ export const useDeleteSubtask = ({
 }: HookOptions<TaskResult> = {}) => {
   const hookName = "useDeleteSubtask";
   const queryClient = useQueryClient();
-  const { toast } = useToastQueue();
+  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (subtaskId: string) => {
