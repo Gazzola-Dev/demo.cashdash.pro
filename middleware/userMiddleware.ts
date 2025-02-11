@@ -59,9 +59,11 @@ async function middleware(request: NextRequest, response: NextResponse) {
       shouldLog,
     );
 
-    return NextResponse.redirect(
-      new URL(configuration.paths.appHome, request.url),
-    );
+    if (pathname !== configuration.paths.appHome)
+      return NextResponse.redirect(
+        new URL(configuration.paths.appHome, request.url),
+      );
+    return response;
   }
 
   // Check if route requires admin access
@@ -155,7 +157,7 @@ async function middleware(request: NextRequest, response: NextResponse) {
   }
 
   // If no current project, assign first available project using SECURITY DEFINER function
-  if (!profile.current_project_id) {
+  if (!profile.current_project_id && projects.length) {
     const firstProject = projects?.[0];
     if (!firstProject) {
       conditionalLog(
@@ -211,10 +213,16 @@ async function middleware(request: NextRequest, response: NextResponse) {
     p => p.id === profile.current_project_id,
   );
 
-  // If URL project slug doesn't match any user projects
+  // Check if user has an invitation for the requested project
+  const hasInviteForProject = invites?.invitations.some(
+    invite => invite.project.slug === urlProjectSlug,
+  );
+
+  // If URL project slug doesn't match any user projects and user has no invitation
   if (
     urlProjectSlug &&
     !projectSlugs?.includes(urlProjectSlug) &&
+    !hasInviteForProject &&
     urlProjectSlug !== "projects"
   ) {
     const redirectProject = currentProject || projects?.[0];
@@ -225,7 +233,6 @@ async function middleware(request: NextRequest, response: NextResponse) {
         user_id: user.id,
         attempted_slug: urlProjectSlug,
         redirect_to: redirectProject?.slug,
-        redirectProject,
       },
       shouldLog,
     );
@@ -246,7 +253,8 @@ async function middleware(request: NextRequest, response: NextResponse) {
   if (
     currentProject &&
     urlProjectSlug &&
-    urlProjectSlug !== currentProject.slug
+    urlProjectSlug !== currentProject.slug &&
+    !hasInviteForProject
   ) {
     // Update current project to match URL
     const newCurrentProject = projects?.find(p => p.slug === urlProjectSlug);
@@ -268,18 +276,18 @@ async function middleware(request: NextRequest, response: NextResponse) {
         shouldLog,
       );
     }
-  } else {
-    conditionalLog(
-      hookName,
-      {
-        status: "normal_access",
-        user_id: user.id,
-        current_project: currentProject?.slug,
-        pathname,
-      },
-      shouldLog,
-    );
   }
+
+  conditionalLog(
+    hookName,
+    {
+      status: "normal_access",
+      user_id: user.id,
+      current_project: profile.current_project_id,
+      pathname,
+    },
+    shouldLog,
+  );
 
   return response;
 }

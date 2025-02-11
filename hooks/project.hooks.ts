@@ -10,6 +10,7 @@ import {
   updateProjectAction,
 } from "@/actions/project.actions";
 import { useGetProfile } from "@/hooks/profile.hooks";
+import { useToast } from "@/hooks/use-toast";
 import { conditionalLog } from "@/lib/log.utils";
 import { Tables, TablesInsert, TablesUpdate } from "@/types/database.types";
 import { HookOptions } from "@/types/db.types";
@@ -19,7 +20,6 @@ import {
 } from "@/types/project.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useToastQueue } from "./useToastQueue";
 
 type Project = Tables<"projects">;
 
@@ -77,7 +77,7 @@ export const useCreateProject = ({
 }: HookOptions<ProjectWithDetails> = {}) => {
   const hookName = "useCreateProject";
   const queryClient = useQueryClient();
-  const { toast } = useToastQueue();
+  const { toast } = useToast();
   const router = useRouter();
 
   return useMutation({
@@ -112,7 +112,7 @@ export const useUpdateProject = ({
 }: HookOptions<ProjectWithDetails> = {}) => {
   const hookName = "useUpdateProject";
   const queryClient = useQueryClient();
-  const { toast } = useToastQueue();
+  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async ({
@@ -150,7 +150,7 @@ export const useDeleteProject = ({
 }: HookOptions<Project> = {}) => {
   const hookName = "useDeleteProject";
   const queryClient = useQueryClient();
-  const { toast } = useToastQueue();
+  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (projectId: string) => {
@@ -178,7 +178,7 @@ export const useDeleteProject = ({
 
 export const useGetProjectSlug = () => {
   const hookName = "useGetProjectSlug";
-  const { toast } = useToastQueue();
+  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (projectName: string) => {
@@ -204,7 +204,7 @@ export const useInviteMember = ({
 }: HookOptions<ProjectInvitationWithProfile> = {}) => {
   const hookName = "useInviteMember";
   const queryClient = useQueryClient();
-  const { toast } = useToastQueue();
+  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (invitation: TablesInsert<"project_invitations">) => {
@@ -215,7 +215,7 @@ export const useInviteMember = ({
     },
     onSuccess: data => {
       conditionalLog(hookName, { success: data }, false);
-      queryClient.invalidateQueries({ queryKey: ["project-invitations"] });
+      queryClient.invalidateQueries({ queryKey: ["project", data?.id] });
       toast({
         title: successMessage || "Invitation sent successfully",
       });

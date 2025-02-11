@@ -160,11 +160,7 @@ export function ProjectSwitcher() {
                             currentProject && "bg-gray-100 dark:bg-gray-700",
                           )}
                         >
-                          {currentProject ? (
-                            <Code2 className="size-4 shrink-0 dark:text-gray-100" />
-                          ) : (
-                            <MailPlus className="size-4 shrink-0 text-blue-500" />
-                          )}
+                          <MailPlus className="size-4 shrink-0 text-blue-500" />
                         </div>
                         <div className="ml-2 flex-1 truncate dark:text-gray-100">
                           {invite.project.name}

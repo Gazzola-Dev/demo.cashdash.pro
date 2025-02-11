@@ -15,6 +15,7 @@ import {
 } from "@/cypress/e2e/test.util.cy";
 
 // TODO: add additional project with admin, check if it shows only on certain lists
+// TODO: check for success/error toast messages
 
 // Environment Variables
 const email1 = Cypress.env("TEST_EMAIL_1");

@@ -289,8 +289,8 @@ export function ProjectPage({
               <div className="space-y-2">
                 <label className="text-sm font-medium">Example URL</label>
                 <div className="flex items-center space-x-2">
-                  <div className="flex-1 bg-muted rounded-md dark:text-gray-200 text-gray-900 italic relative flex items-center px-2 py-1 bg-gray-50">
-                    <span className="px-2 py-0.5 text-gray-600 font-semibold bg-gray-200 rounded">
+                  <div className="flex-1 bg-muted rounded-md dark:text-gray-200 text-gray-900 italic relative flex items-center px-2 py-1 ">
+                    <span className="px-2 py-0.5 text-gray-600 font-semibold bg-gray-100 rounded">
                       cashdash.pro /
                     </span>
                     {!displayData?.slug && !isPending ? (
@@ -321,7 +321,7 @@ export function ProjectPage({
                           </Tooltip>
                         </TooltipProvider>
 
-                        <span className="px-2 text-gray-600 bg-gray-200 font-semibold rounded">
+                        <span className="px-2 text-gray-600 bg-gray-100 font-semibold rounded">
                           /
                         </span>
                         {displayData.prefix && (
@@ -339,7 +339,7 @@ export function ProjectPage({
                                     Each task can be accessed at:
                                     <span className="mx-2 px-1.5 py-1 bg-background text-gray-800 rounded font-bold">
                                       cashdash.pro/{displayProjectSlug}/
-                                      {displayData.prefix}-
+                                      {displayData.prefix}
                                     </span>
                                     +
                                     <span className="mx-2 px-1.5 py-1 bg-background text-gray-800 rounded font-bold">
@@ -349,7 +349,7 @@ export function ProjectPage({
                                 </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
-                            <span className="px-2 text-gray-600 font-semibold bg-gray-200 rounded">
+                            <span className="px-2 text-gray-600 font-semibold bg-gray-100 rounded">
                               123
                             </span>
                           </>
