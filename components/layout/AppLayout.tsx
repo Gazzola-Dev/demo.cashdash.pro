@@ -27,7 +27,6 @@ import configuration from "@/configuration";
 import { useGetProfile } from "@/hooks/profile.hooks";
 import { cn } from "@/lib/utils";
 import { Dot, LayoutDashboard } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
@@ -51,14 +50,14 @@ export function AppLayout({ children, projectSlug }: AppLayoutProps) {
               href={configuration.paths.about}
               className="flex items-center justify-center gap-2 h-full pr-[1.1rem]"
             >
-              <Image
+              <img
                 className="w-24 z-10 -mr-1 pt-0.5 dark:hidden"
                 src="/svg/brand/logo-with-text-light.svg"
                 width={473}
                 height={293}
                 alt="Cash Dash Pro Logo"
               />
-              <Image
+              <img
                 className="w-24 z-10 -mr-1 pt-0.5 hidden dark:block"
                 src="/svg/brand/logo-with-text-dark.svg"
                 width={473}

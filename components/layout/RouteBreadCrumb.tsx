@@ -11,7 +11,6 @@ import configuration from "@/configuration";
 import { useGetProfile } from "@/hooks/profile.hooks";
 import { useListTasks } from "@/hooks/task.hooks";
 import { capitalizeFirstLetter, truncateString } from "@/lib/string.util";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
@@ -32,14 +31,14 @@ export default function RouteBreadcrumb() {
         href={configuration.paths.appHome}
         className="h-full flex items-center justify-center"
       >
-        <Image
+        <img
           className="w-8 z-10 -mr-1 dark:hidden"
           src="/svg/brand/logo-light.svg"
           width={473}
           height={293}
           alt="Cash Dash Pro Logo"
         />
-        <Image
+        <img
           className="w-8 z-10 -mr-1 hidden dark:block"
           src="/svg/brand/logo-dark.svg"
           width={473}
