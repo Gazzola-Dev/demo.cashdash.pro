@@ -23,6 +23,8 @@ import { useEffect, useState } from "react";
 import { useDebounce } from "use-debounce";
 import ProjectMemberList from "./ProjectMemberList";
 
+// TODO: fix stale title and description on new page after creating
+
 interface ProjectPageProps {
   projectData?: ProjectWithDetails | null;
   isNew?: boolean;

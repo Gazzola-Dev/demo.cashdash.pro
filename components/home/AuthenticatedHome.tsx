@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { useUpdateProfile } from "@/hooks/profile.hooks";
 import { useToastQueue } from "@/hooks/useToastQueue";
 import { useIsAdmin, useSignOut } from "@/hooks/user.hooks";
+import { redactEmail } from "@/lib/string.util";
 import { cn } from "@/lib/utils";
 import { UserWithProfile } from "@/types/user.types";
 import { Check, Edit2, LogOut, Shield } from "lucide-react";
@@ -91,7 +92,9 @@ export function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
               </div>
             )}
           </div>
-          <p className="text-muted-foreground">{user.profile.email}</p>
+          <p className="text-muted-foreground">
+            {isAdmin ? user.profile.email : redactEmail(user.profile.email)}
+          </p>
           {isAdmin && (
             <div className="flex items-center justify-center mt-2 text-sm text-muted-foreground">
               <Shield className="h-4 w-4 mr-1" />
