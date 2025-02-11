@@ -65,7 +65,7 @@ const getIconStyles = (isActive: boolean, isPath = false) => ({
   icon: cn(
     "h-4 w-4 dark:text-gray-400",
     isActive && isPath
-      ? "text-blue-500"
+      ? "text-blue-500 dark:text-blue-200"
       : isActive
         ? "dark:text-white text-black"
         : "",

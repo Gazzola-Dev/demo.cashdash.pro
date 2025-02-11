@@ -133,8 +133,19 @@ function AppSidebar({
               </SidebarMenu>
             </SidebarGroup>
             <div className="px-4 pt-4 space-y-2.5">
-              <h3 className={cn("text-xs text-gray-800 font-medium")}>Tasks</h3>
-              <hr className={cn("w-full", isTaskPath && "border-blue-400")} />
+              <h3
+                className={cn(
+                  "text-xs text-gray-800 dark:text-gray-200 font-medium",
+                )}
+              >
+                Tasks
+              </h3>
+              <hr
+                className={cn(
+                  "w-full dark:border-gray-00",
+                  isTaskPath && "border-blue-400 dark:border-blue-400",
+                )}
+              />
             </div>
             <div className="flex-1 min-h-0">
               <TaskList />

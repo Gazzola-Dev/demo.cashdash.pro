@@ -116,8 +116,9 @@ export const useUpdateTask = (
       slug: string;
       updates: TaskUpdateWithSubtasks;
     }) => {
+      conditionalLog(hookName, { slug, updates }, false, null);
       const { data, error } = await updateTaskAction(slug, updates);
-      conditionalLog(hookName, { data, error }, false);
+      conditionalLog(hookName, { data, error }, false, null);
       return data;
     },
     onSuccess: data => {

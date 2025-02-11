@@ -2,10 +2,11 @@
 
 import GitBranchCopy from "@/components/tasks/GitBranchCopy";
 import {
-  AssigneeSelect,
-  PrioritySelect,
-  StatusSelect,
-} from "@/components/tasks/TaskSelectComponents";
+  AssigneeSelectSimple,
+  PrioritySelectSimple,
+  StatusSelectSimple,
+} from "@/components/tasks/SimpleTaskSelectComponents";
+
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -147,7 +148,7 @@ const TaskTable = ({ projectId, projectSlug }: TaskTableProps) => {
           );
         },
         cell: ({ row }) => (
-          <StatusSelect
+          <StatusSelectSimple
             value={row.getValue("status")}
             onValueChange={value => {
               updateTask({
@@ -179,7 +180,7 @@ const TaskTable = ({ projectId, projectSlug }: TaskTableProps) => {
           );
         },
         cell: ({ row }) => (
-          <PrioritySelect
+          <PrioritySelectSimple
             value={row.getValue("priority")}
             onValueChange={value => {
               updateTask({
@@ -211,7 +212,7 @@ const TaskTable = ({ projectId, projectSlug }: TaskTableProps) => {
           );
         },
         cell: ({ row }) => (
-          <AssigneeSelect
+          <AssigneeSelectSimple
             value={row.original.task.assignee}
             onValueChange={value => {
               updateTask({
