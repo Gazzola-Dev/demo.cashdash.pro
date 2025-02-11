@@ -4,7 +4,6 @@ const nextConfig = {
       process.env.NEXT_PUBLIC_SUPABASE_URL
         ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname
         : "",
-      new URL(process.env.NEXT_PUBLIC_SITE_URL).hostname,
     ],
   },
 };
