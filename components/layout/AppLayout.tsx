@@ -25,9 +25,11 @@ import {
 } from "@/components/ui/tooltip";
 import configuration from "@/configuration";
 import { useGetProfile } from "@/hooks/profile.hooks";
-import { Clock, Dot, Kanban, LayoutDashboard } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Dot, LayoutDashboard } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import React from "react";
 
 interface AppLayoutProps {
@@ -88,8 +90,10 @@ function AppSidebar({
   profileData: any;
   projectSlug?: string;
 }) {
+  const pathname = usePathname();
   const { open } = useSidebar();
   const currentProject = profileData?.current_project;
+  const isTaskPath = pathname.includes("tasks");
 
   if (!profileData) return null;
 
@@ -115,7 +119,7 @@ function AppSidebar({
                           matchPattern={`/${currentProject.slug}$`}
                         >
                           <LayoutDashboard className="size-4" />
-                          <span>Overview</span>
+                          <span>Project</span>
                         </SidebarButton>
                       </SidebarMenuItem>
                     </TooltipTrigger>
@@ -125,46 +129,13 @@ function AppSidebar({
                         : "Overview"}
                     </TooltipContent>
                   </Tooltip>
-
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <SidebarMenuItem>
-                        <SidebarButton
-                          href={configuration.paths.project.timeline({
-                            project_slug: currentProject.slug,
-                          })}
-                        >
-                          <Clock className="size-4" />
-                          <span>Timeline</span>
-                        </SidebarButton>
-                      </SidebarMenuItem>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">
-                      {open ? "View project timeline and schedule" : "Timeline"}
-                    </TooltipContent>
-                  </Tooltip>
-
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <SidebarMenuItem>
-                        <SidebarButton
-                          href={configuration.paths.project.kanban({
-                            project_slug: currentProject.slug,
-                          })}
-                        >
-                          <Kanban className="size-4" />
-                          <span>Kanban</span>
-                        </SidebarButton>
-                      </SidebarMenuItem>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">
-                      {open ? "Manage tasks in kanban board view" : "Kanban"}
-                    </TooltipContent>
-                  </Tooltip>
                 </TooltipProvider>
               </SidebarMenu>
             </SidebarGroup>
-
+            <div className="px-4 pt-4 space-y-2.5">
+              <h3 className={cn("text-xs text-gray-800 font-medium")}>Tasks</h3>
+              <hr className={cn("w-full", isTaskPath && "border-blue-400")} />
+            </div>
             <div className="flex-1 min-h-0">
               <TaskList />
             </div>

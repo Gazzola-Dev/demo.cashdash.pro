@@ -53,21 +53,29 @@ type SortOption = {
   order: "asc" | "desc";
 };
 
-const getIconStyles = (isActive: boolean) => ({
+const getIconStyles = (isActive: boolean, isPath = false) => ({
   button: cn(
     "dark:text-gray-200 text-gray-700",
-    isActive &&
-      "dark:border border dark:border-gray-700 border-gray-300 dark:bg-black bg-white",
+    isActive && isPath
+      ? "dark:border border dark:border-blue-700 border-blue-300 dark:bg-black bg-white"
+      : isActive
+        ? "dark:border border dark:border-gray-700 border-gray-300 dark:bg-black bg-white"
+        : "",
   ),
   icon: cn(
     "h-4 w-4 dark:text-gray-400",
-    isActive && "dark:text-white text-black",
+    isActive && isPath
+      ? "text-blue-500"
+      : isActive
+        ? "dark:text-white text-black"
+        : "",
   ),
 });
 
 const TaskList = () => {
   const { data: profileData } = useGetProfile();
   const pathname = usePathname();
+  const isTaskPath = pathname.includes("tasks");
   const { open } = useSidebar();
   const [sortConfig, setSortConfig] = useState<SortOption>({
     field: "priority",
@@ -129,7 +137,7 @@ const TaskList = () => {
 
   return (
     <SidebarGroup className="h-full flex flex-col overflow-hidden">
-      <div className="flex items-center justify-between p-2">
+      <div className="flex items-center justify-between p-2 pt-0">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -210,11 +218,15 @@ const TaskList = () => {
                 variant="ghost"
                 size="icon"
                 asChild
-                className={getIconStyles(pathname === allTasksPath).button}
+                className={
+                  getIconStyles(pathname === allTasksPath, true).button
+                }
               >
                 <Link href={allTasksPath}>
                   <ListIcon
-                    className={getIconStyles(pathname === allTasksPath).icon}
+                    className={
+                      getIconStyles(pathname === allTasksPath, true).icon
+                    }
                   />
                 </Link>
               </Button>
@@ -234,11 +246,15 @@ const TaskList = () => {
                   variant="ghost"
                   size="icon"
                   asChild
-                  className={getIconStyles(pathname === newTaskPath).button}
+                  className={
+                    getIconStyles(pathname === newTaskPath, true).button
+                  }
                 >
                   <Link href={newTaskPath}>
                     <Plus
-                      className={getIconStyles(pathname === newTaskPath).icon}
+                      className={
+                        getIconStyles(pathname === newTaskPath, true).icon
+                      }
                     />
                   </Link>
                 </Button>
