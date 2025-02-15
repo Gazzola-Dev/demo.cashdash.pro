@@ -15,7 +15,6 @@ import useAppStore from "@/hooks/app.store";
 import { useIsAdmin } from "@/hooks/user.hooks";
 import { cn } from "@/lib/utils";
 import {
-  CalendarRange,
   Clock,
   ListIcon,
   Plus,
@@ -32,16 +31,20 @@ const PriorityIcon = ({ priority }: { priority: string }) => {
   switch (priority) {
     case "urgent":
       return (
-        <SignalHigh className="h-4 w-4 text-rose-500 dark:text-rose-400" />
+        <Signal className="h-4 w-4 flex-shrink-0 text-rose-500 dark:text-rose-400" />
       );
     case "high":
-      return <Signal className="h-4 w-4 text-amber-500 dark:text-amber-400" />;
+      return (
+        <SignalHigh className="h-4 w-4 flex-shrink-0 text-amber-500 dark:text-amber-400" />
+      );
     case "medium":
       return (
-        <SignalMedium className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
+        <SignalMedium className="h-4 w-4 flex-shrink-0 text-emerald-500 dark:text-emerald-400" />
       );
     case "low":
-      return <SignalLow className="h-4 w-4 text-sky-500 dark:text-sky-400" />;
+      return (
+        <SignalLow className="h-4 w-4 flex-shrink-0 text-sky-500 dark:text-sky-400" />
+      );
     default:
       return null;
   }
@@ -85,27 +88,36 @@ const TaskList = () => {
     return priorityMap[priority as keyof typeof priorityMap] || 0;
   };
 
-  const { tasks: rawTasks, profile: profileData } = useAppStore();
+  const { tasks, profile: profileData } = useAppStore();
 
-  const tasks = [...rawTasks]
-    .filter(t => t.task.status !== "draft")
+  const sortedTasks = tasks
+    ?.filter(task => task.task.status !== "draft")
     .sort((a, b) => {
-      if (sortConfig.field === "priority") {
-        const priorityA = getPriorityValue(a.task.priority);
-        const priorityB = getPriorityValue(b.task.priority);
-        return sortConfig.order === "desc"
-          ? priorityB - priorityA
-          : priorityA - priorityB;
-      } else if (sortConfig.field === "due_date") {
-        const dateA = a.task_schedule?.due_date
-          ? new Date(a.task_schedule.due_date).getTime()
-          : Infinity;
-        const dateB = b.task_schedule?.due_date
-          ? new Date(b.task_schedule.due_date).getTime()
-          : Infinity;
-        return sortConfig.order === "desc" ? dateA - dateB : dateB - dateA;
+      let aValue, bValue;
+
+      switch (sortConfig.field) {
+        case "priority":
+          aValue = getPriorityValue(a.task.priority);
+          bValue = getPriorityValue(b.task.priority);
+          break;
+        case "created_at":
+          aValue = new Date(a.task.created_at).getTime();
+          bValue = new Date(b.task.created_at).getTime();
+          break;
+        // case "due_date":
+        //   aValue = a.task.due_date ? new Date(a.task.due_date).getTime() : 0;
+        //   bValue = b.task.due_date ? new Date(b.task.due_date).getTime() : 0;
+        //   break;
+        default:
+          aValue = new Date(a.task.created_at).getTime();
+          bValue = new Date(b.task.created_at).getTime();
       }
-      return 0;
+
+      const multiplier = sortConfig.order === "asc" ? 1 : -1;
+      if (aValue === null && bValue === null) return 0;
+      if (aValue === null) return 1 * multiplier;
+      if (bValue === null) return -1 * multiplier;
+      return (aValue - bValue) * multiplier;
     });
 
   const toggleSort = (field: SortOption["field"]) => {
@@ -177,7 +189,7 @@ const TaskList = () => {
               Sort by creation date
             </TooltipContent>
           </Tooltip>
-          <Tooltip>
+          {/* <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"
@@ -200,7 +212,7 @@ const TaskList = () => {
             >
               Sort by due date
             </TooltipContent>
-          </Tooltip>
+          </Tooltip> */}
 
           <Tooltip>
             <TooltipTrigger asChild>
@@ -261,7 +273,7 @@ const TaskList = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {tasks.map(taskData => (
+        {sortedTasks.map(taskData => (
           <SidebarMenuItem key={taskData.task.id}>
             <Link
               href={configuration.paths.tasks.view({

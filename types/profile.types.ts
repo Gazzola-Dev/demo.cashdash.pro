@@ -1,22 +1,15 @@
 import { ActionResponse } from "@/types/action.types";
 import { Tables } from "@/types/database.types";
-import {
-  ProjectInvitationWithProfile,
-  ProjectMemberWithProfile,
-  ProjectWithDetails,
-} from "@/types/project.types";
-import { User } from "@supabase/supabase-js";
+import { ProjectWithDetails } from "@/types/project.types";
+import { TaskResult } from "@/types/task.types";
 
 // Base types from database
 type Profile = Tables<"profiles">;
 type Project = Tables<"projects">;
 type ProjectInvitation = Tables<"project_invitations">;
-type ProjectMember = Tables<"project_members">;
-type Task = Tables<"tasks">;
 
 // Profile with all relationships
 export interface ProfileWithDetails {
-  user: User;
   profile: Profile;
   projects: {
     project: Project;
@@ -24,10 +17,7 @@ export interface ProfileWithDetails {
     created_at: string;
   }[];
   current_project: ProjectWithDetails | null;
-  project_members: ProjectMemberWithProfile[];
-  project_invitations: ProjectInvitationWithProfile[];
-  tasks: Task[];
-  drafts: Task[];
+  tasks: TaskResult[];
   pending_invitations: {
     invitation: ProjectInvitation;
     project: Project;

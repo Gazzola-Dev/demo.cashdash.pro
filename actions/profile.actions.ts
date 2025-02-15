@@ -47,12 +47,12 @@ export const getProfileAction = async (): Promise<ProfileResponse> => {
     // Remove the user_id parameter since the function uses auth.uid() internally
     const { data, error } = await supabase.rpc("get_profile_data");
 
-    conditionalLog(actionName, { data, error }, true, 10);
+    conditionalLog(actionName, { data, error }, true);
     if (error) throw error;
 
     return getActionResponse({ data: data as any as ProfileWithDetails });
   } catch (error) {
-    conditionalLog(actionName, { error }, true);
+    conditionalLog(actionName, { error }, true), null;
     return getActionResponse({ error });
   }
 };

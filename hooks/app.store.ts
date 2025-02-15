@@ -74,33 +74,17 @@ const useAppStore = create<AppStore>(set => ({
 
     set({
       profile: profile,
-      // Set current project from profile with required fields
       currentProject: profile.current_project,
-      // Set transformed projects
       projects: projectsWithDetails,
-      // Combine tasks from profile
-      tasks: [
-        // Regular tasks
-        ...profile.tasks.map(task => ({
+      tasks:
+        profile.current_project?.tasks?.map(task => ({
           task,
-          project:
-            projectsWithDetails.find(p => p.id === task.project_id) || null,
           subtasks: [],
           comments: [],
           task_schedule: null,
           assignee_profile: null,
-        })),
-        // Draft tasks
-        ...profile.drafts.map(task => ({
-          task,
-          project:
-            projectsWithDetails.find(p => p.id === task.project_id) || null,
-          subtasks: [],
-          comments: [],
-          task_schedule: null,
-          assignee_profile: null,
-        })),
-      ],
+          project: null,
+        })) || [],
     });
   },
   setCurrentProject: project => set({ currentProject: project }),
