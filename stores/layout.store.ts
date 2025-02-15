@@ -4,8 +4,8 @@ import { TaskResult } from "@/types/task.types";
 import { create } from "zustand";
 
 interface LayoutState {
-  user: ProfileWithDetails | null;
-  currentProject: ProjectWithDetails | null;
+  profile: ProfileWithDetails | null;
+  currentProject: ProjectWithDetails | null | undefined;
   projects: ProjectWithDetails[];
   tasks: TaskResult[];
   isDrawerOpen: boolean;
@@ -13,8 +13,8 @@ interface LayoutState {
 }
 
 interface LayoutActions {
-  setUser: (user: ProfileWithDetails | null) => void;
-  setCurrentProject: (project: ProjectWithDetails | null) => void;
+  setProfile: (profile: ProfileWithDetails | null) => void;
+  setCurrentProject: (project: ProjectWithDetails | null | undefined) => void;
   setProjects: (projects: ProjectWithDetails[]) => void;
   setTasks: (tasks: TaskResult[]) => void;
   toggleDrawer: (open?: boolean) => void;
@@ -31,7 +31,7 @@ interface LayoutActions {
 
 // Define the initial state
 const initialState: LayoutState = {
-  user: null,
+  profile: null,
   currentProject: null,
   projects: [],
   tasks: [],
@@ -39,41 +39,96 @@ const initialState: LayoutState = {
   isDark: false,
 };
 
+export type LayoutStore = LayoutState & LayoutActions;
+
 // Create the store
-const useLayoutStore = create<LayoutState & LayoutActions>(set => ({
+const useLayoutStore = create<LayoutStore>(set => ({
   ...initialState,
-
   // Actions
-  setUser: user => set({ user }),
+  setProfile: profile => {
+    if (!profile) {
+      set({
+        profile: null,
+        currentProject: null,
+        projects: [],
+        tasks: [],
+      });
+      return;
+    }
 
+    // Transform project data to match ProjectWithDetails
+    const projectsWithDetails: ProjectWithDetails[] = profile.projects.map(
+      p => ({
+        ...p.project,
+        project_members: [],
+        project_invitations: [],
+        tasks: [],
+        external_integrations: [],
+        project_metrics: [],
+      }),
+    );
+
+    set({
+      profile: profile,
+      // Set current project from profile with required fields
+      currentProject: profile.current_project
+        ? {
+            ...profile.current_project,
+            project_members: profile.current_project.project_members || [],
+            project_invitations:
+              profile.current_project.project_invitations || [],
+            tasks: profile.current_project.tasks || [],
+            external_integrations: [],
+            project_metrics: [],
+          }
+        : null,
+      // Set transformed projects
+      projects: projectsWithDetails,
+      // Combine tasks from profile
+      tasks: [
+        // Regular tasks
+        ...profile.tasks.map(task => ({
+          task,
+          project:
+            projectsWithDetails.find(p => p.id === task.project_id) || null,
+          subtasks: [],
+          comments: [],
+          task_schedule: null,
+          assignee_profile: null,
+        })),
+        // Draft tasks
+        ...profile.drafts.map(task => ({
+          task,
+          project:
+            projectsWithDetails.find(p => p.id === task.project_id) || null,
+          subtasks: [],
+          comments: [],
+          task_schedule: null,
+          assignee_profile: null,
+        })),
+      ],
+    });
+  },
   setCurrentProject: project => set({ currentProject: project }),
-
   setProjects: projects => set({ projects }),
-
   setTasks: tasks => set({ tasks }),
-
   toggleDrawer: open =>
     set(state => ({ isDrawerOpen: open ?? !state.isDrawerOpen })),
-
   toggleDarkMode: isDark => set(state => ({ isDark: isDark ?? !state.isDark })),
-
   updateTask: (taskId, updates) =>
     set(state => ({
       tasks: state.tasks.map(task =>
         task.task.id === taskId ? { ...task, ...updates } : task,
       ),
     })),
-
   addTask: task =>
     set(state => ({
       tasks: [...state.tasks, task],
     })),
-
   removeTask: taskId =>
     set(state => ({
       tasks: state.tasks.filter(task => task.task.id !== taskId),
     })),
-
   updateProject: (projectId, updates) =>
     set(state => ({
       projects: state.projects.map(project =>
@@ -84,12 +139,11 @@ const useLayoutStore = create<LayoutState & LayoutActions>(set => ({
           ? { ...state.currentProject, ...updates }
           : state.currentProject,
     })),
-
   reset: () => set(initialState),
 }));
 
 // Optional: Export selectors for better performance
-export const useUser = () => useLayoutStore(state => state.user);
+export const useProfile = () => useLayoutStore(state => state.profile);
 export const useCurrentProject = () =>
   useLayoutStore(state => state.currentProject);
 export const useProjects = () => useLayoutStore(state => state.projects);

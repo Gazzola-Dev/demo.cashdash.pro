@@ -23,12 +23,8 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({
   children,
-  params: { project_slug },
 }: {
   children: React.ReactNode;
-  params: {
-    project_slug: string;
-  };
 }) {
   const { data, error } = await getProfileAction();
 

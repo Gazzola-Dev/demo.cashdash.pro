@@ -27,11 +27,12 @@ import {
 import configuration from "@/configuration";
 import { useGetProfile } from "@/hooks/profile.hooks";
 import { cn } from "@/lib/utils";
+import useLayoutStore from "@/stores/layout.store";
 import { ProfileWithDetails } from "@/types/profile.types";
 
 import { Dot, LayoutDashboard } from "lucide-react";
 import Link from "next/link";
-import React from "react";
+import React, { useEffect } from "react";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -43,6 +44,10 @@ export function AppLayout({
   profile: initialProfile,
 }: AppLayoutProps) {
   const { data: profileData } = useGetProfile(initialProfile);
+  const { setProfile, profile } = useLayoutStore();
+  useEffect(() => {
+    if (!profile && profileData) setProfile(profileData);
+  }, [profile, profileData, setProfile]);
 
   return (
     <SidebarProvider>
