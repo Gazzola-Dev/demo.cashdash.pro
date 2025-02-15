@@ -7,14 +7,14 @@ import {
 } from "@/actions/profile.actions";
 import { useToast } from "@/hooks/use-toast";
 import { conditionalLog } from "@/lib/log.utils";
-import { ProfileResponse, UpdateProfileInput } from "@/types/profile.types";
+import { ProfileWithDetails, UpdateProfileInput } from "@/types/profile.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 enum SuccessMessages {
   UPDATE = "Profile updated successfully",
 }
 
-export const useGetProfile = (initialData?: ProfileResponse["data"]) => {
+export const useGetProfile = (initialData?: ProfileWithDetails | null) => {
   const hookName = "useGetProfile";
 
   return useQuery({

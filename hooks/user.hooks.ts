@@ -1,5 +1,6 @@
 "use client";
 import { inviteMemberAction } from "@/actions/profile.actions";
+import configuration from "@/configuration";
 import { useToast } from "@/hooks/use-toast";
 import useSupabase from "@/hooks/useSupabase";
 import { conditionalLog } from "@/lib/log.utils";
@@ -181,7 +182,12 @@ export const useSignInWithMagicLink = ({
 
   return useMutation({
     mutationFn: async (email: string) => {
-      const { error } = await supabase.auth.signInWithOtp({ email });
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: configuration.site.siteUrl,
+        },
+      });
       conditionalLog(hookName, { error }, false, null);
       if (error) throw new Error(error.message);
       return null;

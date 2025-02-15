@@ -1,22 +1,24 @@
+import { ProfileWithDetails } from "@/types/profile.types";
 import { ProjectWithDetails } from "@/types/project.types";
 import { TaskResult } from "@/types/task.types";
-import { UserWithProfile } from "@/types/user.types";
 import { create } from "zustand";
 
-interface UIState {
-  isDrawerOpen: boolean;
-  toggleDrawer: (open?: boolean) => void;
-}
-
 interface LayoutState {
-  user: UserWithProfile | null;
+  user: ProfileWithDetails | null;
   currentProject: ProjectWithDetails | null;
   projects: ProjectWithDetails[];
   tasks: TaskResult[];
-  setUser: (user: UserWithProfile | null) => void;
+  isDrawerOpen: boolean;
+  isDark: boolean;
+}
+
+interface LayoutActions {
+  setUser: (user: ProfileWithDetails | null) => void;
   setCurrentProject: (project: ProjectWithDetails | null) => void;
   setProjects: (projects: ProjectWithDetails[]) => void;
   setTasks: (tasks: TaskResult[]) => void;
+  toggleDrawer: (open?: boolean) => void;
+  toggleDarkMode: (isDark?: boolean) => void;
   updateTask: (taskId: string, updates: Partial<TaskResult>) => void;
   addTask: (task: TaskResult) => void;
   removeTask: (taskId: string) => void;
@@ -24,27 +26,36 @@ interface LayoutState {
     projectId: string,
     updates: Partial<ProjectWithDetails>,
   ) => void;
+  reset: () => void;
 }
 
-interface CombinedState extends UIState, LayoutState {}
-
-export const useAppStore = create<CombinedState>(set => ({
-  // UI State
-  isDrawerOpen: false,
-  toggleDrawer: (open?: boolean) =>
-    set(state => ({ isDrawerOpen: open ?? !state.isDrawerOpen })),
-
-  // Layout State
+// Define the initial state
+const initialState: LayoutState = {
   user: null,
   currentProject: null,
   projects: [],
   tasks: [],
+  isDrawerOpen: false,
+  isDark: false,
+};
 
-  // Layout Actions
+// Create the store
+const useLayoutStore = create<LayoutState & LayoutActions>(set => ({
+  ...initialState,
+
+  // Actions
   setUser: user => set({ user }),
+
   setCurrentProject: project => set({ currentProject: project }),
+
   setProjects: projects => set({ projects }),
+
   setTasks: tasks => set({ tasks }),
+
+  toggleDrawer: open =>
+    set(state => ({ isDrawerOpen: open ?? !state.isDrawerOpen })),
+
+  toggleDarkMode: isDark => set(state => ({ isDark: isDark ?? !state.isDark })),
 
   updateTask: (taskId, updates) =>
     set(state => ({
@@ -73,15 +84,23 @@ export const useAppStore = create<CombinedState>(set => ({
           ? { ...state.currentProject, ...updates }
           : state.currentProject,
     })),
+
+  reset: () => set(initialState),
 }));
 
 // Optional: Export selectors for better performance
-export const useUser = () => useAppStore(state => state.user);
+export const useUser = () => useLayoutStore(state => state.user);
 export const useCurrentProject = () =>
-  useAppStore(state => state.currentProject);
-export const useProjects = () => useAppStore(state => state.projects);
-export const useTasks = () => useAppStore(state => state.tasks);
+  useLayoutStore(state => state.currentProject);
+export const useProjects = () => useLayoutStore(state => state.projects);
+export const useTasks = () => useLayoutStore(state => state.tasks);
 export const useDrawer = () => ({
-  isOpen: useAppStore(state => state.isDrawerOpen),
-  toggle: useAppStore(state => state.toggleDrawer),
+  isOpen: useLayoutStore(state => state.isDrawerOpen),
+  toggle: useLayoutStore(state => state.toggleDrawer),
 });
+export const useDarkMode = () => ({
+  isDark: useLayoutStore(state => state.isDark),
+  toggle: useLayoutStore(state => state.toggleDarkMode),
+});
+
+export default useLayoutStore;

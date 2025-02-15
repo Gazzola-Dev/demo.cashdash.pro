@@ -9,9 +9,9 @@ const whitelistedDirs = [
   "components", // Only key component directories
   "lib", // Utility functions
   "app", // Page components and routing
-  "supabase/migrations", // Database schema and functions
+  // "supabase/migrations", // Database schema and functions
   "middleware", // Middleware functions
-  "styles",
+  // "styles",
 ];
 
 // Specific subdirectories to exclude even if under whitelisted directories
@@ -21,17 +21,25 @@ const blacklistedDirs = [
 
 // Whitelist of specific files that should be included when in repo root
 const whitelistedRootFiles = [
-  // Core configuration files only
+  // Core configuration files
   "tailwind.config.ts",
+  "tailwind.config.js",
   "next.config.mjs",
   "configuration.ts",
+  "src/configuration.ts",
+  "package.json",
+  "tsconfig.json",
+  "components.json",
 
   // Environment examples
   ".env.local.example",
+  ".env.local",
 
   // Documentation
   "README.md",
   "middleware.ts",
+  ".gitlab-ci.yml",
+  "cypress.config.ts",
 ];
 
 // System files to ignore
@@ -250,7 +258,7 @@ function writeIndexFile(mappings, outputDir, isDev = false) {
     .sort()
     .join("\n");
 
-  const fileName = isDev ? "_index-llm-dev.txt" : "_index-llm.txt";
+  const fileName = isDev ? "_index-dev.txt" : "_index.txt";
   fs.writeFileSync(path.join(outputDir, fileName), indexContent);
 }
 

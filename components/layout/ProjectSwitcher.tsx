@@ -23,85 +23,75 @@ import {
 import configuration from "@/configuration";
 import { useGetUserInvites } from "@/hooks/invite.hooks";
 import { useGetProfile } from "@/hooks/profile.hooks";
-import { useListProjects } from "@/hooks/project.hooks";
 import { useIsAdmin } from "@/hooks/user.hooks";
 import { cn } from "@/lib/utils";
-import { ProfileResponse } from "@/types/profile.types";
-import { useQueryClient } from "@tanstack/react-query";
-import { Code2, ListFilter, MailPlus, Plus } from "lucide-react";
+import { Code2, ListFilter, LogIn, MailPlus, Plus } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect } from "react";
 
 export function ProjectSwitcher() {
-  const queryClient = useQueryClient();
   const isAdmin = useIsAdmin();
-  const pathname = usePathname();
-  const firstSegment = pathname.split("/")[1];
   const { isMobile, open } = useSidebar();
-  const { data: projects = [] } = useListProjects();
   const { data: invites } = useGetUserInvites();
   const { data: profileData } = useGetProfile();
   const currentProject = profileData?.current_project;
-  const currentProjectSlug = currentProject?.slug;
 
   const hasPendingInvites = !!invites?.invitations?.length;
 
-  useEffect(() => {
-    if (
-      firstSegment &&
-      firstSegment !== currentProjectSlug &&
-      projects.some(p => p.slug === firstSegment)
-    ) {
-      queryClient.setQueryData(["profile"], (oldData: ProfileResponse) => {
-        return {
-          ...oldData,
-          current_project: projects.find(p => p.slug === firstSegment),
-        };
-      });
-    }
-  }, [firstSegment, currentProjectSlug, queryClient]);
+  const triggerButton = (
+    <Button
+      variant="ghost"
+      className={cn(
+        "h-auto flex items-center justify-between w-full space-x-1 hover:bg-gray-100 dark:hover:bg-gray-800 relative",
+        !currentProject && "border border-blue-300",
+      )}
+    >
+      <div
+        className={cn(
+          "flex aspect-square size-8 items-center justify-center rounded-lg",
+          !open && "ml-1.5 mt-1.5",
+          currentProject
+            ? "bg-gray-200 dark:bg-gray-700"
+            : "border border-blue-500",
+        )}
+      >
+        {currentProject ? (
+          <Code2 className="size-4 dark:text-gray-100" />
+        ) : hasPendingInvites ? (
+          <MailPlus className="text-blue-500" />
+        ) : (
+          <LogIn className="size-4 text-blue-500" />
+        )}
+      </div>
+      <div className="grid flex-1 text-left text-sm leading-tight">
+        <span className="truncate font-semibold dark:text-gray-100">
+          {currentProject
+            ? currentProject?.name
+            : hasPendingInvites
+              ? "View invitations"
+              : profileData
+                ? "No invites, signing out..."
+                : "Sign in to get started"}
+        </span>
+      </div>
+      {!open && hasPendingInvites && (
+        <div className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary">
+          <MailPlus className="h-3 w-3 text-primary-foreground" />
+        </div>
+      )}
+    </Button>
+  );
 
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <DropdownMenu>
+        <DropdownMenu open={currentProject ? undefined : false}>
           <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              className={cn(
-                "h-auto flex items-center justify-between w-full space-x-1 hover:bg-gray-100 dark:hover:bg-gray-800 relative",
-                !currentProject && "border border-blue-300",
-              )}
-            >
-              <div
-                className={cn(
-                  "flex aspect-square size-8 items-center justify-center rounded-lg",
-                  !open && "ml-1.5 mt-1.5",
-                  currentProject
-                    ? "bg-gray-200 dark:bg-gray-700"
-                    : "border border-blue-500",
-                )}
-              >
-                {currentProject ? (
-                  <Code2 className="size-4 dark:text-gray-100" />
-                ) : (
-                  <MailPlus className="text-blue-500" />
-                )}
-              </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold dark:text-gray-100">
-                  {currentProject ? currentProject?.name : "View invitations"}
-                </span>
-              </div>
-              {!open && hasPendingInvites && (
-                <div className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary">
-                  <MailPlus className="h-3 w-3 text-primary-foreground" />
-                </div>
-              )}
-            </Button>
+            {!profileData ? (
+              <Link href={configuration.paths.appHome}>{triggerButton}</Link>
+            ) : (
+              triggerButton
+            )}
           </DropdownMenuTrigger>
-
           <DropdownMenuContent
             className="w-56 rounded-lg dark:bg-gray-900 dark:border-gray-800"
             align="start"
@@ -112,12 +102,12 @@ export function ProjectSwitcher() {
               My Projects
             </DropdownMenuLabel>
             <TooltipProvider>
-              {projects.map(project => (
-                <Tooltip key={project.id}>
+              {profileData?.projects.map(p => (
+                <Tooltip key={p.project.id}>
                   <TooltipTrigger asChild>
                     <Link
                       href={configuration.paths.project.overview({
-                        project_slug: project.slug,
+                        project_slug: p.project.slug,
                       })}
                     >
                       <DropdownMenuItem className="cursor-pointer dark:hover:bg-gray-800 dark:focus:bg-gray-800">
@@ -125,7 +115,7 @@ export function ProjectSwitcher() {
                           <Code2 className="size-4 shrink-0 dark:text-gray-100" />
                         </div>
                         <div className="ml-2 flex-1 truncate dark:text-gray-100">
-                          {project.name}
+                          {p.project.name}
                         </div>
                       </DropdownMenuItem>
                     </Link>
@@ -134,7 +124,7 @@ export function ProjectSwitcher() {
                     side="right"
                     className="dark:bg-gray-800 dark:text-gray-100"
                   >
-                    {project.name}
+                    {p.project.name}
                   </TooltipContent>
                 </Tooltip>
               ))}

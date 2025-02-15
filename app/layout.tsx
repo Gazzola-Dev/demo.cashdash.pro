@@ -1,3 +1,4 @@
+import { getProfileAction } from "@/actions/profile.actions";
 import AppLayout from "@/components/layout/AppLayout";
 import Providers from "@/providers/Providers";
 import "@/styles/globals.css";
@@ -29,11 +30,13 @@ export default async function RootLayout({
     project_slug: string;
   };
 }) {
+  const { data, error } = await getProfileAction();
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
         <Providers>
-          <AppLayout projectSlug={project_slug}>{children}</AppLayout>
+          <AppLayout profile={data}>{children}</AppLayout>
         </Providers>
       </body>
     </html>

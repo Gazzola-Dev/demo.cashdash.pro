@@ -27,23 +27,27 @@ import {
 import configuration from "@/configuration";
 import { useGetProfile } from "@/hooks/profile.hooks";
 import { cn } from "@/lib/utils";
+import { ProfileWithDetails } from "@/types/profile.types";
+
 import { Dot, LayoutDashboard } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import React from "react";
 
 interface AppLayoutProps {
   children: React.ReactNode;
-  projectSlug?: string;
+  profile?: ProfileWithDetails | null;
 }
 
-export function AppLayout({ children, projectSlug }: AppLayoutProps) {
-  const { data: profileData } = useGetProfile();
+export function AppLayout({
+  children,
+  profile: initialProfile,
+}: AppLayoutProps) {
+  const { data: profileData } = useGetProfile(initialProfile);
 
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
-        <AppSidebar profileData={profileData} projectSlug={projectSlug} />
+        <AppSidebar profileData={profileData} />
         <SidebarInset>
           <header className="flex h-12 shrink-0 items-center justify-between gap-2">
             <RouteBreadcrumb />
@@ -72,17 +76,11 @@ export function AppLayout({ children, projectSlug }: AppLayoutProps) {
 
 function AppSidebar({
   profileData,
-  projectSlug,
 }: {
-  profileData: any;
-  projectSlug?: string;
+  profileData?: ProfileWithDetails | null;
 }) {
-  const pathname = usePathname();
   const { open } = useSidebar();
   const currentProject = profileData?.current_project;
-  const isTaskPath = pathname.includes("tasks");
-
-  if (!profileData) return null;
 
   return (
     <Sidebar collapsible="icon">
@@ -127,12 +125,7 @@ function AppSidebar({
               >
                 Tasks
               </h3>
-              <hr
-                className={cn(
-                  "w-full dark:border-gray-00",
-                  isTaskPath && "border-blue-400 dark:border-blue-400",
-                )}
-              />
+              <hr className={cn("w-full dark:border-gray-00")} />
             </div>
             <div className="flex-1 min-h-0">
               <TaskList />
