@@ -137,6 +137,10 @@ export function ProjectMemberList({ isDraft = false }: { isDraft?: boolean }) {
     });
   };
 
+  const pendingInvites = project?.project_invitations.filter(
+    invite => invite.status === "pending",
+  );
+
   return (
     <Card className="relative">
       {isDraft && (
@@ -240,7 +244,7 @@ export function ProjectMemberList({ isDraft = false }: { isDraft?: boolean }) {
           </div>
         ))}
 
-        {isAdmin && (
+        {isAdmin && !!pendingInvites?.length && (
           <>
             <h3 className="text-sm font-medium text-muted-foreground">
               {project?.project_members?.length
@@ -248,7 +252,7 @@ export function ProjectMemberList({ isDraft = false }: { isDraft?: boolean }) {
                 : "No pending invitations"}
             </h3>
             {/* Pending Invitations */}
-            {project?.project_invitations?.map(invite => (
+            {pendingInvites?.map(invite => (
               <div
                 key={invite.id}
                 className="flex items-center gap-4 p-2 rounded-lg hover:bg-muted/50 border border-dashed border-muted-foreground/20"
