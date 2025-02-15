@@ -17,6 +17,7 @@ import { Project, ProjectWithDetails } from "@/types/project.types";
 import { TaskFilters, TaskResult } from "@/types/task.types";
 import {
   UseQueryOptions,
+  UseQueryResult,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
@@ -175,11 +176,13 @@ export const useGetDraftTask = (
   });
 };
 
-export const useGetUserInvites = (config?: QueryConfig<UserInvites | null>) => {
+export const useGetUserInvites = (
+  config?: QueryConfig<UserInvites | null>,
+): UseQueryResult<UserInvites | null, Error> => {
   const hookName = "useGetUserInvites";
   const { data: user } = useGetUser();
 
-  return useQuery({
+  return useQuery<UserInvites | null, Error>({
     queryKey: ["user-invites"],
     queryFn: async () => {
       if (!user?.email) throw new Error("Not authenticated");

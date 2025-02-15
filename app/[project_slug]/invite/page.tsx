@@ -95,6 +95,18 @@ export default function InvitePage({ params }: InvitePageProps) {
     inv => inv.project.slug === params.project_slug,
   );
 
+  if (getInvitesIsPending)
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Loading...</CardTitle>
+          <CardDescription>
+            Please wait while we check for your invitations.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    );
+
   if (!invitation) {
     return (
       <Card>

@@ -15,16 +15,16 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
+import useAppStore from "@/hooks/app.store";
 import {
   useDeleteInvitation,
   useDeleteProjectMember,
   useInviteMember,
 } from "@/hooks/mutation.hooks";
-import { useGetProject } from "@/hooks/query.hooks";
 
 import { useToast } from "@/hooks/use-toast";
 import { useDialogQueue } from "@/hooks/useDialogQueue";
-import { useGetUser, useIsAdmin } from "@/hooks/user.hooks";
+import { useIsAdmin } from "@/hooks/user.hooks";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -50,8 +50,8 @@ export function ProjectMemberList({ isDraft = false }: { isDraft?: boolean }) {
   const { mutate: inviteMember, isPending } = useInviteMember();
   const { mutate: deleteInvite } = useDeleteInvitation();
   const { mutate: deleteMember } = useDeleteProjectMember();
-  const { data: project } = useGetProject();
-  const { data: user } = useGetUser();
+  const { profile, user } = useAppStore();
+  const project = profile?.current_project;
   const { dialog } = useDialogQueue();
   const { toast } = useToast();
 

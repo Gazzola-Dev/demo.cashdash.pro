@@ -21,7 +21,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import configuration from "@/configuration";
-import { useGetProfile, useGetUserInvites } from "@/hooks/query.hooks";
+import useAppStore from "@/hooks/app.store";
+import { useGetUserInvites } from "@/hooks/query.hooks";
 import { useIsAdmin } from "@/hooks/user.hooks";
 import { cn } from "@/lib/utils";
 import { Code2, ListFilter, LogIn, MailPlus, Plus } from "lucide-react";
@@ -31,7 +32,7 @@ export function ProjectSwitcher() {
   const isAdmin = useIsAdmin();
   const { isMobile, open } = useSidebar();
   const { data: invites } = useGetUserInvites();
-  const { data: profileData } = useGetProfile();
+  const { profile: profileData } = useAppStore();
   const currentProject = profileData?.current_project;
 
   const hasPendingInvites = !!invites?.invitations?.length;

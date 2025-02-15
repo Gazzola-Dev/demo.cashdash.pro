@@ -24,9 +24,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import configuration from "@/configuration";
+import useAppStore from "@/hooks/app.store";
 import { useUpdateTask } from "@/hooks/mutation.hooks";
-import { useGetProject, useListTasks } from "@/hooks/query.hooks";
-import { useToast } from "@/hooks/use-toast";
+import { useListTasks } from "@/hooks/query.hooks";
 import { useIsAdmin } from "@/hooks/user.hooks";
 import { cn } from "@/lib/utils";
 import { Tables } from "@/types/database.types";
@@ -50,9 +50,9 @@ import { useDebounce } from "use-debounce";
 
 const TaskTable = ({ projectId, projectSlug }: TaskTableProps) => {
   const router = useRouter();
-  const { toast } = useToast();
   const { mutate: updateTask } = useUpdateTask();
-  const { data: projectData } = useGetProject();
+  const { profile } = useAppStore();
+  const projectData = profile?.current_project;
 
   const [sorting, setSorting] = React.useState<SortingState>([
     {

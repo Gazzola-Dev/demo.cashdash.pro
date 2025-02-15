@@ -45,11 +45,13 @@ export function AppLayout({
   profile: initialProfile,
   user,
 }: AppLayoutProps) {
-  const { setProfile, profile: profileData } = useAppStore();
+  const { setProfile, profile: profileData, setUser } = useAppStore();
   useEffect(() => {
-    if (!profileData && user && initialProfile)
-      setProfile({ ...initialProfile, user });
-  }, [profileData, setProfile, user, initialProfile]);
+    if (!profileData && user && initialProfile) {
+      setProfile(initialProfile);
+      setUser(user);
+    }
+  }, [profileData, setProfile, user, initialProfile, setUser]);
 
   return (
     <SidebarProvider>

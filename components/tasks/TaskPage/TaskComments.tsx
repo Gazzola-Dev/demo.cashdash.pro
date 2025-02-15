@@ -2,7 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { useGetUser } from "@/hooks/user.hooks";
+import useAppStore from "@/hooks/app.store";
 import { capitalizeFirstLetter } from "@/lib/string.util";
 import { TaskResult } from "@/types/task.types";
 import { format } from "date-fns";
@@ -23,7 +23,8 @@ interface CommentItemProps {
 function CommentItem({ comment, onUpdateComment }: CommentItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(comment.content || "");
-  const { data: currentUser } = useGetUser();
+  const { user: currentUser } = useAppStore();
+
   const isAuthor = currentUser?.id === comment.user_id;
 
   const handleSave = () => {
