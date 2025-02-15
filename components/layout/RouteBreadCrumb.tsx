@@ -9,8 +9,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import configuration from "@/configuration";
-import { useGetProfile } from "@/hooks/profile.hooks";
-import { useListTasks } from "@/hooks/task.hooks";
+import { useGetProfile, useListTasks } from "@/hooks/query.hooks";
 import { capitalizeFirstLetter, truncateString } from "@/lib/string.util";
 import { usePathname } from "next/navigation";
 

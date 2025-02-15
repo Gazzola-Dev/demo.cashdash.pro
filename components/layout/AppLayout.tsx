@@ -25,10 +25,10 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import configuration from "@/configuration";
-import { useGetProfile } from "@/hooks/profile.hooks";
+import useAppStore from "@/hooks/app.store";
 import { cn } from "@/lib/utils";
-import useLayoutStore from "@/stores/layout.store";
 import { ProfileWithDetails } from "@/types/profile.types";
+import { User } from "@supabase/supabase-js";
 
 import { Dot, LayoutDashboard } from "lucide-react";
 import Link from "next/link";
@@ -37,17 +37,19 @@ import React, { useEffect } from "react";
 interface AppLayoutProps {
   children: React.ReactNode;
   profile?: ProfileWithDetails | null;
+  user?: User | null;
 }
 
 export function AppLayout({
   children,
   profile: initialProfile,
+  user,
 }: AppLayoutProps) {
-  const { data: profileData } = useGetProfile(initialProfile);
-  const { setProfile, profile } = useLayoutStore();
+  const { setProfile, profile: profileData } = useAppStore();
   useEffect(() => {
-    if (!profile && profileData) setProfile(profileData);
-  }, [profile, profileData, setProfile]);
+    if (!profileData && user && initialProfile)
+      setProfile({ ...initialProfile, user });
+  }, [profileData, setProfile, user, initialProfile]);
 
   return (
     <SidebarProvider>

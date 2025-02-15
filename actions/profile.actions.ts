@@ -101,7 +101,7 @@ export const createProjectAction = async (
 
     if (!userData.user) throw new Error("User not authenticated");
 
-    const { data: projectData, error: projectError } = await supabase.rpc(
+    const { data, error: error } = await supabase.rpc(
       "create_project_with_owner",
       {
         p_name: project.name,
@@ -111,59 +111,11 @@ export const createProjectAction = async (
         p_owner_id: userData.user.id,
       },
     );
-    const typesProjectData = projectData as any as ProjectWithDetails | null;
 
-    if (!typesProjectData) throw new Error("No data returned from server");
+    conditionalLog(actionName, { data, error }, true);
+    if (error) throw error;
 
-    conditionalLog(actionName, { projectData, projectError }, true);
-    if (projectError) throw projectError;
-
-    const { data: fullProject, error: fetchError } = await supabase
-      .from("projects")
-      .select(
-        `
-        *,
-        project_members (
-          *,
-          profile:profiles!user_id(*)
-        ),
-        project_invitations (
-          *,
-          inviter:profiles!invited_by(*)
-        ),
-        tasks (*),
-        external_integrations (*),
-        project_metrics (*)
-      `,
-      )
-      .eq("id", typesProjectData?.id)
-      .single();
-
-    conditionalLog(actionName, { fullProject, fetchError }, true);
-    if (fetchError) throw fetchError;
-
-    // Transform nested objects
-    const transformedProject = {
-      ...fullProject,
-      project_members: fullProject.project_members?.map(member => ({
-        ...member,
-        profile: member.profile?.[0] || null,
-      })),
-      project_invitations: fullProject.project_invitations?.map(invitation => ({
-        ...invitation,
-        inviter: invitation.inviter?.[0] || null,
-      })),
-    };
-
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .update({ current_project_id: typesProjectData.id })
-      .eq("id", userData.user.id);
-
-    conditionalLog(actionName, { profileError }, true);
-    if (profileError) throw profileError;
-
-    return getActionResponse({ data: transformedProject });
+    return getActionResponse({ data: data as any as ProjectWithDetails });
   } catch (error) {
     conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });

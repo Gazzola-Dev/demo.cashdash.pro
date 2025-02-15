@@ -24,8 +24,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import configuration from "@/configuration";
-import { useGetProject } from "@/hooks/project.hooks";
-import { useListTasks, useUpdateTask } from "@/hooks/task.hooks";
+import { useUpdateTask } from "@/hooks/mutation.hooks";
+import { useGetProject, useListTasks } from "@/hooks/query.hooks";
 import { useToast } from "@/hooks/use-toast";
 import { useIsAdmin } from "@/hooks/user.hooks";
 import { cn } from "@/lib/utils";

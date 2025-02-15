@@ -21,7 +21,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import configuration from "@/configuration";
-import { useGetProfile } from "@/hooks/profile.hooks";
+import useAppStore from "@/hooks/app.store";
 import { useSignOut } from "@/hooks/user.hooks";
 import { capitalizeFirstLetter } from "@/lib/string.util";
 import { cn } from "@/lib/utils";
@@ -33,7 +33,7 @@ export function NavUser() {
   const { isMobile } = useSidebar();
   const { mutate: signOut } = useSignOut();
   const { open } = useSidebar();
-  const { data: profileData } = useGetProfile();
+  const { profile: profileData } = useAppStore();
 
   const handleSignOut = () => {
     signOut();

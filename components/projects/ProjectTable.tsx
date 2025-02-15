@@ -18,7 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import configuration from "@/configuration";
-import { useListProjects } from "@/hooks/project.hooks";
+import { useListProjects } from "@/hooks/query.hooks";
 import { useIsAdmin } from "@/hooks/user.hooks";
 import { Tables } from "@/types/database.types";
 import { ProjectWithDetails } from "@/types/project.types";

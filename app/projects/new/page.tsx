@@ -2,7 +2,7 @@
 
 import { ProjectPage } from "@/components/projects/ProjectPage";
 import configuration from "@/configuration";
-import { useCreateProject } from "@/hooks/project.hooks";
+import { useCreateProject } from "@/hooks/mutation.hooks";
 import { useRouter } from "next/navigation";
 
 export default function NewProjectPage() {

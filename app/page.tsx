@@ -2,10 +2,10 @@
 
 import { AuthenticatedHome } from "@/components/home/AuthenticatedHome";
 import { UnauthenticatedHome } from "@/components/home/UnAuthenticatedHome";
-import { useGetUser } from "@/hooks/user.hooks";
+import useAppStore from "@/hooks/app.store";
 
 export default function HomePage() {
-  const { data: user } = useGetUser();
+  const { user } = useAppStore();
 
   if (!user) {
     return <UnauthenticatedHome />;

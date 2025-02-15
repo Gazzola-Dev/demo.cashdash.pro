@@ -11,7 +11,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import configuration from "@/configuration";
-import { useDeleteProject, useGetProjectSlug } from "@/hooks/project.hooks";
+import { useDeleteProject, useGetProjectSlug } from "@/hooks/mutation.hooks";
 import { useToast } from "@/hooks/use-toast";
 import { useDialogQueue } from "@/hooks/useDialogQueue";
 import { useIsAdmin } from "@/hooks/user.hooks";

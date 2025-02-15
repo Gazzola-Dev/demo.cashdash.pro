@@ -64,46 +64,26 @@ export const updateProjectAction = async (
   const supabase = await getSupabaseServerActionClient();
 
   try {
-    const { data, error } = await supabase
-      .from("projects")
-      .update(updates)
-      .eq("id", projectId)
-      .select(
-        `
-        *,
-        project_members (
-          *,
-          profile:profiles!user_id(*)
-        ),
-        project_invitations (
-          *,
-          inviter:profiles!invited_by(*)
-        ),
-        tasks (*),
-        external_integrations (*),
-        project_metrics (*)
-      `,
-      )
-      .single();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    conditionalLog(actionName, { userData: user, userError }, true);
+    if (!user) throw new Error("User not authenticated");
+
+    const { data, error } = await supabase.rpc("update_project_data", {
+      p_project_id: projectId,
+      p_updates: updates,
+      p_user_id: user.id,
+    });
 
     conditionalLog(actionName, { data, error }, true);
-
     if (error) throw error;
 
-    // Transform nested objects
-    const transformedProject = {
-      ...data,
-      project_members: data.project_members?.map(member => ({
-        ...member,
-        profile: member.profile?.[0] || null,
-      })),
-      project_invitations: data.project_invitations?.map(invitation => ({
-        ...invitation,
-        inviter: invitation.inviter?.[0] || null,
-      })),
-    };
-
-    return getActionResponse({ data: transformedProject });
+    return getActionResponse({
+      data: data as any as ProjectWithDetails,
+    });
   } catch (error) {
     conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });

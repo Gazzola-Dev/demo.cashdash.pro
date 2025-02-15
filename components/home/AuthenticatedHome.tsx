@@ -1,25 +1,22 @@
 // components/home/AuthenticatedHome.tsx
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useUpdateProfile } from "@/hooks/profile.hooks";
+import useAppStore from "@/hooks/app.store";
+import { useUpdateProfile } from "@/hooks/mutation.hooks";
 import { useToastQueue } from "@/hooks/useToastQueue";
 import { useIsAdmin, useSignOut } from "@/hooks/user.hooks";
 import { redactEmail } from "@/lib/string.util";
 import { cn } from "@/lib/utils";
-import { UserWithProfile } from "@/types/user.types";
+import { User } from "@supabase/supabase-js";
 import { Check, Edit2, LogOut, Shield } from "lucide-react";
 import { useState } from "react";
 
-interface AuthenticatedHomeProps {
-  user: UserWithProfile;
-}
-
-export function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
+export function AuthenticatedHome({ user }: { user: User }) {
+  const { profile: profileData } = useAppStore();
+  const profile = profileData?.profile;
   const isAdmin = useIsAdmin();
   const [isEditing, setIsEditing] = useState(false);
-  const [displayName, setDisplayName] = useState(
-    user.profile?.display_name ?? "",
-  );
+  const [displayName, setDisplayName] = useState(profile?.display_name ?? "");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { mutate: updateProfile } = useUpdateProfile();
   const { mutate: signOut } = useSignOut();
@@ -27,7 +24,7 @@ export function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
 
   const handleSave = () => {
     setIsEditing(false);
-    if (displayName === user.profile.display_name) return;
+    if (displayName === profile?.display_name) return;
     updateProfile(
       { display_name: displayName },
       {
@@ -93,7 +90,13 @@ export function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
             )}
           </div>
           <p className="text-muted-foreground">
-            {isAdmin ? user.profile.email : redactEmail(user.profile.email)}
+            {isAdmin ? (
+              profile?.email
+            ) : profile?.email ? (
+              redactEmail(profile?.email)
+            ) : (
+              <span className="italic text-sm">Email not found</span>
+            )}
           </p>
           {isAdmin && (
             <div className="flex items-center justify-center mt-2 text-sm text-muted-foreground">

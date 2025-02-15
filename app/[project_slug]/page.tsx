@@ -10,8 +10,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useGetUserInvites } from "@/hooks/invite.hooks";
-import { useGetProject, useUpdateProject } from "@/hooks/project.hooks";
+import { useUpdateProject } from "@/hooks/mutation.hooks";
+import { useGetProject, useGetUserInvites } from "@/hooks/query.hooks";
 
 interface ProjectPageProps {
   params: {

@@ -1,5 +1,7 @@
 import { ActionResponse } from "@/types/action.types";
+import { CommentWithProfile } from "@/types/comment.types";
 import { Tables } from "@/types/database.types";
+import { ProfileWithDetails } from "@/types/profile.types";
 
 // Base types from database
 type Project = Tables<"projects">;
@@ -32,7 +34,7 @@ export interface TaskWithProject extends Task {
 
 // Extended Comment type that includes user profile
 interface Comment extends BaseComment {
-  user: Profile;
+  profile: ProfileWithDetails;
 }
 
 // Updated TaskSchedule type to explicitly handle timestamps
@@ -46,7 +48,7 @@ export interface TaskScheduleWithTimestamps
 export interface TaskResult {
   task: Task;
   subtasks: Subtask[];
-  comments?: Comment[] | null;
+  comments?: CommentWithProfile[] | null;
   task_schedule: TaskScheduleWithTimestamps | null;
   assignee_profile: Profile | null;
   project: Project | null;
@@ -73,19 +75,6 @@ export interface SubtaskUpdate extends Partial<Subtask> {
   id: string;
 }
 
-// Task input types for creation/updates
-export interface TaskInput {
-  project_id: Task["project_id"];
-  title: Task["title"];
-  description?: Task["description"];
-  status?: Task["status"];
-  priority?: Task["priority"];
-  slug: Task["slug"];
-  prefix: Task["prefix"];
-  assignee?: Task["assignee"];
-  budget_cents?: Task["budget_cents"];
-}
-
 // Subtask input type for creation
 export interface SubtaskInput {
   task_id: Subtask["task_id"];
@@ -95,12 +84,12 @@ export interface SubtaskInput {
   budget_cents?: Subtask["budget_cents"];
 }
 
-export interface TaskUpdate extends Partial<TaskInput> {
+export interface TaskUpdate extends Partial<Tables<"tasks">> {
   id: string;
 }
 
 // Updated task update types to include subtask updates
-export interface TaskUpdateWithSubtasks extends Partial<TaskInput> {
+export interface TaskUpdateWithSubtasks extends Partial<Task> {
   id?: string;
   subtasks?: SubtaskUpdate[];
   task_schedule?: TaskScheduleWithTimestamps;

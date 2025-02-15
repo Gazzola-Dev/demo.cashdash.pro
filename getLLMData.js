@@ -12,6 +12,7 @@ const whitelistedDirs = [
   // "supabase/migrations", // Database schema and functions
   "middleware", // Middleware functions
   // "styles",
+  "docs",
 ];
 
 // Specific subdirectories to exclude even if under whitelisted directories

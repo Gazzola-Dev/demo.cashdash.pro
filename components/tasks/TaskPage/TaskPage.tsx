@@ -6,7 +6,7 @@ import TaskSidebar from "@/components/tasks/TaskPage/TaskSidebar";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import configuration from "@/configuration";
-import { useDeleteTask } from "@/hooks/task.hooks";
+import { useDeleteTask } from "@/hooks/mutation.hooks";
 import { useToast } from "@/hooks/use-toast";
 import { useDialogQueue } from "@/hooks/useDialogQueue";
 import { useIsAdmin } from "@/hooks/user.hooks";

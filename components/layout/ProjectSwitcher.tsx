@@ -21,8 +21,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import configuration from "@/configuration";
-import { useGetUserInvites } from "@/hooks/invite.hooks";
-import { useGetProfile } from "@/hooks/profile.hooks";
+import { useGetProfile, useGetUserInvites } from "@/hooks/query.hooks";
 import { useIsAdmin } from "@/hooks/user.hooks";
 import { cn } from "@/lib/utils";
 import { Code2, ListFilter, LogIn, MailPlus, Plus } from "lucide-react";

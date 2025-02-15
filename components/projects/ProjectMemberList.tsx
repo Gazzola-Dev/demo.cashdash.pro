@@ -15,12 +15,13 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
-import { useDeleteInvitation } from "@/hooks/invite.hooks";
 import {
+  useDeleteInvitation,
   useDeleteProjectMember,
-  useGetProject,
   useInviteMember,
-} from "@/hooks/project.hooks";
+} from "@/hooks/mutation.hooks";
+import { useGetProject } from "@/hooks/query.hooks";
+
 import { useToast } from "@/hooks/use-toast";
 import { useDialogQueue } from "@/hooks/useDialogQueue";
 import { useGetUser, useIsAdmin } from "@/hooks/user.hooks";
@@ -68,7 +69,6 @@ export function ProjectMemberList({ isDraft = false }: { isDraft?: boolean }) {
           email: data.email,
           project_id: project.id,
           role: "member",
-          status: "pending",
           invited_by: user.id,
           expires_at: new Date(
             Date.now() + 7 * 24 * 60 * 60 * 1000,

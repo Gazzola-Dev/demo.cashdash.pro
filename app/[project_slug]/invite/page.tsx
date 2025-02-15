@@ -10,10 +10,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import configuration from "@/configuration";
-import {
-  useGetUserInvites,
-  useRespondToInvitation,
-} from "@/hooks/invite.hooks";
+import { useRespondToInvitation } from "@/hooks/mutation.hooks";
+import { useGetUserInvites } from "@/hooks/query.hooks";
+
 import { useToast } from "@/hooks/use-toast";
 import { MailPlus } from "lucide-react";
 import { useRouter } from "next/navigation";

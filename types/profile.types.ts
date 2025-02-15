@@ -1,5 +1,11 @@
 import { ActionResponse } from "@/types/action.types";
 import { Tables } from "@/types/database.types";
+import {
+  ProjectInvitationWithProfile,
+  ProjectMemberWithProfile,
+  ProjectWithDetails,
+} from "@/types/project.types";
+import { User } from "@supabase/supabase-js";
 
 // Base types from database
 type Profile = Tables<"profiles">;
@@ -8,24 +14,9 @@ type ProjectInvitation = Tables<"project_invitations">;
 type ProjectMember = Tables<"project_members">;
 type Task = Tables<"tasks">;
 
-// Extended types for relationships
-export interface ProjectMemberWithProfile extends ProjectMember {
-  profile: Profile | null;
-}
-
-export interface ProjectInvitationWithProfile extends ProjectInvitation {
-  inviter: Profile | null;
-}
-
-// Project with related data
-export interface ProjectWithDetails extends Project {
-  project_members: ProjectMemberWithProfile[];
-  project_invitations: ProjectInvitationWithProfile[];
-  tasks: Task[];
-}
-
 // Profile with all relationships
 export interface ProfileWithDetails {
+  user: User;
   profile: Profile;
   projects: {
     project: Project;

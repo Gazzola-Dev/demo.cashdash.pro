@@ -8,7 +8,7 @@ import {
   StatusSelect,
 } from "@/components/tasks/TaskSelectComponents";
 import { Card, CardContent } from "@/components/ui/card";
-import { useGetProject } from "@/hooks/project.hooks";
+import { useGetProject } from "@/hooks/query.hooks";
 import { useIsAdmin } from "@/hooks/user.hooks";
 import { TaskResult, TaskUpdateWithSubtasks } from "@/types/task.types";
 import { format } from "date-fns";

@@ -1,13 +1,12 @@
 import { ActionResponse } from "@/types/action.types";
 import { Tables } from "@/types/database.types";
+import { ProfileWithDetails } from "@/types/profile.types";
 
 // Base types from database
 export type Project = Tables<"projects">;
 type ProjectMember = Tables<"project_members">;
 type ProjectInvitation = Tables<"project_invitations">;
 type Task = Tables<"tasks">;
-type ExternalIntegration = Tables<"external_integrations">;
-type ProjectMetrics = Tables<"project_metrics">;
 type Profile = Tables<"profiles">;
 
 // Required project type ensures all project fields are non-null
@@ -35,32 +34,18 @@ export interface ProfileWithEmail extends Profile {
 
 // Member with profile relationship
 export interface ProjectMemberWithProfile extends ProjectMember {
-  profile: ProfileWithEmail | null;
+  profile: Profile | null;
 }
-
 // Invitation with inviter profile relationship
 export interface ProjectInvitationWithProfile extends ProjectInvitation {
-  inviter: ProfileWithEmail | null;
+  inviter: ProfileWithDetails | null;
 }
 
 // Project with all relationships
-export interface ProjectWithDetails {
-  id: Project["id"];
-  name: Project["name"];
-  description: Project["description"];
-  status: Project["status"];
-  slug: Project["slug"];
-  prefix: Project["prefix"];
-  github_repo_url: Project["github_repo_url"];
-  github_owner: Project["github_owner"];
-  github_repo: Project["github_repo"];
-  created_at: Project["created_at"];
-  updated_at: Project["updated_at"];
+export interface ProjectWithDetails extends Project {
   project_members: ProjectMemberWithProfile[];
   project_invitations: ProjectInvitationWithProfile[];
   tasks: Task[];
-  external_integrations: ExternalIntegration[];
-  project_metrics: ProjectMetrics[];
 }
 
 // Input types for invitations
@@ -94,3 +79,11 @@ export const PROJECT_STATUS_OPTIONS: Project["status"][] = [
 
 export interface ProjectMemberResponse
   extends ActionResponse<ProjectMemberWithProfile> {}
+
+export interface InviteMemberInput {
+  email: string;
+  project_id: string;
+  role: "admin" | "member";
+  invited_by: string;
+  expires_at?: string;
+}

@@ -1,8 +1,12 @@
 "use client";
 
 import TaskPage from "@/components/tasks/TaskPage/TaskPage";
-import { useCreateComment, useUpdateComment } from "@/hooks/comment.hooks";
-import { useGetTask, useUpdateTask } from "@/hooks/task.hooks";
+import useAppStore from "@/hooks/app.store";
+import {
+  useCreateComment,
+  useUpdateComment,
+  useUpdateTask,
+} from "@/hooks/mutation.hooks";
 import { TaskResult, TaskUpdateWithSubtasks } from "@/types/task.types";
 
 function TaskPageContent({
@@ -20,8 +24,9 @@ function TaskPageContent({
     initialData.task.id,
     initialData.task.slug,
   );
+  const { tasks } = useAppStore();
+  const task = tasks.find(task => task.task.slug === taskSlug);
   const { mutate: updateComment } = useUpdateComment();
-  const { data: taskData } = useGetTask(taskSlug, { initialData });
 
   const handleUpdateTask = (updates: TaskUpdateWithSubtasks) => {
     updateTask({
@@ -40,7 +45,7 @@ function TaskPageContent({
 
   return (
     <TaskPage
-      taskData={taskData}
+      taskData={task}
       onUpdate={handleUpdateTask}
       updateIsPending={updateTaskIsPending}
       onComment={handleCreateComment}

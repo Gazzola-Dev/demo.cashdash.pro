@@ -1,4 +1,5 @@
 import { getProfileAction } from "@/actions/profile.actions";
+import { createServerSupabaseClient } from "@/clients/action-client";
 import AppLayout from "@/components/layout/AppLayout";
 import Providers from "@/providers/Providers";
 import "@/styles/globals.css";
@@ -26,13 +27,19 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { data, error } = await getProfileAction();
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { data: profile } = await getProfileAction();
 
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
         <Providers>
-          <AppLayout profile={data}>{children}</AppLayout>
+          <AppLayout profile={profile} user={user}>
+            {children}
+          </AppLayout>
         </Providers>
       </body>
     </html>

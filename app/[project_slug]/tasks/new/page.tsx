@@ -1,6 +1,7 @@
 "use client";
 import { TaskPage } from "@/components/tasks/TaskPage/TaskPage";
-import { useGetDraftTask, useUpdateTask } from "@/hooks/task.hooks";
+import { useUpdateTask } from "@/hooks/mutation.hooks";
+import { useGetDraftTask } from "@/hooks/query.hooks";
 import { TaskUpdateWithSubtasks } from "@/types/task.types";
 import { useParams } from "next/navigation";
 
@@ -10,10 +11,8 @@ export default function NewTaskPage() {
 
   const { data: taskData, error, isPending } = useGetDraftTask(projectSlug);
   const isDraft = true;
-  const { mutate: updateTask, isPending: updateTaskIsPending } = useUpdateTask(
-    {},
-    isDraft,
-  );
+  const { mutate: updateTask, isPending: updateTaskIsPending } =
+    useUpdateTask();
 
   if (isPending) return null;
 

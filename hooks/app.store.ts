@@ -1,20 +1,23 @@
 import { ProfileWithDetails } from "@/types/profile.types";
 import { ProjectWithDetails } from "@/types/project.types";
 import { TaskResult } from "@/types/task.types";
+import { User } from "@supabase/supabase-js";
 import { create } from "zustand";
 
-interface LayoutState {
+interface AppState {
   profile: ProfileWithDetails | null;
-  currentProject: ProjectWithDetails | null | undefined;
+  currentProject?: ProjectWithDetails | null;
   projects: ProjectWithDetails[];
   tasks: TaskResult[];
   isDrawerOpen: boolean;
   isDark: boolean;
+  user?: User | null;
 }
 
-interface LayoutActions {
+interface AppActions {
+  setUser: (user?: User | null) => void;
   setProfile: (profile: ProfileWithDetails | null) => void;
-  setCurrentProject: (project: ProjectWithDetails | null | undefined) => void;
+  setCurrentProject: (project?: ProjectWithDetails | null) => void;
   setProjects: (projects: ProjectWithDetails[]) => void;
   setTasks: (tasks: TaskResult[]) => void;
   toggleDrawer: (open?: boolean) => void;
@@ -30,7 +33,7 @@ interface LayoutActions {
 }
 
 // Define the initial state
-const initialState: LayoutState = {
+const initialState: AppState = {
   profile: null,
   currentProject: null,
   projects: [],
@@ -39,11 +42,12 @@ const initialState: LayoutState = {
   isDark: false,
 };
 
-export type LayoutStore = LayoutState & LayoutActions;
+export type AppStore = AppState & AppActions;
 
 // Create the store
-const useLayoutStore = create<LayoutStore>(set => ({
+const useAppStore = create<AppStore>(set => ({
   ...initialState,
+  setUser: user => set({ user }),
   // Actions
   setProfile: profile => {
     if (!profile) {
@@ -71,17 +75,7 @@ const useLayoutStore = create<LayoutStore>(set => ({
     set({
       profile: profile,
       // Set current project from profile with required fields
-      currentProject: profile.current_project
-        ? {
-            ...profile.current_project,
-            project_members: profile.current_project.project_members || [],
-            project_invitations:
-              profile.current_project.project_invitations || [],
-            tasks: profile.current_project.tasks || [],
-            external_integrations: [],
-            project_metrics: [],
-          }
-        : null,
+      currentProject: profile.current_project,
       // Set transformed projects
       projects: projectsWithDetails,
       // Combine tasks from profile
@@ -143,18 +137,18 @@ const useLayoutStore = create<LayoutStore>(set => ({
 }));
 
 // Optional: Export selectors for better performance
-export const useProfile = () => useLayoutStore(state => state.profile);
+export const useProfile = () => useAppStore(state => state.profile);
 export const useCurrentProject = () =>
-  useLayoutStore(state => state.currentProject);
-export const useProjects = () => useLayoutStore(state => state.projects);
-export const useTasks = () => useLayoutStore(state => state.tasks);
+  useAppStore(state => state.currentProject);
+export const useProjects = () => useAppStore(state => state.projects);
+export const useTasks = () => useAppStore(state => state.tasks);
 export const useDrawer = () => ({
-  isOpen: useLayoutStore(state => state.isDrawerOpen),
-  toggle: useLayoutStore(state => state.toggleDrawer),
+  isOpen: useAppStore(state => state.isDrawerOpen),
+  toggle: useAppStore(state => state.toggleDrawer),
 });
 export const useDarkMode = () => ({
-  isDark: useLayoutStore(state => state.isDark),
-  toggle: useLayoutStore(state => state.toggleDarkMode),
+  isDark: useAppStore(state => state.isDark),
+  toggle: useAppStore(state => state.toggleDarkMode),
 });
 
-export default useLayoutStore;
+export default useAppStore;

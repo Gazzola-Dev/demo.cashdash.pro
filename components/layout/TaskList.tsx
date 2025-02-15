@@ -11,8 +11,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import configuration from "@/configuration";
-import { useGetProfile } from "@/hooks/profile.hooks";
-import { useListTasks } from "@/hooks/task.hooks";
+import useAppStore from "@/hooks/app.store";
 import { useIsAdmin } from "@/hooks/user.hooks";
 import { cn } from "@/lib/utils";
 import {
@@ -73,9 +72,7 @@ const getIconStyles = (isActive: boolean, isPath = false) => ({
 });
 
 const TaskList = () => {
-  const { data: profileData } = useGetProfile();
   const pathname = usePathname();
-  const isTaskPath = pathname.includes("tasks");
   const { open } = useSidebar();
   const [sortConfig, setSortConfig] = useState<SortOption>({
     field: "priority",
@@ -88,14 +85,7 @@ const TaskList = () => {
     return priorityMap[priority as keyof typeof priorityMap] || 0;
   };
 
-  const { data: rawTasks = [] } = useListTasks({
-    projectSlug: profileData?.current_project?.slug,
-    sort:
-      sortConfig.field === "priority" || sortConfig.field === "due_date"
-        ? "created_at"
-        : "created_at",
-    order: sortConfig.order,
-  });
+  const { tasks: rawTasks, profile: profileData } = useAppStore();
 
   const tasks = [...rawTasks]
     .filter(t => t.task.status !== "draft")

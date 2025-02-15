@@ -1,13 +1,19 @@
 // types/comment.types.ts
-
 import { ActionResponse } from "@/types/action.types";
 import { Tables } from "@/types/database.types";
 
 export type Comment = Tables<"comments">;
-export type Profile = Tables<"profiles">;
+
+// Only include the profile fields needed for comments
+export interface CommentProfile {
+  id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  professional_title: string | null;
+}
 
 export interface CommentWithProfile extends Comment {
-  user: Profile;
+  user: CommentProfile;
 }
 
 export interface CreateCommentInput {
