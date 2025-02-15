@@ -2,6 +2,17 @@ import { Slugs } from "@/types/nav.types";
 
 const production = process.env.NODE_ENV === "production";
 
+export const firstRouteSegments = [
+  "404",
+  "about",
+  "feedback",
+  "privacy",
+  "projects",
+  "settings",
+  "support",
+  "terms",
+];
+
 const configuration = {
   site: {
     name: "Cash Dash Pro",

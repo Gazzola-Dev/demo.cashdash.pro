@@ -2,6 +2,7 @@
 
 import useIsMounted from "@/hooks/useIsMounted";
 import AuthProvider from "@/providers/AuthProvider";
+import ProjectProvider from "@/providers/ProjectProvider";
 import QueryProvider from "@/providers/QueryProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { ZIndexProvider } from "@/providers/ZIndexProvider";
@@ -21,7 +22,9 @@ const Providers = ({ children }: { children: ReactNode }) => {
           disableTransitionOnChange
         >
           <ZIndexProvider>
-            <AuthProvider>{children}</AuthProvider>
+            <AuthProvider>
+              <ProjectProvider>{children}</ProjectProvider>
+            </AuthProvider>
           </ZIndexProvider>
         </ThemeProvider>
       </QueryProvider>

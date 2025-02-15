@@ -13,6 +13,7 @@ const whitelistedDirs = [
   "middleware", // Middleware functions
   // "styles",
   "docs",
+  "providers",
 ];
 
 // Specific subdirectories to exclude even if under whitelisted directories

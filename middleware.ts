@@ -1,5 +1,6 @@
 import csrffMiddleware from "@/middleware/csrfMiddleware";
-import userMiddleware from "@/middleware/userMiddleware";
+import projectMiddleware from "@/middleware/projectMiddleware";
+import publicMiddleware from "@/middleware/publicMiddleware";
 import { NextRequest, NextResponse } from "next/server";
 
 export const config = {
@@ -11,6 +12,7 @@ export const config = {
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next();
   const csrfResponse = await csrffMiddleware(request, response);
-  const userResponse = await userMiddleware(request, csrfResponse);
-  return userResponse;
+  const publicResponse = await publicMiddleware(request, csrfResponse);
+  const projectResponse = await projectMiddleware(request, publicResponse);
+  return projectResponse;
 }

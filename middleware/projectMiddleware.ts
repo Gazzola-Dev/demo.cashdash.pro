@@ -1,68 +1,23 @@
 import { getUserInvitesAction } from "@/actions/invite.actions";
 import { listProjectsAction } from "@/actions/project.actions";
 import createMiddlewareClient from "@/clients/middleware-client";
-import configuration from "@/configuration";
+import configuration, { firstRouteSegments } from "@/configuration";
 import { conditionalLog } from "@/lib/log.utils";
 import { NextRequest, NextResponse } from "next/server";
 
-async function middleware(request: NextRequest, response: NextResponse) {
+async function projectMiddleware(request: NextRequest, response: NextResponse) {
   const hookName = "middleware";
   const pathname = request.nextUrl.pathname;
-  const pathSegments = pathname.split("/").filter(Boolean);
   const supabase = createMiddlewareClient(request, response);
+  const pathSegments = pathname.split("/").filter(Boolean);
 
-  // Skip logging for static assets and API routes
-  const shouldLog =
-    process.env.SERVER_DEBUG === "true" &&
-    !pathname.startsWith("/_next/") &&
-    !pathname.startsWith("/api/");
-
-  // Allow public assets, API routes, and Next.js internal routes to bypass middleware
-  if (
-    pathname.startsWith("/svg/") ||
-    pathname.startsWith("/_next/") ||
-    pathname.startsWith("/api/") ||
-    pathname.startsWith("/__nextjs") ||
-    pathname.includes(".")
-  ) {
-    conditionalLog(hookName, { status: "bypassed", pathname }, shouldLog);
-    return response;
-  }
-
-  // Public paths that don't require authentication
-  const publicPaths = [
-    "settings",
-    "support",
-    "feedback",
-    "privacy",
-    "terms",
-    "404",
-    "about",
-    "invite",
-  ];
-
-  if (publicPaths.includes(pathSegments[0])) {
-    conditionalLog(hookName, { status: "public_path", pathname }, shouldLog);
-    return response;
-  }
-
-  // Get user session
   const {
     data: { user },
     error: sessionError,
   } = await supabase.auth.getUser();
 
   if (sessionError || !user) {
-    conditionalLog(
-      hookName,
-      { status: "unauthenticated", sessionError },
-      shouldLog,
-    );
-
-    if (pathname !== configuration.paths.appHome)
-      return NextResponse.redirect(
-        new URL(configuration.paths.appHome, request.url),
-      );
+    conditionalLog(hookName, { status: "unauthenticated", sessionError }, true);
     return response;
   }
 
@@ -72,62 +27,27 @@ async function middleware(request: NextRequest, response: NextResponse) {
     pathname ===
       configuration.paths.tasks.new({ project_slug: pathSegments?.[1] });
 
-  if (isAdminRoute) {
+  const { data: invites } = await getUserInvitesAction();
+  const { data: projects } = await listProjectsAction();
+
+  if (isAdminRoute || (!projects?.length && !invites?.invitations.length)) {
     const { data: roles, error: rolesError } = await supabase
       .from("user_roles")
       .select("role")
-      .eq("user_id", user.id)
+      .eq("user_id", user?.id || "")
       .eq("role", "admin");
 
     if (rolesError || !roles.length) {
       conditionalLog(
         hookName,
-        { status: "admin_required", rolesError },
-        shouldLog,
+        {
+          status: isAdminRoute ? "admin_required" : "no_memberships_or_invites",
+          user_id: user?.id,
+          roles,
+          rolesError,
+        },
+        true,
       );
-      return NextResponse.redirect(
-        new URL(configuration.paths.appHome, request.url),
-      );
-    }
-  }
-
-  // Get user profile with current project
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("*, current_project_id")
-    .eq("id", user.id)
-    .single();
-
-  if (profileError || !profile) {
-    conditionalLog(
-      hookName,
-      { status: "no_profile", user_id: user.id, profileError },
-      shouldLog,
-    );
-    await supabase.auth.signOut();
-    return NextResponse.redirect(
-      new URL(configuration.paths.appHome, request.url),
-    );
-  }
-
-  const { data: invites } = await getUserInvitesAction();
-  const { data: projects } = await listProjectsAction();
-
-  if (!projects?.length && !invites?.invitations.length) {
-    const { data: roles, error: rolesError } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "admin");
-    const isAdmin = !!roles?.length;
-    if (isAdmin) return response;
-    if (!isAdmin) {
-      conditionalLog(
-        hookName,
-        { status: "no_memberships_or_invites", user_id: user.id },
-        shouldLog,
-      );
-      await supabase.auth.signOut();
       return NextResponse.redirect(
         new URL(configuration.paths.appHome, request.url),
       );
@@ -142,7 +62,7 @@ async function middleware(request: NextRequest, response: NextResponse) {
         user_id: user.id,
         invites_count: invites?.invitations.length,
       },
-      shouldLog,
+      true,
     );
     return response;
   }
@@ -156,21 +76,29 @@ async function middleware(request: NextRequest, response: NextResponse) {
     return response;
   }
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("*, current_project_id")
+    .eq("id", user.id)
+    .single();
+
   // If no current project, assign first available project using SECURITY DEFINER function
-  if (!profile.current_project_id && projects.length) {
+  if (!profile?.current_project_id && projects.length) {
     const firstProject = projects?.[0];
     if (!firstProject) {
       conditionalLog(
         hookName,
         { status: "no_projects_available", user_id: user.id },
-        shouldLog,
+        true,
       );
-      return NextResponse.redirect(
-        new URL(configuration.paths.project.new, request.url),
-      );
+      if (pathname !== configuration.paths.appHome) {
+        return NextResponse.redirect(
+          new URL(configuration.paths.appHome, request.url),
+        );
+      }
+      return NextResponse.next();
     }
 
-    // Call the SECURITY DEFINER function to update current project
     const { error: updateError } = await supabase.rpc(
       "set_user_current_project",
       {
@@ -187,7 +115,7 @@ async function middleware(request: NextRequest, response: NextResponse) {
         project_id: firstProject.id,
         updateError,
       },
-      shouldLog,
+      true,
     );
 
     if (updateError) {
@@ -195,7 +123,7 @@ async function middleware(request: NextRequest, response: NextResponse) {
       conditionalLog(
         hookName,
         { status: "update_error", error: updateError },
-        shouldLog,
+        true,
       );
     }
 
@@ -210,7 +138,7 @@ async function middleware(request: NextRequest, response: NextResponse) {
   }
 
   const currentProject = projects?.find(
-    p => p.id === profile.current_project_id,
+    p => p.id === profile?.current_project_id,
   );
 
   // Check if user has an invitation for the requested project
@@ -218,12 +146,13 @@ async function middleware(request: NextRequest, response: NextResponse) {
     invite => invite.project.slug === urlProjectSlug,
   );
 
-  // If URL project slug doesn't match any user projects and user has no invitation
+  const isKnownRoute = firstRouteSegments.includes(urlProjectSlug);
+  const isKnownProject = projectSlugs?.includes(urlProjectSlug);
   if (
     urlProjectSlug &&
-    !projectSlugs?.includes(urlProjectSlug) &&
-    !hasInviteForProject &&
-    urlProjectSlug !== "projects"
+    !isKnownRoute &&
+    !isKnownProject &&
+    !hasInviteForProject
   ) {
     const redirectProject = currentProject || projects?.[0];
     conditionalLog(
@@ -234,7 +163,7 @@ async function middleware(request: NextRequest, response: NextResponse) {
         attempted_slug: urlProjectSlug,
         redirect_to: redirectProject?.slug,
       },
-      shouldLog,
+      true,
     );
 
     return NextResponse.redirect(
@@ -249,7 +178,6 @@ async function middleware(request: NextRequest, response: NextResponse) {
     );
   }
 
-  // If URL project slug doesn't match current project
   if (
     currentProject &&
     urlProjectSlug &&
@@ -273,7 +201,7 @@ async function middleware(request: NextRequest, response: NextResponse) {
           new_project: newCurrentProject.slug,
           updateError,
         },
-        shouldLog,
+        true,
       );
     }
   }
@@ -283,13 +211,12 @@ async function middleware(request: NextRequest, response: NextResponse) {
     {
       status: "normal_access",
       user_id: user.id,
-      current_project: profile.current_project_id,
+      current_project: profile?.current_project_id,
       pathname,
     },
-    shouldLog,
+    true,
   );
-
   return response;
 }
 
-export default middleware;
+export default projectMiddleware;
