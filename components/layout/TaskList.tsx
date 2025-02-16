@@ -1,3 +1,4 @@
+import { StatusIconSimple } from "@/components/tasks/SimpleTaskSelectComponents";
 import { Button } from "@/components/ui/button";
 import {
   SidebarGroup,
@@ -16,6 +17,7 @@ import { useIsAdmin } from "@/hooks/user.hooks";
 import { cn } from "@/lib/utils";
 import {
   Clock,
+  Filter,
   ListIcon,
   Plus,
   Signal,
@@ -55,6 +57,8 @@ type SortOption = {
   order: "asc" | "desc";
 };
 
+type TaskStatus = "in_review" | "todo" | "backlog" | "draft" | null;
+
 const getIconStyles = (isActive: boolean, isPath = false) => ({
   button: cn(
     "dark:text-gray-200 text-gray-700",
@@ -74,21 +78,34 @@ const getIconStyles = (isActive: boolean, isPath = false) => ({
   ),
 });
 
-const TaskListSkeleton = () => {
-  const skeletonCount = Math.floor(Math.random() * 5) + 3; // Random number between 3 and 7
-  return (
-    <div className="space-y-2 px-2">
-      {Array.from({ length: skeletonCount }).map((_, index) => (
-        <div
-          key={index}
-          className="flex items-center gap-2 p-2 rounded-md animate-pulse"
-        >
-          <div className="h-4 w-4 rounded-full bg-gray-200 dark:bg-gray-700" />
-          <div className="h-4 flex-1 bg-gray-200 dark:bg-gray-700 rounded" />
-        </div>
-      ))}
-    </div>
-  );
+const getBorderColorForStatus = (status: TaskStatus) => {
+  switch (status) {
+    case "in_review":
+      return "border-purple-500 dark:border-purple-400";
+    case "todo":
+      return "border-blue-500 dark:border-blue-400";
+    case "backlog":
+      return "border-gray-500 dark:border-gray-400";
+    case "draft":
+      return "border-gray-500 dark:border-gray-400";
+    default:
+      return "border-transparent";
+  }
+};
+
+const getStatusDisplayName = (status: TaskStatus) => {
+  switch (status) {
+    case "in_review":
+      return "In Review";
+    case "todo":
+      return "To Do";
+    case "backlog":
+      return "Backlog";
+    case "draft":
+      return "Draft";
+    default:
+      return null;
+  }
 };
 
 const TaskList = () => {
@@ -98,6 +115,7 @@ const TaskList = () => {
     field: "priority",
     order: "desc",
   });
+  const [currentStatus, setCurrentStatus] = useState<TaskStatus>(null);
 
   const isAdmin = useIsAdmin();
   const getPriorityValue = (priority: string) => {
@@ -105,12 +123,43 @@ const TaskList = () => {
     return priorityMap[priority as keyof typeof priorityMap] || 0;
   };
 
-  const { tasks, profile: profileData, currentProject } = useAppStore();
+  const { tasks, profile: profileData } = useAppStore();
 
-  const isLoading = tasks?.[0]?.task?.project_id !== currentProject?.id;
+  const cycleStatus = () => {
+    switch (currentStatus) {
+      case null:
+        setCurrentStatus("in_review");
+        break;
+      case "in_review":
+        setCurrentStatus("todo");
+        break;
+      case "todo":
+        setCurrentStatus("backlog");
+        break;
+      case "backlog":
+        setCurrentStatus(isAdmin ? "draft" : null);
+        break;
+      case "draft":
+        setCurrentStatus(null);
+        break;
+      default:
+        setCurrentStatus(null);
+    }
+  };
 
-  const sortedTasks = tasks
-    ?.filter(task => task.task.status !== "draft")
+  const filteredTasks = tasks
+    ?.filter(
+      task =>
+        task.task.status !==
+        (currentStatus === null
+          ? "draft"
+          : currentStatus === "draft"
+            ? undefined
+            : "draft"),
+    )
+    .filter(
+      task => currentStatus === null || task.task.status === currentStatus,
+    )
     .sort((a, b) => {
       let aValue, bValue;
 
@@ -165,7 +214,6 @@ const TaskList = () => {
                 className={
                   getIconStyles(sortConfig.field === "priority").button
                 }
-                disabled={isLoading}
               >
                 <Signal
                   className={
@@ -178,7 +226,12 @@ const TaskList = () => {
               side="top"
               className="dark:bg-gray-800 dark:text-gray-100"
             >
-              Sort by priority
+              Sort by priority{" "}
+              <span className="font-semibold italic">
+                (
+                {sortConfig.order === "desc" ? "Highest first" : "Lowest first"}
+                )
+              </span>
             </TooltipContent>
           </Tooltip>
           <Tooltip>
@@ -190,7 +243,6 @@ const TaskList = () => {
                 className={
                   getIconStyles(sortConfig.field === "created_at").button
                 }
-                disabled={isLoading}
               >
                 <Clock
                   className={
@@ -203,7 +255,43 @@ const TaskList = () => {
               side="top"
               className="dark:bg-gray-800 dark:text-gray-100"
             >
-              Sort by creation date
+              Sort by creation date{" "}
+              <span className="font-semibold italic">
+                ({sortConfig.order === "desc" ? "Newest first" : "Oldest first"}
+                )
+              </span>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={cycleStatus}
+                className={cn(
+                  "border",
+                  getBorderColorForStatus(currentStatus),
+                  getIconStyles(!!currentStatus).button,
+                )}
+              >
+                {currentStatus ? (
+                  <StatusIconSimple status={currentStatus} />
+                ) : (
+                  <Filter className={getIconStyles(false).icon} />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent
+              side="top"
+              className="dark:bg-gray-800 dark:text-gray-100"
+            >
+              Filter by status
+              {currentStatus && (
+                <span className="font-semibold italic">
+                  {" "}
+                  ({getStatusDisplayName(currentStatus)})
+                </span>
+              )}
             </TooltipContent>
           </Tooltip>
 
@@ -216,7 +304,6 @@ const TaskList = () => {
                 className={
                   getIconStyles(pathname === allTasksPath, true).button
                 }
-                disabled={isLoading}
               >
                 <Link href={allTasksPath}>
                   <ListIcon
@@ -245,7 +332,6 @@ const TaskList = () => {
                   className={
                     getIconStyles(pathname === newTaskPath, true).button
                   }
-                  disabled={isLoading}
                 >
                   <Link href={newTaskPath}>
                     <Plus
@@ -268,50 +354,49 @@ const TaskList = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {isLoading ? (
-          <TaskListSkeleton />
-        ) : (
-          sortedTasks?.map(taskData => (
-            <SidebarMenuItem key={taskData.task.id}>
-              <Link
-                href={configuration.paths.tasks.view({
-                  project_slug: profileData.current_project?.slug,
-                  task_slug: taskData.task.slug,
-                })}
-                className={cn(
-                  "flex items-center gap-2 px-2 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 select-none",
-                  "text-sm",
-                  pathname ===
-                    configuration.paths.tasks.view({
-                      project_slug: profileData.current_project?.slug,
-                      task_slug: taskData.task.slug,
-                    }) && "bg-gray-100 dark:bg-gray-800 font-medium",
-                )}
-              >
+        {filteredTasks.map(taskData => (
+          <SidebarMenuItem key={taskData.task.id}>
+            <Link
+              href={configuration.paths.tasks.view({
+                project_slug: profileData.current_project?.slug,
+                task_slug: taskData.task.slug,
+              })}
+              className={cn(
+                "flex items-center gap-2 px-2 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 select-none",
+                "text-sm",
+                pathname ===
+                  configuration.paths.tasks.view({
+                    project_slug: profileData.current_project?.slug,
+                    task_slug: taskData.task.slug,
+                  }) && "bg-gray-100 dark:bg-gray-800 font-medium",
+              )}
+            >
+              <div className="flex items-center gap-2">
                 <PriorityIcon priority={taskData.task.priority} />
-                <span className="truncate">
-                  {open ? (
-                    taskData.task.title
-                  ) : (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span>{taskData.task.title}</span>
-                        </TooltipTrigger>
-                        <TooltipContent
-                          side="right"
-                          className="dark:bg-gray-800 dark:text-gray-100"
-                        >
-                          {taskData.task.title}
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  )}
-                </span>
-              </Link>
-            </SidebarMenuItem>
-          ))
-        )}
+                <StatusIconSimple status={taskData.task.status} />
+              </div>
+              <span className="truncate">
+                {open ? (
+                  taskData.task.title
+                ) : (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span>{taskData.task.title}</span>
+                      </TooltipTrigger>
+                      <TooltipContent
+                        side="right"
+                        className="dark:bg-gray-800 dark:text-gray-100"
+                      >
+                        {taskData.task.title}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </span>
+            </Link>
+          </SidebarMenuItem>
+        ))}
       </div>
     </SidebarGroup>
   );
