@@ -20,7 +20,7 @@ async function projectMiddleware(request: NextRequest, response: NextResponse) {
 
   if (sessionError || !user) {
     conditionalLog(hookName, { status: "unauthenticated", sessionError }, true);
-    if (!isKnownRoute) {
+    if (!isKnownRoute && pathname !== configuration.paths.appHome) {
       return NextResponse.redirect(
         new URL(configuration.paths.appHome, request.url),
       );
