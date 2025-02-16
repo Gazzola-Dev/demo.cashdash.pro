@@ -1,13 +1,13 @@
 "use client";
 import useAppStore from "@/hooks/app.store";
-import { useQueryClient } from "@tanstack/react-query";
+import { useGetProfile } from "@/hooks/query.hooks";
 import { usePathname } from "next/navigation";
 import { ReactNode, useEffect } from "react";
 
 const ProjectProvider = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname();
   const { projects, currentProject, setCurrentProject } = useAppStore();
-  const queryClient = useQueryClient();
+  const { refetch: refetchProfile } = useGetProfile();
 
   useEffect(() => {
     const firstRouteSegment = pathname.split("/")[1];
@@ -23,12 +23,10 @@ const ProjectProvider = ({ children }: { children: ReactNode }) => {
     const newProject = projects.find(p => p.slug === firstRouteSegment);
 
     if (newProject?.id !== currentProject?.id) {
+      refetchProfile();
       setCurrentProject(newProject);
-      queryClient.invalidateQueries({
-        queryKey: ["project", newProject?.slug],
-      });
     }
-  }, [pathname, projects, currentProject, setCurrentProject]);
+  }, [pathname, projects, currentProject, setCurrentProject, refetchProfile]);
 
   return <>{children}</>;
 };

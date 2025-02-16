@@ -32,8 +32,7 @@ export function ProjectSwitcher() {
   const isAdmin = useIsAdmin();
   const { isMobile, open } = useSidebar();
   const { data: invites } = useGetUserInvites();
-  const { profile: profileData } = useAppStore();
-  const currentProject = profileData?.current_project;
+  const { profile: profileData, currentProject } = useAppStore();
 
   const hasPendingInvites = !!invites?.invitations?.length;
 

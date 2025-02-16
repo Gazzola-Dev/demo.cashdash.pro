@@ -74,6 +74,23 @@ const getIconStyles = (isActive: boolean, isPath = false) => ({
   ),
 });
 
+const TaskListSkeleton = () => {
+  const skeletonCount = Math.floor(Math.random() * 5) + 3; // Random number between 3 and 7
+  return (
+    <div className="space-y-2 px-2">
+      {Array.from({ length: skeletonCount }).map((_, index) => (
+        <div
+          key={index}
+          className="flex items-center gap-2 p-2 rounded-md animate-pulse"
+        >
+          <div className="h-4 w-4 rounded-full bg-gray-200 dark:bg-gray-700" />
+          <div className="h-4 flex-1 bg-gray-200 dark:bg-gray-700 rounded" />
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const TaskList = () => {
   const pathname = usePathname();
   const { open } = useSidebar();
@@ -88,7 +105,9 @@ const TaskList = () => {
     return priorityMap[priority as keyof typeof priorityMap] || 0;
   };
 
-  const { tasks, profile: profileData } = useAppStore();
+  const { tasks, profile: profileData, currentProject } = useAppStore();
+
+  const isLoading = tasks?.[0]?.task?.project_id !== currentProject?.id;
 
   const sortedTasks = tasks
     ?.filter(task => task.task.status !== "draft")
@@ -104,10 +123,6 @@ const TaskList = () => {
           aValue = new Date(a.task.created_at).getTime();
           bValue = new Date(b.task.created_at).getTime();
           break;
-        // case "due_date":
-        //   aValue = a.task.due_date ? new Date(a.task.due_date).getTime() : 0;
-        //   bValue = b.task.due_date ? new Date(b.task.due_date).getTime() : 0;
-        //   break;
         default:
           aValue = new Date(a.task.created_at).getTime();
           bValue = new Date(b.task.created_at).getTime();
@@ -150,6 +165,7 @@ const TaskList = () => {
                 className={
                   getIconStyles(sortConfig.field === "priority").button
                 }
+                disabled={isLoading}
               >
                 <Signal
                   className={
@@ -174,6 +190,7 @@ const TaskList = () => {
                 className={
                   getIconStyles(sortConfig.field === "created_at").button
                 }
+                disabled={isLoading}
               >
                 <Clock
                   className={
@@ -189,30 +206,6 @@ const TaskList = () => {
               Sort by creation date
             </TooltipContent>
           </Tooltip>
-          {/* <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => toggleSort("due_date")}
-                className={
-                  getIconStyles(sortConfig.field === "due_date").button
-                }
-              >
-                <CalendarRange
-                  className={
-                    getIconStyles(sortConfig.field === "due_date").icon
-                  }
-                />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent
-              side="top"
-              className="dark:bg-gray-800 dark:text-gray-100"
-            >
-              Sort by due date
-            </TooltipContent>
-          </Tooltip> */}
 
           <Tooltip>
             <TooltipTrigger asChild>
@@ -223,6 +216,7 @@ const TaskList = () => {
                 className={
                   getIconStyles(pathname === allTasksPath, true).button
                 }
+                disabled={isLoading}
               >
                 <Link href={allTasksPath}>
                   <ListIcon
@@ -251,6 +245,7 @@ const TaskList = () => {
                   className={
                     getIconStyles(pathname === newTaskPath, true).button
                   }
+                  disabled={isLoading}
                 >
                   <Link href={newTaskPath}>
                     <Plus
@@ -273,46 +268,50 @@ const TaskList = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {sortedTasks.map(taskData => (
-          <SidebarMenuItem key={taskData.task.id}>
-            <Link
-              href={configuration.paths.tasks.view({
-                project_slug: profileData.current_project?.slug,
-                task_slug: taskData.task.slug,
-              })}
-              className={cn(
-                "flex items-center gap-2 px-2 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 select-none",
-                "text-sm",
-                pathname ===
-                  configuration.paths.tasks.view({
-                    project_slug: profileData.current_project?.slug,
-                    task_slug: taskData.task.slug,
-                  }) && "bg-gray-100 dark:bg-gray-800 font-medium",
-              )}
-            >
-              <PriorityIcon priority={taskData.task.priority} />
-              <span className="truncate">
-                {open ? (
-                  taskData.task.title
-                ) : (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span>{taskData.task.title}</span>
-                      </TooltipTrigger>
-                      <TooltipContent
-                        side="right"
-                        className="dark:bg-gray-800 dark:text-gray-100"
-                      >
-                        {taskData.task.title}
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+        {isLoading ? (
+          <TaskListSkeleton />
+        ) : (
+          sortedTasks?.map(taskData => (
+            <SidebarMenuItem key={taskData.task.id}>
+              <Link
+                href={configuration.paths.tasks.view({
+                  project_slug: profileData.current_project?.slug,
+                  task_slug: taskData.task.slug,
+                })}
+                className={cn(
+                  "flex items-center gap-2 px-2 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 select-none",
+                  "text-sm",
+                  pathname ===
+                    configuration.paths.tasks.view({
+                      project_slug: profileData.current_project?.slug,
+                      task_slug: taskData.task.slug,
+                    }) && "bg-gray-100 dark:bg-gray-800 font-medium",
                 )}
-              </span>
-            </Link>
-          </SidebarMenuItem>
-        ))}
+              >
+                <PriorityIcon priority={taskData.task.priority} />
+                <span className="truncate">
+                  {open ? (
+                    taskData.task.title
+                  ) : (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span>{taskData.task.title}</span>
+                        </TooltipTrigger>
+                        <TooltipContent
+                          side="right"
+                          className="dark:bg-gray-800 dark:text-gray-100"
+                        >
+                          {taskData.task.title}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+                </span>
+              </Link>
+            </SidebarMenuItem>
+          ))
+        )}
       </div>
     </SidebarGroup>
   );

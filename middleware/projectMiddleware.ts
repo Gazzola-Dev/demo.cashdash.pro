@@ -30,7 +30,11 @@ async function projectMiddleware(request: NextRequest, response: NextResponse) {
   const { data: invites } = await getUserInvitesAction();
   const { data: projects } = await listProjectsAction();
 
-  if (isAdminRoute || (!projects?.length && !invites?.invitations.length)) {
+  const pendingInvites = invites?.invitations.filter(
+    invite => invite.status === "pending",
+  );
+
+  if (isAdminRoute || (!projects?.length && !pendingInvites?.length)) {
     const { data: roles, error: rolesError } = await supabase
       .from("user_roles")
       .select("role")
@@ -60,7 +64,7 @@ async function projectMiddleware(request: NextRequest, response: NextResponse) {
       {
         status: "has_invites_only",
         user_id: user.id,
-        invites_count: invites?.invitations.length,
+        pendingInvites_count: pendingInvites?.length,
       },
       true,
     );
@@ -70,11 +74,6 @@ async function projectMiddleware(request: NextRequest, response: NextResponse) {
   // Extract project slugs and find current project
   const projectSlugs = projects?.map(p => p.slug);
   const urlProjectSlug = pathSegments[0];
-
-  // Skip project slug validation for Next.js internal routes
-  if (urlProjectSlug?.startsWith("__nextjs")) {
-    return response;
-  }
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -187,10 +186,13 @@ async function projectMiddleware(request: NextRequest, response: NextResponse) {
     // Update current project to match URL
     const newCurrentProject = projects?.find(p => p.slug === urlProjectSlug);
     if (newCurrentProject) {
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ current_project_id: newCurrentProject.id })
-        .eq("id", user.id);
+      const { error: updateError } = await supabase.rpc(
+        "set_user_current_project",
+        {
+          p_user_id: user.id,
+          p_project_id: newCurrentProject.id,
+        },
+      );
 
       conditionalLog(
         hookName,
@@ -210,8 +212,8 @@ async function projectMiddleware(request: NextRequest, response: NextResponse) {
     hookName,
     {
       status: "normal_access",
-      user_id: user.id,
-      current_project: profile?.current_project_id,
+      user_id: user.email,
+      current_project: currentProject?.slug,
       pathname,
     },
     true,

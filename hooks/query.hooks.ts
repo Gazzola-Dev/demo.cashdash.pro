@@ -9,6 +9,7 @@ import {
   listTasksAction,
   upsertDraftTaskAction,
 } from "@/actions/task.actions";
+import useAppStore from "@/hooks/app.store";
 import { useGetUser } from "@/hooks/user.hooks";
 import { conditionalLog } from "@/lib/log.utils";
 import { UserInvites } from "@/types/invites.types";
@@ -36,13 +37,15 @@ export const useGetProfile = (
   config?: QueryConfig<ProfileWithDetails | null>,
 ) => {
   const hookName = "useGetProfile";
+  const { setProfile } = useAppStore();
 
   return useQuery({
     queryKey: ["profile"],
     queryFn: async () => {
       const { data, error } = await getProfileAction();
-      conditionalLog(hookName, { data, error }, false, 10);
+      conditionalLog(hookName, { data, error }, false);
       if (error) throw new Error(error);
+      setProfile(data);
       return data;
     },
     initialData,
