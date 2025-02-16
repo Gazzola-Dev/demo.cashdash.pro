@@ -1,13 +1,13 @@
 "use client";
 import { inviteMemberAction } from "@/actions/profile.actions";
 import configuration from "@/configuration";
+import useAppStore from "@/hooks/app.store";
 import { useToast } from "@/hooks/use-toast";
 import useSupabase from "@/hooks/useSupabase";
 import { conditionalLog } from "@/lib/log.utils";
 import { Tables, TablesInsert } from "@/types/database.types";
 import { HookOptions } from "@/types/db.types";
 import { ProjectWithDetails } from "@/types/project.types";
-import { UserWithProfile } from "@/types/user.types";
 import { User } from "@supabase/supabase-js";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -54,13 +54,12 @@ export const useInviteMember = ({
   });
 };
 
-export const useGetUser = ({
-  initialData,
-}: { initialData?: UserWithProfile } = {}) => {
+export const useGetUser = ({ initialData }: { initialData?: User } = {}) => {
   const supabase = useSupabase();
   const hookName = "useGetUser";
+  const { setUser } = useAppStore();
 
-  return useQuery<UserWithProfile | null, Error>({
+  return useQuery<User | null, Error>({
     queryKey: ["user"],
     queryFn: async () => {
       const {
@@ -72,20 +71,8 @@ export const useGetUser = ({
       if (userError) throw userError;
       if (!user) return null;
 
-      // Get user profile
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-
-      conditionalLog(hookName, { profile, profileError }, false);
-      if (profileError) throw profileError;
-
-      return {
-        ...user,
-        profile,
-      };
+      setUser(user);
+      return user;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
     initialData,

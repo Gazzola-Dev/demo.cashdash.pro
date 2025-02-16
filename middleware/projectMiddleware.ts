@@ -10,6 +10,8 @@ async function projectMiddleware(request: NextRequest, response: NextResponse) {
   const pathname = request.nextUrl.pathname;
   const supabase = createMiddlewareClient(request, response);
   const pathSegments = pathname.split("/").filter(Boolean);
+  const urlProjectSlug = pathSegments[0];
+  const isKnownRoute = firstRouteSegments.includes(urlProjectSlug);
 
   const {
     data: { user },
@@ -18,6 +20,11 @@ async function projectMiddleware(request: NextRequest, response: NextResponse) {
 
   if (sessionError || !user) {
     conditionalLog(hookName, { status: "unauthenticated", sessionError }, true);
+    if (!isKnownRoute) {
+      return NextResponse.redirect(
+        new URL(configuration.paths.appHome, request.url),
+      );
+    }
     return response;
   }
 
@@ -73,7 +80,6 @@ async function projectMiddleware(request: NextRequest, response: NextResponse) {
 
   // Extract project slugs and find current project
   const projectSlugs = projects?.map(p => p.slug);
-  const urlProjectSlug = pathSegments[0];
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -145,7 +151,6 @@ async function projectMiddleware(request: NextRequest, response: NextResponse) {
     invite => invite.project.slug === urlProjectSlug,
   );
 
-  const isKnownRoute = firstRouteSegments.includes(urlProjectSlug);
   const isKnownProject = projectSlugs?.includes(urlProjectSlug);
   if (
     urlProjectSlug &&
