@@ -67,9 +67,7 @@ export function ProjectSwitcher() {
             ? currentProject?.name
             : hasPendingInvites
               ? "View invitations"
-              : profileData
-                ? "No invites, signing out..."
-                : "Sign in to get started"}
+              : "Sign in to get started"}
         </span>
       </div>
       {!open && hasPendingInvites && (
@@ -83,7 +81,7 @@ export function ProjectSwitcher() {
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <DropdownMenu open={currentProject ? undefined : false}>
+        <DropdownMenu open={profileData ? undefined : false}>
           <DropdownMenuTrigger asChild>
             {!profileData ? (
               <Link href={configuration.paths.appHome}>{triggerButton}</Link>

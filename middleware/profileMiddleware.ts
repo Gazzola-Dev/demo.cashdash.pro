@@ -5,7 +5,7 @@ import configuration, { firstRouteSegments } from "@/configuration";
 import { conditionalLog } from "@/lib/log.utils";
 import { NextRequest, NextResponse } from "next/server";
 
-async function projectMiddleware(request: NextRequest, response: NextResponse) {
+async function profileMiddleware(request: NextRequest, response: NextResponse) {
   const hookName = "middleware";
   const pathname = request.nextUrl.pathname;
   const supabase = createMiddlewareClient(request, response);
@@ -20,7 +20,7 @@ async function projectMiddleware(request: NextRequest, response: NextResponse) {
 
   if (sessionError || !user) {
     conditionalLog(hookName, { status: "unauthenticated", sessionError }, true);
-    if (!isKnownRoute && pathname !== configuration.paths.appHome) {
+    if (pathname !== configuration.paths.appHome) {
       return NextResponse.redirect(
         new URL(configuration.paths.appHome, request.url),
       );
@@ -34,14 +34,7 @@ async function projectMiddleware(request: NextRequest, response: NextResponse) {
     pathname ===
       configuration.paths.tasks.new({ project_slug: pathSegments?.[1] });
 
-  const { data: invites } = await getUserInvitesAction();
-  const { data: projects } = await listProjectsAction();
-
-  const pendingInvites = invites?.invitations.filter(
-    invite => invite.status === "pending",
-  );
-
-  if (isAdminRoute || (!projects?.length && !pendingInvites?.length)) {
+  if (isAdminRoute) {
     const { data: roles, error: rolesError } = await supabase
       .from("user_roles")
       .select("role")
@@ -64,19 +57,7 @@ async function projectMiddleware(request: NextRequest, response: NextResponse) {
       );
     }
   }
-
-  if (!projects?.length) {
-    conditionalLog(
-      hookName,
-      {
-        status: "has_invites_only",
-        user_id: user.id,
-        pendingInvites_count: pendingInvites?.length,
-      },
-      true,
-    );
-    return response;
-  }
+  const { data: projects } = await listProjectsAction();
 
   // Extract project slugs and find current project
   const projectSlugs = projects?.map(p => p.slug);
@@ -88,7 +69,7 @@ async function projectMiddleware(request: NextRequest, response: NextResponse) {
     .single();
 
   // If no current project, assign first available project using SECURITY DEFINER function
-  if (!profile?.current_project_id && projects.length) {
+  if (!profile?.current_project_id && projects?.length) {
     const firstProject = projects?.[0];
     if (!firstProject) {
       conditionalLog(
@@ -145,6 +126,7 @@ async function projectMiddleware(request: NextRequest, response: NextResponse) {
   const currentProject = projects?.find(
     p => p.id === profile?.current_project_id,
   );
+  const { data: invites } = await getUserInvitesAction();
 
   // Check if user has an invitation for the requested project
   const hasInviteForProject = invites?.invitations.some(
@@ -226,4 +208,4 @@ async function projectMiddleware(request: NextRequest, response: NextResponse) {
   return response;
 }
 
-export default projectMiddleware;
+export default profileMiddleware;
