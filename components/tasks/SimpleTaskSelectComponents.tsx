@@ -116,6 +116,7 @@ export const StatusSelectSimple = ({
   value,
   onValueChange,
 }: StatusSelectSimpleProps) => {
+  const isAdmin = useIsAdmin();
   const statuses: TaskStatus[] = [
     "backlog",
     "todo",
@@ -130,6 +131,7 @@ export const StatusSelectSimple = ({
       value={value}
       onChange={e => onValueChange(e.target.value as TaskStatus)}
       className="w-32 p-2 border rounded-md disabled:opacity-50 bg-white dark:bg-gray-800"
+      disabled={!isAdmin}
     >
       {statuses.map(status => (
         <option key={status} value={status}>
