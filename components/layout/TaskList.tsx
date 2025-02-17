@@ -12,7 +12,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import configuration from "@/configuration";
-import useAppStore from "@/hooks/app.store";
+import useDemoData from "@/hooks/useDemoData";
 import { cn } from "@/lib/utils";
 import {
   Clock,
@@ -121,7 +121,8 @@ const TaskList = () => {
     return priorityMap[priority as keyof typeof priorityMap] || 0;
   };
 
-  const { tasks, profile: profileData } = useAppStore();
+  const { profile: profileData, project } = useDemoData();
+  const tasks = project?.tasks;
 
   const cycleStatus = () => {
     switch (currentStatus) {
@@ -148,31 +149,29 @@ const TaskList = () => {
   const filteredTasks = tasks
     ?.filter(
       task =>
-        task.task.status !==
+        task.status !==
         (currentStatus === null
           ? "draft"
           : currentStatus === "draft"
             ? undefined
             : "draft"),
     )
-    .filter(
-      task => currentStatus === null || task.task.status === currentStatus,
-    )
+    .filter(task => currentStatus === null || task.status === currentStatus)
     .sort((a, b) => {
       let aValue, bValue;
 
       switch (sortConfig.field) {
         case "priority":
-          aValue = getPriorityValue(a.task.priority);
-          bValue = getPriorityValue(b.task.priority);
+          aValue = getPriorityValue(a.priority);
+          bValue = getPriorityValue(b.priority);
           break;
         case "created_at":
-          aValue = new Date(a.task.created_at).getTime();
-          bValue = new Date(b.task.created_at).getTime();
+          aValue = new Date(a.created_at).getTime();
+          bValue = new Date(b.created_at).getTime();
           break;
         default:
-          aValue = new Date(a.task.created_at).getTime();
-          bValue = new Date(b.task.created_at).getTime();
+          aValue = new Date(a.created_at).getTime();
+          bValue = new Date(b.created_at).getTime();
       }
 
       const multiplier = sortConfig.order === "asc" ? 1 : -1;
@@ -190,13 +189,11 @@ const TaskList = () => {
     }));
   };
 
-  if (!profileData?.current_project) return null;
-
   const allTasksPath = configuration.paths.tasks.all({
-    project_slug: profileData.current_project.slug,
+    project_slug: project?.slug,
   });
   const newTaskPath = configuration.paths.tasks.new({
-    project_slug: profileData.current_project.slug,
+    project_slug: project?.slug,
   });
 
   return (
@@ -348,41 +345,41 @@ const TaskList = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {filteredTasks.map(taskData => (
-          <SidebarMenuItem key={taskData.task.id}>
+        {filteredTasks?.map(taskData => (
+          <SidebarMenuItem key={taskData.id}>
             <Link
               href={configuration.paths.tasks.view({
-                project_slug: profileData.current_project?.slug,
-                task_slug: taskData.task.slug,
+                project_slug: project?.slug,
+                task_slug: taskData.slug,
               })}
               className={cn(
                 "flex items-center gap-2 px-2 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 select-none",
                 "text-sm",
                 pathname ===
                   configuration.paths.tasks.view({
-                    project_slug: profileData.current_project?.slug,
-                    task_slug: taskData.task.slug,
+                    project_slug: project?.slug,
+                    task_slug: taskData.slug,
                   }) && "bg-gray-100 dark:bg-gray-800 font-medium",
               )}
             >
               <div className="flex items-center gap-2">
-                <PriorityIcon priority={taskData.task.priority} />
-                <StatusIconSimple status={taskData.task.status} />
+                <PriorityIcon priority={taskData.priority} />
+                <StatusIconSimple status={taskData.status} />
               </div>
               <span className="truncate">
                 {open ? (
-                  taskData.task.title
+                  taskData.title
                 ) : (
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <span>{taskData.task.title}</span>
+                        <span>{taskData.title}</span>
                       </TooltipTrigger>
                       <TooltipContent
                         side="right"
                         className="dark:bg-gray-800 dark:text-gray-100"
                       >
-                        {taskData.task.title}
+                        {taskData.title}
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>

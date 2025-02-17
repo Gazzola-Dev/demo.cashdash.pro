@@ -8,15 +8,12 @@ import {
   StatusSelect,
 } from "@/components/tasks/TaskSelectComponents";
 import { Card, CardContent } from "@/components/ui/card";
-import useAppStore from "@/hooks/app.store";
 import useDemoData from "@/hooks/useDemoData";
 import { format } from "date-fns";
 
 export function TaskSidebar() {
-  const { profile } = useAppStore();
-  const projectData = profile?.current_project;
+  const { project: projectData, task: taskData } = useDemoData();
   const members = projectData?.project_members || [];
-  const { task: taskData } = useDemoData();
 
   const task = taskData?.task;
   const handleStatusChange = () => {};

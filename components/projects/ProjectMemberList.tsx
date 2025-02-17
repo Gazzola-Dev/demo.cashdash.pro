@@ -15,9 +15,10 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
-import useAppStore from "@/hooks/app.store";
+import { USER_ID } from "@/data/demo.util";
 
 import { useToast } from "@/hooks/use-toast";
+import useDemoData from "@/hooks/useDemoData";
 import { useDialogQueue } from "@/hooks/useDialogQueue";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -41,8 +42,7 @@ type InviteFormValues = z.infer<typeof inviteSchema>;
 export function ProjectMemberList({ isDraft = false }: { isDraft?: boolean }) {
   const [isInviteOpen, setIsInviteOpen] = useState(false);
 
-  const { profile, user } = useAppStore();
-  const project = profile?.current_project;
+  const { profile, project } = useDemoData();
   const { dialog } = useDialogQueue();
   const { toast } = useToast();
 
@@ -168,7 +168,7 @@ export function ProjectMemberList({ isDraft = false }: { isDraft?: boolean }) {
                 </p>
               )}
             </div>
-            {member.user_id !== user?.id && (
+            {member.user_id !== USER_ID && (
               <Button
                 variant="ghost"
                 className="px-2"

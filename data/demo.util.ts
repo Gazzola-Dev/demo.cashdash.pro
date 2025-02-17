@@ -1,11 +1,16 @@
+import { Tables } from "@/types/database.types";
 import { ProjectWithDetails } from "@/types/project.types";
 import { TaskResult } from "@/types/task.types";
-import { demoData } from "./demo.db";
+import { demoData, teamMembers } from "./demo.db";
 
 export interface ParsedDemoData {
   project: ProjectWithDetails | null;
   task: TaskResult | null;
+  profile: Tables<"profiles"> | null;
+  projects: ProjectWithDetails[];
 }
+
+export const USER_ID = teamMembers[0].id;
 
 export function getDraftTask(projectId: string): TaskResult {
   const project = demoData.projects.find(p => p.id === projectId);
@@ -77,13 +82,24 @@ export function getDraftProject(): ProjectWithDetails {
 export function getDemoDataFromPath(pathname: string): ParsedDemoData {
   // Initialize return object
   const result: ParsedDemoData = {
-    project: null,
+    project: {
+      ...demoData.projects[0],
+      tasks: demoData.tasks?.project1.map(t => t.task) || [],
+      project_members: [],
+      project_invitations: [],
+    },
     task: null,
+    profile: demoData.teamMembers[0],
+    projects: demoData.projects.map(p => ({
+      ...p,
+      project_members: [],
+      project_invitations: [],
+      tasks: [],
+    })),
   };
 
   // Split path into segments and remove empty strings
   const segments = pathname.split("/").filter(Boolean);
-
   // Return early if no segments
   if (!segments.length) {
     return result;
@@ -101,7 +117,29 @@ export function getDemoDataFromPath(pathname: string): ParsedDemoData {
   // Find matching project from demo data
   const project = demoData.projects.find(p => p.slug === projectSlug);
   if (!project) {
-    return result;
+    return {
+      project: {
+        ...demoData.projects[0],
+        tasks: demoData.tasks.project1.map(t => t.task),
+        project_invitations: [],
+        project_members: [],
+      },
+      task: null,
+      profile: null,
+      projects: demoData.projects.map((p, i) => ({
+        ...p,
+        project_members: [],
+        project_invitations: [],
+        tasks: (i === 0
+          ? demoData.tasks.project1
+          : i === 1
+            ? demoData.tasks.project2
+            : i === 2
+              ? demoData.tasks.project1
+              : []
+        ).map(t => t.task),
+      })),
+    };
   }
 
   // Build full project details

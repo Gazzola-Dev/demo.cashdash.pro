@@ -9,7 +9,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import configuration from "@/configuration";
-import useAppStore from "@/hooks/app.store";
+import useDemoData from "@/hooks/useDemoData";
 import { capitalizeFirstLetter, truncateString } from "@/lib/string.util";
 import { usePathname } from "next/navigation";
 
@@ -18,7 +18,8 @@ const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
 export default function RouteBreadcrumb() {
   const pathname = usePathname();
   const segments = pathname.split("/").filter(Boolean);
-  const { profile: data, tasks } = useAppStore();
+  const { project } = useDemoData();
+  const tasks = project?.tasks;
 
   const homeBreadcrumb = (
     <BreadcrumbItem className="h-full p-2">
@@ -140,17 +141,15 @@ export default function RouteBreadcrumb() {
   // Handle project-specific routes
   if (segments.length >= 1) {
     const projectSlug = segments[0];
-    const project = data?.projects?.find(p => p.project.slug === projectSlug);
-    const projectName = truncateString(
-      capitalize(project ? project.project.name : projectSlug),
-    );
+
+    const projectName = truncateString(capitalize(project?.name ?? ""));
 
     // Handle task view route
     if (
       segments.length === 2 &&
       !["timeline", "kanban", "tasks"].includes(segments[1])
     ) {
-      const task = tasks?.find(t => t.task?.slug.includes(segments[1]));
+      const task = tasks?.find(t => t?.slug.includes(segments[1]));
       return (
         <Breadcrumb className="flex-grow">
           <BreadcrumbList className="h-full !gap-0">
@@ -177,7 +176,7 @@ export default function RouteBreadcrumb() {
             <BreadcrumbItem className="h-full">
               <BreadcrumbPage className="h-full flex items-center px-2">
                 {task
-                  ? `${project?.project.prefix || "Task"}-${task.task?.ordinal_id}: ${capitalizeFirstLetter(task.task.title)}`
+                  ? `${project?.prefix || "Task"}-${task?.ordinal_id}: ${capitalizeFirstLetter(task.title)}`
                   : segments[1]}
               </BreadcrumbPage>
             </BreadcrumbItem>

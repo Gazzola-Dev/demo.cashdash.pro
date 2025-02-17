@@ -1,7 +1,7 @@
 // components/home/AuthenticatedHome.tsx
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import useAppStore from "@/hooks/app.store";
+import useDemoData from "@/hooks/useDemoData";
 import { useToastQueue } from "@/hooks/useToastQueue";
 import { redactEmail } from "@/lib/string.util";
 import { cn } from "@/lib/utils";
@@ -10,8 +10,7 @@ import { Check, Edit2, LogOut, Shield } from "lucide-react";
 import { useState } from "react";
 
 export function AuthenticatedHome({ user }: { user: User }) {
-  const { profile: profileData } = useAppStore();
-  const profile = profileData?.profile;
+  const { profile: profileData, profile } = useDemoData();
   const [isEditing, setIsEditing] = useState(false);
   const [displayName, setDisplayName] = useState(profile?.display_name ?? "");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);

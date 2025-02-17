@@ -61,7 +61,7 @@ const demoProjects: Tables<"projects">[] = [
   },
 ];
 
-const teamMembers: Tables<"profiles">[] = [
+export const teamMembers: Tables<"profiles">[] = [
   {
     id: "user-1",
     email: "maya@example.com",

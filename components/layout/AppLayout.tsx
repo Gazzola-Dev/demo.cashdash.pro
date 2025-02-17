@@ -26,7 +26,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import configuration from "@/configuration";
-import useAppStore from "@/hooks/app.store";
+import useDemoData from "@/hooks/useDemoData";
 import { cn } from "@/lib/utils";
 import { ProfileWithDetails } from "@/types/profile.types";
 import { User } from "@supabase/supabase-js";
@@ -42,12 +42,10 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
-  const { profile: profileData } = useAppStore();
-
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
-        <AppSidebar profileData={profileData} />
+        <AppSidebar />
         <SidebarInset>
           <DemoHeader />
           <header className="flex h-12 shrink-0 items-center justify-between gap-2">
@@ -75,13 +73,9 @@ export function AppLayout({ children }: AppLayoutProps) {
   );
 }
 
-function AppSidebar({
-  profileData,
-}: {
-  profileData?: ProfileWithDetails | null;
-}) {
+function AppSidebar() {
   const { open } = useSidebar();
-  const currentProject = profileData?.current_project;
+  const { project } = useDemoData();
 
   return (
     <Sidebar collapsible="icon">
@@ -89,50 +83,44 @@ function AppSidebar({
         <SidebarHeader>
           <ProjectSwitcher />
         </SidebarHeader>
-        {!currentProject && <div className="flex-grow"></div>}
-        {currentProject && (
-          <>
-            <SidebarGroup>
-              <SidebarMenu>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <SidebarMenuItem>
-                        <SidebarButton
-                          href={configuration.paths.project.overview({
-                            project_slug: currentProject.slug,
-                          })}
-                          matchPattern={`/${currentProject.slug}$`}
-                        >
-                          <LayoutDashboard className="size-4" />
-                          <span>Project</span>
-                        </SidebarButton>
-                      </SidebarMenuItem>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">
-                      {open
-                        ? "View project dashboard and key metrics"
-                        : "Overview"}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </SidebarMenu>
-            </SidebarGroup>
-            <div className="px-4 pt-4 space-y-2.5">
-              <h3
-                className={cn(
-                  "text-xs text-gray-800 dark:text-gray-200 font-medium",
-                )}
-              >
-                Tasks
-              </h3>
-              <hr className={cn("w-full dark:border-gray-00")} />
-            </div>
-            <div className="flex-1 min-h-0">
-              <TaskList />
-            </div>
-          </>
-        )}
+
+        <SidebarGroup>
+          <SidebarMenu>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <SidebarMenuItem>
+                    <SidebarButton
+                      href={configuration.paths.project.overview({
+                        project_slug: project?.slug,
+                      })}
+                      matchPattern={`/${project?.slug}$`}
+                    >
+                      <LayoutDashboard className="size-4" />
+                      <span>Project</span>
+                    </SidebarButton>
+                  </SidebarMenuItem>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  {open ? "View project dashboard and key metrics" : "Overview"}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </SidebarMenu>
+        </SidebarGroup>
+        <div className="px-4 pt-4 space-y-2.5">
+          <h3
+            className={cn(
+              "text-xs text-gray-800 dark:text-gray-200 font-medium",
+            )}
+          >
+            Tasks
+          </h3>
+          <hr className={cn("w-full dark:border-gray-00")} />
+        </div>
+        <div className="flex-1 min-h-0">
+          <TaskList />
+        </div>
 
         <SidebarFooter>
           <NavUser />

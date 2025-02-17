@@ -21,7 +21,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import configuration from "@/configuration";
-import useAppStore from "@/hooks/app.store";
+import useDemoData from "@/hooks/useDemoData";
 import { capitalizeFirstLetter } from "@/lib/string.util";
 import { cn } from "@/lib/utils";
 import { LogOut } from "lucide-react";
@@ -31,23 +31,21 @@ import ThemeSwitcher from "./ThemeSwitcher";
 export function NavUser() {
   const { isMobile } = useSidebar();
   const { open } = useSidebar();
-  const { profile: profileData } = useAppStore();
+  const { profile } = useDemoData();
 
   const handleSignOut = () => {};
-
-  if (!profileData) return null;
 
   const avatarContent = (
     <>
       <Avatar className="size-8 rounded-lg">
         <AvatarImage
-          src={profileData.profile.avatar_url ?? ""}
-          alt={profileData.profile.display_name ?? "User"}
+          src={profile?.avatar_url ?? ""}
+          alt={profile?.display_name ?? "User"}
         />
         <AvatarFallback className="rounded-lg bg-gray-200 dark:bg-gray-700 dark:text-gray-100">
           {capitalizeFirstLetter(
-            profileData.profile.display_name?.slice(0, 2) ??
-              profileData.profile.email.slice(0, 2) ??
+            profile?.display_name?.slice(0, 2) ??
+              profile?.email.slice(0, 2) ??
               "?",
           )}
         </AvatarFallback>
@@ -55,8 +53,8 @@ export function NavUser() {
       <div className="grid flex-1 text-left text-sm leading-tight">
         <span className="truncate font-semibold dark:text-gray-100">
           {capitalizeFirstLetter(
-            profileData.profile.display_name ||
-              profileData.profile.email.split("@")?.[0] ||
+            profile?.display_name ||
+              profile?.email.split("@")?.[0] ||
               "Unnamed User",
           )}
         </span>

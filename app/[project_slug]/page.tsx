@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import useAppStore from "@/hooks/app.store";
+import useDemoData from "@/hooks/useDemoData";
 
 interface ProjectPageProps {
   params: {
@@ -17,14 +17,14 @@ interface ProjectPageProps {
 }
 
 export default function ProjectOverviewPage({ params }: ProjectPageProps) {
-  const { currentProject } = useAppStore();
+  const { project } = useDemoData();
   const getInvitesIsPending = false;
 
   const hasInvite = false;
 
   const handleUpdate = () => {};
 
-  if (!currentProject && !hasInvite && !getInvitesIsPending)
+  if (!hasInvite && !getInvitesIsPending)
     return (
       <Card>
         <CardHeader>
@@ -39,5 +39,5 @@ export default function ProjectOverviewPage({ params }: ProjectPageProps) {
       </Card>
     );
 
-  return <ProjectPage projectData={currentProject} onUpdate={handleUpdate} />;
+  return <ProjectPage projectData={project} onUpdate={handleUpdate} />;
 }
