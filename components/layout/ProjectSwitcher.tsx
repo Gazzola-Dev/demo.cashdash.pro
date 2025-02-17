@@ -1,5 +1,4 @@
-"use client";
-
+import { default as ProjectIcon } from "@/components/projects/ProjectIcon";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -23,7 +22,7 @@ import {
 import configuration from "@/configuration";
 import useDemoData from "@/hooks/useDemoData";
 import { cn } from "@/lib/utils";
-import { Code2, ListFilter, LogIn, MailPlus, Plus } from "lucide-react";
+import { MailPlus, Plus } from "lucide-react";
 import Link from "next/link";
 
 export function ProjectSwitcher() {
@@ -38,24 +37,20 @@ export function ProjectSwitcher() {
             <Button
               variant="ghost"
               className={cn(
-                "h-auto flex items-center justify-between w-full space-x-1 hover:bg-gray-100 dark:hover:bg-gray-800 relative",
+                "px-2 h-auto flex items-center justify-between w-full space-x-1 hover:bg-gray-100 dark:hover:bg-gray-800 relative",
                 !project && "border border-blue-300",
               )}
             >
               <div
                 className={cn(
                   "flex aspect-square size-8 items-center justify-center rounded-lg",
-                  !open && "ml-1.5 mt-1.5",
-                  project
-                    ? "bg-gray-200 dark:bg-gray-700"
-                    : "border border-blue-500",
                 )}
               >
-                {project ? (
-                  <Code2 className="size-4 dark:text-gray-100" />
-                ) : (
-                  <LogIn className="size-4 text-blue-500" />
-                )}
+                <ProjectIcon
+                  iconName={project?.icon_name}
+                  iconColorFg={project?.icon_color_fg}
+                  iconColorBg={project?.icon_color_bg}
+                />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold dark:text-gray-100">
@@ -70,12 +65,12 @@ export function ProjectSwitcher() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-56 rounded-lg dark:bg-gray-900 dark:border-gray-800"
+            className="w-56 rounded-lg dark:bg-gray-900 dark:border-gray-800 px-2 py-2.5"
             align="start"
             side={isMobile ? "bottom" : "right"}
             sideOffset={4}
           >
-            <DropdownMenuLabel className="text-xs dark:text-gray-400">
+            <DropdownMenuLabel className="text-sm dark:text-gray-400 pb-3 text-gray-700">
               My Projects
             </DropdownMenuLabel>
             <TooltipProvider>
@@ -87,9 +82,14 @@ export function ProjectSwitcher() {
                         project_slug: p.slug,
                       })}
                     >
-                      <DropdownMenuItem className="cursor-pointer dark:hover:bg-gray-800 dark:focus:bg-gray-800">
+                      <DropdownMenuItem className="py-2.5 cursor-pointer dark:hover:bg-gray-800 dark:focus:bg-gray-800">
                         <div className="flex size-6 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-700">
-                          <Code2 className="size-4 shrink-0 dark:text-gray-100" />
+                          <ProjectIcon
+                            iconName={p.icon_name}
+                            iconColorFg={p.icon_color_fg}
+                            iconColorBg={p.icon_color_bg}
+                            className="size-4 shrink-0 dark:text-gray-100"
+                          />
                         </div>
                         <div className="ml-2 flex-1 truncate dark:text-gray-100">
                           {p.name}
@@ -116,11 +116,11 @@ export function ProjectSwitcher() {
                     asChild
                   >
                     <Link
-                      href={configuration.paths.project.all}
+                      href={configuration.paths.project.new}
                       className="dark:text-gray-100"
                     >
-                      <ListFilter className="mr-2 size-4 dark:text-gray-400" />
-                      All Projects
+                      <Plus className="mr-2 size-4 dark:text-gray-400" />
+                      New Project
                     </Link>
                   </DropdownMenuItem>
                 </TooltipTrigger>
@@ -128,33 +128,9 @@ export function ProjectSwitcher() {
                   side="right"
                   className="dark:bg-gray-800 dark:text-gray-100"
                 >
-                  View and manage all projects
+                  Create a new project
                 </TooltipContent>
               </Tooltip>
-              {
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <DropdownMenuItem
-                      className="cursor-pointer dark:hover:bg-gray-800 dark:focus:bg-gray-800"
-                      asChild
-                    >
-                      <Link
-                        href={configuration.paths.project.new}
-                        className="dark:text-gray-100"
-                      >
-                        <Plus className="mr-2 size-4 dark:text-gray-400" />
-                        New Project
-                      </Link>
-                    </DropdownMenuItem>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="right"
-                    className="dark:bg-gray-800 dark:text-gray-100"
-                  >
-                    Create a new project
-                  </TooltipContent>
-                </Tooltip>
-              }
             </TooltipProvider>
           </DropdownMenuContent>
         </DropdownMenu>

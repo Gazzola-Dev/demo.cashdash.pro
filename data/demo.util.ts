@@ -76,6 +76,9 @@ export function getDraftProject(): ProjectWithDetails {
     project_members: [],
     project_invitations: [],
     tasks: [],
+    icon_color_bg: "gray",
+    icon_color_fg: "white",
+    icon_name: "lucide:code-2",
   };
 }
 

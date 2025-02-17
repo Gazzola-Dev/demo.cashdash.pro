@@ -364,6 +364,9 @@ export type Database = {
           github_owner: string | null
           github_repo: string | null
           github_repo_url: string | null
+          icon_color_bg: string | null
+          icon_color_fg: string | null
+          icon_name: string | null
           id: string
           name: string
           prefix: string
@@ -377,6 +380,9 @@ export type Database = {
           github_owner?: string | null
           github_repo?: string | null
           github_repo_url?: string | null
+          icon_color_bg?: string | null
+          icon_color_fg?: string | null
+          icon_name?: string | null
           id?: string
           name: string
           prefix: string
@@ -390,6 +396,9 @@ export type Database = {
           github_owner?: string | null
           github_repo?: string | null
           github_repo_url?: string | null
+          icon_color_bg?: string | null
+          icon_color_fg?: string | null
+          icon_name?: string | null
           id?: string
           name?: string
           prefix?: string

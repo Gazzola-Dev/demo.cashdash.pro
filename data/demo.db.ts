@@ -32,6 +32,9 @@ export const demoProjects: Tables<"projects">[] = [
     github_repo: "gotask",
     created_at: "2024-01-01T00:00:00Z",
     updated_at: "2024-01-01T00:00:00Z",
+    icon_name: "lucide:circle-check-big",
+    icon_color_fg: "#BFDBFE", // blue-200
+    icon_color_bg: "#1E3A8A", // blue-900
   },
   {
     id: "proj-2",
@@ -45,6 +48,9 @@ export const demoProjects: Tables<"projects">[] = [
     github_repo: "eco3d-shop",
     created_at: "2024-02-01T00:00:00Z",
     updated_at: "2024-02-01T00:00:00Z",
+    icon_name: "lucide:leaf",
+    icon_color_fg: "#166534", // green-800
+    icon_color_bg: "#F0FDF4", // green-100
   },
   {
     id: "proj-3",
@@ -58,6 +64,9 @@ export const demoProjects: Tables<"projects">[] = [
     github_repo: "menu-run",
     created_at: "2024-03-01T00:00:00Z",
     updated_at: "2024-03-01T00:00:00Z",
+    icon_name: "lucide:pizza",
+    icon_color_fg: "#9A3412", // orange-800
+    icon_color_bg: "#FFF7ED", // orange-50
   },
 ];
 

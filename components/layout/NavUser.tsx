@@ -69,8 +69,7 @@ export function NavUser() {
               variant="ghost"
               className={cn(
                 "h-auto flex items-center justify-between w-full",
-                "hover:bg-gray-100 dark:hover:bg-gray-800 space-x-1.5",
-                open ? "px-1 py-2" : "p-0",
+                "hover:bg-gray-100 dark:hover:bg-gray-800 space-x-1.5 px-2",
               )}
             >
               {avatarContent}
