@@ -3,8 +3,6 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -24,8 +22,8 @@ import configuration from "@/configuration";
 import useDemoData from "@/hooks/useDemoData";
 import { capitalizeFirstLetter } from "@/lib/string.util";
 import { cn } from "@/lib/utils";
-import { LogOut } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 import ThemeSwitcher from "./ThemeSwitcher";
 
 export function NavUser() {
@@ -33,7 +31,7 @@ export function NavUser() {
   const { open } = useSidebar();
   const { profile } = useDemoData();
 
-  const handleSignOut = () => {};
+  const [isOpen, setOpen] = useState(false);
 
   const avatarContent = (
     <>
@@ -65,7 +63,7 @@ export function NavUser() {
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <DropdownMenu>
+        <DropdownMenu open={isOpen} onOpenChange={setOpen}>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
@@ -89,6 +87,7 @@ export function NavUser() {
                 <TooltipTrigger asChild>
                   <DropdownMenuLabel>
                     <Link
+                      onClick={() => setOpen(false)}
                       href={configuration.paths.appHome}
                       className="flex items-center gap-2 p-1 cursor-pointer dark:hover:bg-gray-800 rounded-md space-x-1.5"
                     >
@@ -104,27 +103,7 @@ export function NavUser() {
                 </TooltipContent>
               </Tooltip>
               <DropdownMenuSeparator className="dark:border-gray-700" />
-              <DropdownMenuGroup>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <DropdownMenuItem
-                      className="cursor-pointer dark:hover:bg-gray-800 dark:focus:bg-gray-800 dark:text-gray-100 px-3"
-                      onClick={handleSignOut}
-                    >
-                      <div className="flex items-center gap-4">
-                        <LogOut className="size-4" />
-                        <span className="text-sm"> Sign out</span>
-                      </div>
-                    </DropdownMenuItem>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="right"
-                    className="dark:bg-gray-800 dark:text-gray-100"
-                  >
-                    Sign out of your account
-                  </TooltipContent>
-                </Tooltip>
-              </DropdownMenuGroup>
+
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="w-full">
