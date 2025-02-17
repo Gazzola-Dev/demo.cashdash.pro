@@ -27,6 +27,7 @@ const configuration = {
   paths: {
     appHome: "/",
     project: {
+      prototype: ({ project_slug = "" }: Slugs) => `/${project_slug}/prototype`,
       overview: ({ project_slug = "" }: Slugs) => `/${project_slug}`,
       timeline: ({ project_slug = "" }: Slugs) => `/${project_slug}/timeline`,
       kanban: ({ project_slug = "" }: Slugs) => `/${project_slug}/kanban`,

@@ -18,18 +18,18 @@ const demoAdminUser: Tables<"profiles"> = {
   current_project_id: null,
 };
 
-const demoProjects: Tables<"projects">[] = [
+export const demoProjects: Tables<"projects">[] = [
   {
     id: "proj-1",
-    name: "CashDash",
+    name: "GoTask.wow",
     description:
       "Desktop-first AI-powered project and task management platform",
     status: "active",
-    slug: "cashdash",
-    prefix: "CASH",
-    github_repo_url: "https://github.com/org/cashdash",
+    slug: "go-task",
+    prefix: "GO",
+    github_repo_url: "https://github.com/org/gotaask",
     github_owner: "org",
-    github_repo: "cashdash",
+    github_repo: "gotask",
     created_at: "2024-01-01T00:00:00Z",
     updated_at: "2024-01-01T00:00:00Z",
   },
@@ -485,3 +485,7 @@ export const demoData = {
     project3: PROJECT_3_TASKS,
   },
 };
+
+export const allTaskSlugs = Object.values(demoData.tasks)
+  .flat()
+  .map(taskResult => taskResult.task.slug);

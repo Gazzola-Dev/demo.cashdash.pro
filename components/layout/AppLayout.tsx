@@ -31,7 +31,7 @@ import { cn } from "@/lib/utils";
 import { ProfileWithDetails } from "@/types/profile.types";
 import { User } from "@supabase/supabase-js";
 
-import { Dot, LayoutDashboard } from "lucide-react";
+import { Dot, Images } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 
@@ -91,13 +91,15 @@ function AppSidebar() {
                 <TooltipTrigger>
                   <SidebarMenuItem>
                     <SidebarButton
-                      href={configuration.paths.project.overview({
+                      href={configuration.paths.project.prototype({
                         project_slug: project?.slug,
                       })}
-                      matchPattern={`/${project?.slug}$`}
+                      matchPattern={configuration.paths.project.prototype({
+                        project_slug: project?.slug,
+                      })}
                     >
-                      <LayoutDashboard className="size-4" />
-                      <span>Project</span>
+                      <Images className="size-4" />
+                      <span>Prototype</span>
                     </SidebarButton>
                   </SidebarMenuItem>
                 </TooltipTrigger>
