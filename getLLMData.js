@@ -14,6 +14,7 @@ const whitelistedDirs = [
   // "styles",
   "docs",
   "providers",
+  "data",
 ];
 
 // Specific subdirectories to exclude even if under whitelisted directories
