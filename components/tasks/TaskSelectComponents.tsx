@@ -6,7 +6,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useIsAdmin } from "@/hooks/user.hooks";
 import { cn } from "@/lib/utils";
 import { Tables } from "@/types/database.types";
 import {
@@ -43,18 +42,12 @@ export const AssigneeSelect = ({
   onValueChange,
   members,
 }: AssigneeSelectProps) => {
-  const isAdmin = useIsAdmin();
-
   const handleValueChange = (newValue: string) => {
     onValueChange(newValue === "unassigned" ? null : newValue);
   };
 
   return (
-    <Select
-      value={value || "unassigned"}
-      onValueChange={handleValueChange}
-      disabled={!isAdmin}
-    >
+    <Select value={value || "unassigned"} onValueChange={handleValueChange}>
       <SelectTrigger className="w-48">
         <SelectValue>
           {(() => {
@@ -118,11 +111,10 @@ export const PrioritySelect = ({
   value,
   onValueChange,
 }: PrioritySelectProps) => {
-  const isAdmin = useIsAdmin();
   const priorities: TaskPriority[] = ["low", "medium", "high", "urgent"];
 
   return (
-    <Select value={value} onValueChange={onValueChange} disabled={!isAdmin}>
+    <Select value={value} onValueChange={onValueChange}>
       <SelectTrigger className="w-32">
         <SelectValue>
           <div className="flex items-center gap-2">
@@ -170,7 +162,6 @@ interface StatusSelectProps {
 }
 
 export const StatusSelect = ({ value, onValueChange }: StatusSelectProps) => {
-  const isAdmin = useIsAdmin();
   const statuses: TaskStatus[] = [
     "backlog",
     "todo",
@@ -181,7 +172,7 @@ export const StatusSelect = ({ value, onValueChange }: StatusSelectProps) => {
   ];
 
   return (
-    <Select value={value} onValueChange={onValueChange} disabled={!isAdmin}>
+    <Select value={value} onValueChange={onValueChange}>
       <SelectTrigger className="w-32">
         <SelectValue>
           <div className="flex items-center gap-2">

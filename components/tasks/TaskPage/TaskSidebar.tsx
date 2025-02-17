@@ -9,38 +9,21 @@ import {
 } from "@/components/tasks/TaskSelectComponents";
 import { Card, CardContent } from "@/components/ui/card";
 import useAppStore from "@/hooks/app.store";
-import { useIsAdmin } from "@/hooks/user.hooks";
-import { TaskResult, TaskUpdateWithSubtasks } from "@/types/task.types";
+import useDemoData from "@/hooks/useDemoData";
 import { format } from "date-fns";
 
-interface TaskSidebarProps {
-  task: TaskResult["task"];
-  assigneeProfile: TaskResult["assignee_profile"];
-  taskSchedule: TaskResult["task_schedule"] | null;
-  onUpdateTask: (updates: TaskUpdateWithSubtasks) => void;
-}
-
-export function TaskSidebar({
-  task,
-  taskSchedule,
-  onUpdateTask,
-}: TaskSidebarProps) {
+export function TaskSidebar() {
   const { profile } = useAppStore();
   const projectData = profile?.current_project;
   const members = projectData?.project_members || [];
-  const isAdmin = useIsAdmin();
+  const { task: taskData } = useDemoData();
 
-  const handleStatusChange = (value: NonNullable<typeof task.status>) => {
-    onUpdateTask({ status: value });
-  };
+  const task = taskData?.task;
+  const handleStatusChange = () => {};
 
-  const handlePriorityChange = (value: NonNullable<typeof task.priority>) => {
-    onUpdateTask({ priority: value });
-  };
+  const handlePriorityChange = () => {};
 
-  const handleAssigneeChange = (value: string | null) => {
-    onUpdateTask({ assignee: value });
-  };
+  const handleAssigneeChange = (value: string | null) => {};
 
   return (
     <Card>
@@ -51,14 +34,14 @@ export function TaskSidebar({
               <label className="text-sm font-medium">Assignee</label>
               <div className="flex items-center justify-between flex-grow">
                 <AssigneeSelect
-                  value={task.assignee}
+                  value={task?.assignee || null}
                   onValueChange={handleAssigneeChange}
                   members={members}
                 />
                 <GitBranchCopy
                   projectPrefix={projectData?.prefix}
-                  taskOrdinalId={task.ordinal_id}
-                  taskTitle={task.title}
+                  taskOrdinalId={task?.ordinal_id || 0}
+                  taskTitle={task?.title || ""}
                 />
               </div>
             </div>
@@ -68,7 +51,7 @@ export function TaskSidebar({
           <div>
             <label className="text-sm font-medium">Status</label>
             <StatusSelect
-              value={task.status}
+              value={task?.status || "backlog"}
               onValueChange={handleStatusChange}
             />
           </div>
@@ -77,7 +60,7 @@ export function TaskSidebar({
           <div>
             <label className="text-sm font-medium">Priority</label>
             <PrioritySelect
-              value={task.priority}
+              value={task?.priority || "medium"}
               onValueChange={handlePriorityChange}
             />
           </div>
@@ -85,7 +68,7 @@ export function TaskSidebar({
           {/* Created */}
           <div className="pt-2">
             <div className="text-sm text-muted-foreground">
-              Created {format(new Date(task.created_at), "MMM d, yyyy")}
+              Created {format(new Date(task?.created_at || ""), "MMM d, yyyy")}
             </div>
           </div>
         </div>

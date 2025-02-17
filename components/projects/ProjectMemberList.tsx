@@ -16,15 +16,9 @@ import {
 } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import useAppStore from "@/hooks/app.store";
-import {
-  useDeleteInvitation,
-  useDeleteProjectMember,
-  useInviteMember,
-} from "@/hooks/mutation.hooks";
 
 import { useToast } from "@/hooks/use-toast";
 import { useDialogQueue } from "@/hooks/useDialogQueue";
-import { useIsAdmin } from "@/hooks/user.hooks";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -46,10 +40,7 @@ type InviteFormValues = z.infer<typeof inviteSchema>;
 
 export function ProjectMemberList({ isDraft = false }: { isDraft?: boolean }) {
   const [isInviteOpen, setIsInviteOpen] = useState(false);
-  const isAdmin = useIsAdmin();
-  const { mutate: inviteMember, isPending } = useInviteMember();
-  const { mutate: deleteInvite } = useDeleteInvitation();
-  const { mutate: deleteMember } = useDeleteProjectMember();
+
   const { profile, user } = useAppStore();
   const project = profile?.current_project;
   const { dialog } = useDialogQueue();
@@ -62,26 +53,7 @@ export function ProjectMemberList({ isDraft = false }: { isDraft?: boolean }) {
     },
   });
 
-  const handleSubmit = (data: InviteFormValues) => {
-    if (user?.id && project?.id)
-      inviteMember(
-        {
-          email: data.email,
-          project_id: project.id,
-          role: "member",
-          invited_by: user.id,
-          expires_at: new Date(
-            Date.now() + 7 * 24 * 60 * 60 * 1000,
-          ).toISOString(),
-        },
-        {
-          onSuccess: () => {
-            setIsInviteOpen(false);
-            form.reset();
-          },
-        },
-      );
-  };
+  const handleSubmit = (data: InviteFormValues) => {};
 
   const handleDeleteInvitation = (id: string) => {
     dialog({
@@ -89,23 +61,7 @@ export function ProjectMemberList({ isDraft = false }: { isDraft?: boolean }) {
       description:
         "Are you sure you want to delete this invitation? This action cannot be undone.",
       variant: "destructive",
-      onConfirm: () => {
-        deleteInvite(id, {
-          onSuccess: () => {
-            toast({
-              title: "Invitation deleted successfully",
-            });
-          },
-          onError: error => {
-            toast({
-              title: "Error deleting invitation",
-              description:
-                error instanceof Error ? error.message : "An error occurred",
-              variant: "destructive",
-            });
-          },
-        });
-      },
+      onConfirm: () => {},
     });
   };
 
@@ -117,23 +73,7 @@ export function ProjectMemberList({ isDraft = false }: { isDraft?: boolean }) {
           ? "Are you sure you want to remove this owner? Make sure there is at least one other owner."
           : "Are you sure you want to remove this member? This action cannot be undone.",
       variant: "destructive",
-      onConfirm: () => {
-        deleteMember(memberId, {
-          onSuccess: () => {
-            toast({
-              title: "Member removed successfully",
-            });
-          },
-          onError: error => {
-            toast({
-              title: "Error removing member",
-              description:
-                error instanceof Error ? error.message : "An error occurred",
-              variant: "destructive",
-            });
-          },
-        });
-      },
+      onConfirm: () => {},
     });
   };
 
@@ -162,50 +102,46 @@ export function ProjectMemberList({ isDraft = false }: { isDraft?: boolean }) {
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {isAdmin && (
-          <Collapsible open={isInviteOpen} onOpenChange={setIsInviteOpen}>
-            <CollapsibleTrigger asChild>
-              <Button variant="outline" size="sm" disabled={isDraft}>
-                {isInviteOpen ? (
-                  <ChevronUp className="w-4 h-4 mr-2" />
-                ) : (
-                  <UserPlus className="w-4 h-4 mr-2" />
-                )}
-                {isInviteOpen ? "Cancel" : "Invite"}
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="mt-4">
-              <form
-                onSubmit={form.handleSubmit(handleSubmit)}
-                className="flex items-center gap-2"
-              >
-                <Input
-                  placeholder="Email address"
-                  {...form.register("email")}
-                  className={cn(
-                    "flex-1",
-                    form.formState.errors.email && "border-destructive",
-                  )}
-                />
-                <ActionButton
-                  type="submit"
-                  size="sm"
-                  loading={isPending}
-                  disabled={!form.formState.isValid}
-                >
-                  Send Invite
-                </ActionButton>
-              </form>
-              {form.formState.errors.email && (
-                <p className="text-sm text-destructive mt-1">
-                  {form.formState.errors.email.message}
-                </p>
+        <Collapsible open={isInviteOpen} onOpenChange={setIsInviteOpen}>
+          <CollapsibleTrigger asChild>
+            <Button variant="outline" size="sm" disabled={isDraft}>
+              {isInviteOpen ? (
+                <ChevronUp className="w-4 h-4 mr-2" />
+              ) : (
+                <UserPlus className="w-4 h-4 mr-2" />
               )}
-            </CollapsibleContent>
-          </Collapsible>
-        )}
+              {isInviteOpen ? "Cancel" : "Invite"}
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-4">
+            <form
+              onSubmit={form.handleSubmit(handleSubmit)}
+              className="flex items-center gap-2"
+            >
+              <Input
+                placeholder="Email address"
+                {...form.register("email")}
+                className={cn(
+                  "flex-1",
+                  form.formState.errors.email && "border-destructive",
+                )}
+              />
+              <ActionButton
+                type="submit"
+                size="sm"
+                disabled={!form.formState.isValid}
+              >
+                Send Invite
+              </ActionButton>
+            </form>
+            {form.formState.errors.email && (
+              <p className="text-sm text-destructive mt-1">
+                {form.formState.errors.email.message}
+              </p>
+            )}
+          </CollapsibleContent>
+        </Collapsible>
 
-        {/* Active Members */}
         {project?.project_members?.map(member => (
           <div
             key={member.id}
@@ -232,7 +168,7 @@ export function ProjectMemberList({ isDraft = false }: { isDraft?: boolean }) {
                 </p>
               )}
             </div>
-            {isAdmin && member.user_id !== user?.id && (
+            {member.user_id !== user?.id && (
               <Button
                 variant="ghost"
                 className="px-2"
@@ -244,7 +180,7 @@ export function ProjectMemberList({ isDraft = false }: { isDraft?: boolean }) {
           </div>
         ))}
 
-        {isAdmin && !!pendingInvites?.length && (
+        {!!pendingInvites?.length && (
           <>
             <h3 className="text-sm font-medium text-muted-foreground">
               {project?.project_members?.length

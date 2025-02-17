@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import useAppStore from "@/hooks/app.store";
+import useDemoData from "@/hooks/useDemoData";
 import { capitalizeFirstLetter } from "@/lib/string.util";
 import { TaskResult } from "@/types/task.types";
 import { format } from "date-fns";
@@ -107,26 +108,18 @@ function CommentItem({ comment, onUpdateComment }: CommentItemProps) {
   );
 }
 
-export function TaskComments({
-  comments = [],
-  onSubmitComment,
-  onUpdateComment,
-}: TaskCommentsProps) {
+export function TaskComments() {
   const [newComment, setNewComment] = useState("");
+  const { task } = useDemoData();
+  const comments = task?.comments;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (newComment.trim()) {
-      onSubmitComment(newComment);
-      setNewComment("");
-    }
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter" && newComment.trim()) {
       e.preventDefault();
-      onSubmitComment(newComment);
-      setNewComment("");
     }
   };
 
@@ -155,7 +148,7 @@ export function TaskComments({
             <CommentItem
               key={`${comment.id}-${index}`}
               comment={comment}
-              onUpdateComment={onUpdateComment}
+              onUpdateComment={() => {}}
             />
           ))}
       </CardContent>

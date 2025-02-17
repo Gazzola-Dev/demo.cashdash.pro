@@ -1,4 +1,3 @@
-import { useIsAdmin } from "@/hooks/user.hooks";
 import { Tables } from "@/types/database.types";
 import {
   CheckCircle2,
@@ -34,8 +33,6 @@ export const AssigneeSelectSimple = ({
   onValueChange,
   members,
 }: AssigneeSelectSimpleProps) => {
-  const isAdmin = useIsAdmin();
-
   const handleValueChange = (newValue: string) => {
     onValueChange(newValue === "unassigned" ? null : newValue);
   };
@@ -44,7 +41,6 @@ export const AssigneeSelectSimple = ({
     <select
       value={value || "unassigned"}
       onChange={e => handleValueChange(e.target.value)}
-      disabled={!isAdmin}
       className="w-48 p-2 border rounded-md disabled:opacity-50 bg-white dark:bg-gray-800"
     >
       <option value="unassigned">Unassigned</option>
@@ -66,14 +62,12 @@ export const PrioritySelectSimple = ({
   value,
   onValueChange,
 }: PrioritySelectSimpleProps) => {
-  const isAdmin = useIsAdmin();
   const priorities: TaskPriority[] = ["low", "medium", "high", "urgent"];
 
   return (
     <select
       value={value}
       onChange={e => onValueChange(e.target.value as TaskPriority)}
-      disabled={!isAdmin}
       className="w-32 p-2 border rounded-md disabled:opacity-50 bg-white dark:bg-gray-800"
     >
       {priorities.map(priority => (
@@ -116,7 +110,6 @@ export const StatusSelectSimple = ({
   value,
   onValueChange,
 }: StatusSelectSimpleProps) => {
-  const isAdmin = useIsAdmin();
   const statuses: TaskStatus[] = [
     "backlog",
     "todo",
@@ -131,7 +124,6 @@ export const StatusSelectSimple = ({
       value={value}
       onChange={e => onValueChange(e.target.value as TaskStatus)}
       className="w-32 p-2 border rounded-md disabled:opacity-50 bg-white dark:bg-gray-800"
-      disabled={!isAdmin}
     >
       {statuses.map(status => (
         <option key={status} value={status}>
@@ -168,10 +160,12 @@ export const StatusIconSimple = ({ status }: { status: string }) => {
   }
 };
 
-export default {
+const SimpleTaskSelectComponents = {
   AssigneeSelectSimple,
   PrioritySelectSimple,
   StatusSelectSimple,
   PriorityIconSimple,
   StatusIconSimple,
 };
+
+export default SimpleTaskSelectComponents;

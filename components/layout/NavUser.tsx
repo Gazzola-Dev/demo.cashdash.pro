@@ -22,7 +22,6 @@ import {
 } from "@/components/ui/tooltip";
 import configuration from "@/configuration";
 import useAppStore from "@/hooks/app.store";
-import { useSignOut } from "@/hooks/user.hooks";
 import { capitalizeFirstLetter } from "@/lib/string.util";
 import { cn } from "@/lib/utils";
 import { LogOut } from "lucide-react";
@@ -31,13 +30,10 @@ import ThemeSwitcher from "./ThemeSwitcher";
 
 export function NavUser() {
   const { isMobile } = useSidebar();
-  const { mutate: signOut } = useSignOut();
   const { open } = useSidebar();
   const { profile: profileData } = useAppStore();
 
-  const handleSignOut = () => {
-    signOut();
-  };
+  const handleSignOut = () => {};
 
   if (!profileData) return null;
 

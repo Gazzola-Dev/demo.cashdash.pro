@@ -9,7 +9,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useSignInWithMagicLink } from "@/hooks/user.hooks";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MailOpen } from "lucide-react";
 import { useState } from "react";
@@ -28,8 +27,6 @@ type FormValues = z.infer<typeof formSchema>;
 
 export function UnauthenticatedHome() {
   const [isPasswordMode, setIsPasswordMode] = useState(false);
-  const { mutate: signInWithMagicLink, isPending: isSigningIn } =
-    useSignInWithMagicLink();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -43,9 +40,7 @@ export function UnauthenticatedHome() {
   const { isValid } = form.formState;
   const emailIsValid = emailValue && isValid;
 
-  const handleSubmit = (data: FormValues) => {
-    signInWithMagicLink(data.email);
-  };
+  const handleSubmit = (data: FormValues) => {};
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-6">
@@ -117,19 +112,9 @@ export function UnauthenticatedHome() {
                 </CollapsibleContent>
               </Collapsible> */}
 
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={!emailIsValid || isSigningIn}
-              >
-                {isSigningIn ? (
-                  "Sending..."
-                ) : (
-                  <>
-                    Send Magic Link
-                    <MailOpen className="ml-2 h-4 w-4" />
-                  </>
-                )}
+              <Button type="submit" className="w-full" disabled={!emailIsValid}>
+                Send Magic Link
+                <MailOpen className="ml-2 h-4 w-4" />
               </Button>
             </form>
           </Form>

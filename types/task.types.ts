@@ -110,8 +110,3 @@ export const PRIORITY_OPTIONS: Tables<"tasks">["priority"][] = [
   "high",
   "urgent",
 ];
-
-export interface TaskTableProps {
-  projectId: string;
-  projectSlug: string;
-}

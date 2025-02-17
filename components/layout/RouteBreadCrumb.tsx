@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/breadcrumb";
 import configuration from "@/configuration";
 import useAppStore from "@/hooks/app.store";
-import { useListTasks } from "@/hooks/query.hooks";
 import { capitalizeFirstLetter, truncateString } from "@/lib/string.util";
 import { usePathname } from "next/navigation";
 
@@ -19,12 +18,7 @@ const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
 export default function RouteBreadcrumb() {
   const pathname = usePathname();
   const segments = pathname.split("/").filter(Boolean);
-  const { profile: data } = useAppStore();
-  const { data: tasks } = useListTasks({
-    projectSlug: segments[0],
-    sort: "ordinal_id",
-    order: "asc",
-  });
+  const { profile: data, tasks } = useAppStore();
 
   const homeBreadcrumb = (
     <BreadcrumbItem className="h-full p-2">

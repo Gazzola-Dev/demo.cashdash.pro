@@ -10,11 +10,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import configuration from "@/configuration";
-import { useDeleteProject, useGetProjectSlug } from "@/hooks/mutation.hooks";
 import { useToast } from "@/hooks/use-toast";
 import { useDialogQueue } from "@/hooks/useDialogQueue";
-import { useIsAdmin } from "@/hooks/user.hooks";
 import { cn } from "@/lib/utils";
 import { ProjectWithDetails } from "@/types/project.types";
 import { LoaderCircle, Save, TerminalIcon, Trash2 } from "lucide-react";
@@ -40,10 +37,8 @@ export function ProjectPage({
   onUpdate,
   isPending = false,
 }: ProjectPageProps) {
-  const isAdmin = useIsAdmin();
   const router = useRouter();
   const { toast } = useToast();
-  const { mutate: deleteProject } = useDeleteProject();
   const { dialog } = useDialogQueue();
   const [formData, setFormData] = useState<Partial<ProjectWithDetails>>(
     isNew
@@ -64,8 +59,6 @@ export function ProjectPage({
 
   const [hasChanges, setHasChanges] = useState(false);
   const [debouncedName] = useDebounce(formData.name, 500);
-  const { mutate: getProjectSlug, isPending: isSlugPending } =
-    useGetProjectSlug();
 
   useEffect(() => {
     if (!isNew && projectData) {
@@ -74,22 +67,10 @@ export function ProjectPage({
     }
   }, [isNew, projectData]);
 
-  useEffect(() => {
-    if (debouncedName && isAdmin) {
-      getProjectSlug(debouncedName, {
-        onSuccess: slug => {
-          if (slug) setFormData(prev => ({ ...prev, slug }));
-        },
-      });
-    }
-  }, [debouncedName, getProjectSlug, isAdmin]);
-
   const handleChange = (
     field: keyof ProjectWithDetails,
     value: string | ProjectWithDetails["status"],
   ) => {
-    if (!isAdmin) return;
-
     if (isNew) {
       setFormData(prev => ({ ...prev, [field]: value }));
     } else {
@@ -118,37 +99,16 @@ export function ProjectPage({
       description:
         "Are you sure you want to delete this project? This action cannot be undone.",
       variant: "destructive",
-      onConfirm: () => {
-        deleteProject(projectData.id, {
-          onSuccess: () => {
-            toast({
-              title: "Project deleted successfully",
-            });
-            router.push(configuration.paths.appHome);
-          },
-          onError: error => {
-            toast({
-              title: "Error deleting project",
-              description:
-                error instanceof Error ? error.message : "An error occurred",
-              variant: "destructive",
-            });
-          },
-        });
-      },
+      onConfirm: () => {},
     });
   };
 
   const displayData = isNew ? formData : { ...projectData, ...formData };
 
   const displayProjectSlug =
-    !nameIsChanged && !isNew ? (
-      projectData?.slug
-    ) : isSlugPending ? (
-      <LoaderCircle className="h-4 w-4 animate-spin" />
-    ) : (
-      displayData?.slug || "my-project"
-    );
+    !nameIsChanged && !isNew
+      ? projectData?.slug
+      : displayData?.slug || "my-project";
 
   const isValid = Boolean(
     displayData?.name && displayData?.prefix && displayData?.slug,
@@ -159,26 +119,19 @@ export function ProjectPage({
     field: keyof ProjectWithDetails,
     placeholder?: string,
   ) => {
-    if (isAdmin) {
-      return (
-        <Input
-          value={value || ""}
-          onChange={e => {
-            if (field === "prefix") {
-              const lettersOnly = e.target.value.replace(/[^A-Za-z]/g, "");
-              handleChange(field, lettersOnly.toUpperCase());
-            } else {
-              handleChange(field, e.target.value);
-            }
-          }}
-          placeholder={placeholder || `Enter ${label.toLowerCase()}`}
-        />
-      );
-    }
     return (
-      <div className="p-2 bg-muted rounded-md">
-        {value || `No ${label.toLowerCase()} set`}
-      </div>
+      <Input
+        value={value || ""}
+        onChange={e => {
+          if (field === "prefix") {
+            const lettersOnly = e.target.value.replace(/[^A-Za-z]/g, "");
+            handleChange(field, lettersOnly.toUpperCase());
+          } else {
+            handleChange(field, e.target.value);
+          }
+        }}
+        placeholder={placeholder || `Enter ${label.toLowerCase()}`}
+      />
     );
   };
 
@@ -187,20 +140,13 @@ export function ProjectPage({
     value: string | null | undefined,
     field: keyof ProjectWithDetails,
   ) => {
-    if (isAdmin) {
-      return (
-        <Textarea
-          value={value || ""}
-          onChange={e => handleChange(field, e.target.value)}
-          placeholder={`Enter ${label.toLowerCase()}`}
-          className="min-h-[100px]"
-        />
-      );
-    }
     return (
-      <div className="p-2 bg-muted rounded-md min-h-[100px] whitespace-pre-line">
-        {value || `No ${label.toLowerCase()} set`}
-      </div>
+      <Textarea
+        value={value || ""}
+        onChange={e => handleChange(field, e.target.value)}
+        placeholder={`Enter ${label.toLowerCase()}`}
+        className="min-h-[100px]"
+      />
     );
   };
 
@@ -223,7 +169,7 @@ export function ProjectPage({
                 size="sm"
                 className="ml-4 border-amber-500 text-amber-700 hover:bg-amber-100 hover:text-amber-800"
                 onClick={handleCreate}
-                disabled={!isValid || isPending || !isAdmin}
+                disabled={!isValid || isPending}
               >
                 Publish Project
               </ActionButton>
@@ -238,7 +184,7 @@ export function ProjectPage({
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Project Information</CardTitle>
               <div className="flex gap-2">
-                {!isNew && hasChanges && isAdmin && (
+                {!isNew && hasChanges && (
                   <Button
                     variant="outline"
                     size="sm"
@@ -261,7 +207,7 @@ export function ProjectPage({
                     </div>
                   </Button>
                 )}
-                {!isNew && isAdmin && (
+                {!isNew && (
                   <Button
                     variant="destructive"
                     size="sm"
@@ -309,16 +255,12 @@ export function ProjectPage({
                               </span>
                             </TooltipTrigger>
                             <TooltipContent className="pr-0">
-                              {isSlugPending ? (
-                                "Generating slug..."
-                              ) : (
-                                <div className="py-1 px-0.5 font-bold text-sm">
-                                  Your project can be accessed at:
-                                  <span className="mx-2 px-1.5 py-1 bg-background text-gray-800 rounded font-bold">
-                                    cashdash.pro/{displayProjectSlug}
-                                  </span>
-                                </div>
-                              )}
+                              <div className="py-1 px-0.5 font-bold text-sm">
+                                Your project can be accessed at:
+                                <span className="mx-2 px-1.5 py-1 bg-background text-gray-800 rounded font-bold">
+                                  cashdash.pro/{displayProjectSlug}
+                                </span>
+                              </div>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>

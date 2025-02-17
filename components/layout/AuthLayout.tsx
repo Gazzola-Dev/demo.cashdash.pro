@@ -14,9 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import useSupabase from "@/hooks/useSupabase";
-import { useSignInWithMagicLink } from "@/hooks/user.hooks";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowRight, MailOpen } from "lucide-react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
@@ -40,16 +38,12 @@ export default function AuthLayout() {
     },
   });
 
-  const { mutate: signIn, isPending: isLoading } = useSignInWithMagicLink();
-
   const { isValid } = form.formState;
 
   const emailValue = form.watch("email");
   const emailIsValid = emailValue && isValid;
 
-  async function onSubmit(data: FormValues) {
-    signIn(data.email);
-  }
+  async function onSubmit(data: FormValues) {}
 
   const handleGitHubSignIn = async () => {
     // try {
@@ -79,7 +73,6 @@ export default function AuthLayout() {
             variant="outline"
             className="w-full flex items-center justify-center gap-2"
             onClick={handleGitHubSignIn}
-            disabled={isLoading}
           >
             <svg viewBox="0 0 438.549 438.549" className="h-4 w-4">
               <path
@@ -120,19 +113,8 @@ export default function AuthLayout() {
                   </FormItem>
                 )}
               />
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading || !emailIsValid}
-              >
-                {isLoading ? "Sending..." : "Send Magic Link"}
-                {!isLoading && (
-                  <>
-                    <ArrowRight className="h-4 w-4 ml-2" />
-
-                    <MailOpen className="h-4 w-4 ml-2" />
-                  </>
-                )}
+              <Button type="submit" className="w-full" disabled={!emailIsValid}>
+                Send Magic Link
               </Button>
             </form>
           </Form>

@@ -1,4 +1,3 @@
-// hooks/useDialogQueue.tsx
 import {
   AlertDialog,
   AlertDialogAction,
@@ -9,9 +8,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
-const DIALOG_QUERY_KEY = ["dialogs"];
+import { create } from "zustand";
 
 interface DialogOptions {
   title: string;
@@ -29,71 +26,40 @@ interface Dialog extends DialogOptions {
   onOpenChange?: (open: boolean) => void;
 }
 
-// Initial dialog state
-const initialDialogState: Dialog[] = [];
+interface DialogStore {
+  dialogs: Dialog[];
+  addDialog: (dialog: Dialog) => void;
+  dismissDialog: () => void;
+  removeDialog: (dialogId: string) => void;
+}
 
 // Generate unique ID for each dialog
 function genId() {
   return `${Date.now()}-${Math.random()}`;
 }
 
+// Create Zustand store for dialogs
+const useDialogStore = create<DialogStore>(set => ({
+  dialogs: [],
+  addDialog: dialog =>
+    set(state => ({
+      dialogs: [dialog, ...state.dialogs],
+    })),
+  dismissDialog: () =>
+    set(state => ({
+      dialogs: state.dialogs.map((d, index) =>
+        index === 0 ? { ...d, open: false } : d,
+      ),
+    })),
+  removeDialog: dialogId =>
+    set(state => ({
+      dialogs: state.dialogs.filter(d => d.id !== dialogId),
+    })),
+}));
+
 // Custom hook for managing dialog queue
 export function useDialogQueue() {
-  const queryClient = useQueryClient();
-
-  // Query to get current dialogs
-  const { data: dialogs = initialDialogState } = useQuery({
-    queryKey: DIALOG_QUERY_KEY,
-    initialData: initialDialogState,
-    staleTime: Infinity,
-  });
-
-  // Mutation to add dialog
-  const addDialogMutation = useMutation({
-    mutationFn: (dialog: Dialog) => {
-      return Promise.resolve([...dialogs, dialog]);
-    },
-    onMutate: newDialog => {
-      queryClient.setQueryData(
-        DIALOG_QUERY_KEY,
-        (oldDialogs: Dialog[] | undefined) => {
-          return [newDialog, ...(oldDialogs || [])];
-        },
-      );
-    },
-  });
-
-  // Mutation to dismiss dialog
-  const dismissDialogMutation = useMutation({
-    mutationFn: () => {
-      return Promise.resolve(
-        dialogs.map((d, index) => (index === 0 ? { ...d, open: false } : d)),
-      );
-    },
-    onMutate: () => {
-      queryClient.setQueryData(
-        DIALOG_QUERY_KEY,
-        (oldDialogs: Dialog[] | undefined) =>
-          oldDialogs?.map((d, index) =>
-            index === 0 ? { ...d, open: false } : d,
-          ),
-      );
-    },
-  });
-
-  // Mutation to remove dialog
-  const removeDialogMutation = useMutation({
-    mutationFn: (dialogId: string) => {
-      return Promise.resolve(dialogs.filter(d => d.id !== dialogId));
-    },
-    onMutate: dialogId => {
-      queryClient.setQueryData(
-        DIALOG_QUERY_KEY,
-        (oldDialogs: Dialog[] | undefined) =>
-          oldDialogs?.filter(d => d.id !== dialogId),
-      );
-    },
-  });
+  const { dialogs, addDialog, dismissDialog, removeDialog } = useDialogStore();
 
   const dialog = (options: DialogOptions) => {
     const id = genId();
@@ -105,24 +71,20 @@ export function useDialogQueue() {
         if (!open) dismiss();
       },
     };
-    addDialogMutation.mutate(newDialog);
+    addDialog(newDialog);
     return {
       id,
       dismiss: () => dismiss(),
       update: (updatedProps: Partial<Dialog>) => {
-        queryClient.setQueryData(
-          DIALOG_QUERY_KEY,
-          (oldDialogs: Dialog[] | undefined) =>
-            oldDialogs?.map(dialog =>
-              dialog.id === id ? { ...dialog, ...updatedProps } : dialog,
-            ),
-        );
+        // Remove the old dialog and add an updated one
+        removeDialog(id);
+        addDialog({ ...newDialog, ...updatedProps });
       },
     };
   };
 
   const dismiss = () => {
-    dismissDialogMutation.mutate();
+    dismissDialog();
   };
 
   return {
@@ -134,7 +96,7 @@ export function useDialogQueue() {
 
 // Dialog component that renders the current dialog in the queue
 export function DialogRenderer() {
-  const { dialogs = [], dismiss } = useDialogQueue();
+  const { dialogs, dismiss } = useDialogQueue();
   const currentDialog = dialogs[0];
 
   if (!currentDialog) return null;

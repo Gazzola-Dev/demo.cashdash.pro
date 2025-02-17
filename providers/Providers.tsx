@@ -1,6 +1,7 @@
 "use client";
 
 import useIsMounted from "@/hooks/useIsMounted";
+import DemoDataProvider from "@/providers/DemoDataProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { ZIndexProvider } from "@/providers/ZIndexProvider";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
@@ -17,7 +18,9 @@ const Providers = ({ children }: { children: ReactNode }) => {
         enableSystem
         disableTransitionOnChange
       >
-        <ZIndexProvider>{children}</ZIndexProvider>
+        <DemoDataProvider>
+          <ZIndexProvider>{children}</ZIndexProvider>
+        </DemoDataProvider>
       </ThemeProvider>
     </NuqsAdapter>
   );

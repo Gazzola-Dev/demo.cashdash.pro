@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/tooltip";
 import configuration from "@/configuration";
 import useAppStore from "@/hooks/app.store";
-import { useIsAdmin } from "@/hooks/user.hooks";
 import { cn } from "@/lib/utils";
 import {
   Clock,
@@ -117,7 +116,6 @@ const TaskList = () => {
   });
   const [currentStatus, setCurrentStatus] = useState<TaskStatus>(null);
 
-  const isAdmin = useIsAdmin();
   const getPriorityValue = (priority: string) => {
     const priorityMap = { urgent: 4, high: 3, medium: 2, low: 1 };
     return priorityMap[priority as keyof typeof priorityMap] || 0;
@@ -137,7 +135,7 @@ const TaskList = () => {
         setCurrentStatus("backlog");
         break;
       case "backlog":
-        setCurrentStatus(isAdmin ? "draft" : null);
+        setCurrentStatus("draft");
         break;
       case "draft":
         setCurrentStatus(null);
@@ -322,34 +320,30 @@ const TaskList = () => {
             </TooltipContent>
           </Tooltip>
 
-          {isAdmin && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  asChild
-                  className={
-                    getIconStyles(pathname === newTaskPath, true).button
-                  }
-                >
-                  <Link href={newTaskPath}>
-                    <Plus
-                      className={
-                        getIconStyles(pathname === newTaskPath, true).icon
-                      }
-                    />
-                  </Link>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent
-                side="top"
-                className="dark:bg-gray-800 dark:text-gray-100"
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                asChild
+                className={getIconStyles(pathname === newTaskPath, true).button}
               >
-                Create new task
-              </TooltipContent>
-            </Tooltip>
-          )}
+                <Link href={newTaskPath}>
+                  <Plus
+                    className={
+                      getIconStyles(pathname === newTaskPath, true).icon
+                    }
+                  />
+                </Link>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent
+              side="top"
+              className="dark:bg-gray-800 dark:text-gray-100"
+            >
+              Create new task
+            </TooltipContent>
+          </Tooltip>
         </TooltipProvider>
       </div>
 

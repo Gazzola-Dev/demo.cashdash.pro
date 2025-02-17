@@ -2,9 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import useAppStore from "@/hooks/app.store";
-import { useUpdateProfile } from "@/hooks/mutation.hooks";
 import { useToastQueue } from "@/hooks/useToastQueue";
-import { useIsAdmin, useSignOut } from "@/hooks/user.hooks";
 import { redactEmail } from "@/lib/string.util";
 import { cn } from "@/lib/utils";
 import { User } from "@supabase/supabase-js";
@@ -14,27 +12,14 @@ import { useState } from "react";
 export function AuthenticatedHome({ user }: { user: User }) {
   const { profile: profileData } = useAppStore();
   const profile = profileData?.profile;
-  const isAdmin = useIsAdmin();
   const [isEditing, setIsEditing] = useState(false);
   const [displayName, setDisplayName] = useState(profile?.display_name ?? "");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const { mutate: updateProfile } = useUpdateProfile();
-  const { mutate: signOut } = useSignOut();
   const { toast } = useToastQueue();
 
   const handleSave = () => {
     setIsEditing(false);
     if (displayName === profile?.display_name) return;
-    updateProfile(
-      { display_name: displayName },
-      {
-        onSuccess: () => {
-          toast({
-            title: "Profile updated successfully",
-          });
-        },
-      },
-    );
   };
 
   const handleDelete = () => {
@@ -90,24 +75,22 @@ export function AuthenticatedHome({ user }: { user: User }) {
             )}
           </div>
           <p className="text-muted-foreground">
-            {isAdmin ? (
-              profile?.email
-            ) : profile?.email ? (
+            {profile?.email ? (
               redactEmail(profile?.email)
             ) : (
               <span className="italic text-sm">Email not found</span>
             )}
           </p>
-          {isAdmin && (
+          {
             <div className="flex items-center justify-center mt-2 text-sm text-muted-foreground">
               <Shield className="h-4 w-4 mr-1" />
               Admin
             </div>
-          )}
+          }
         </div>
 
         <div className="space-y-4">
-          <Button onClick={() => signOut()} className="w-full">
+          <Button onClick={() => {}} className="w-full">
             <LogOut className="mr-2 h-4 w-4" />
             Sign out
           </Button>

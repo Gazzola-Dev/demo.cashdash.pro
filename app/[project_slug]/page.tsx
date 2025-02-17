@@ -1,6 +1,5 @@
 "use client";
 
-import InvitePage from "@/app/[project_slug]/invite/page";
 import { ProjectPage } from "@/components/projects/ProjectPage";
 import {
   Card,
@@ -10,8 +9,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import useAppStore from "@/hooks/app.store";
-import { useUpdateProject } from "@/hooks/mutation.hooks";
-import { useGetUserInvites } from "@/hooks/query.hooks";
 
 interface ProjectPageProps {
   params: {
@@ -21,24 +18,11 @@ interface ProjectPageProps {
 
 export default function ProjectOverviewPage({ params }: ProjectPageProps) {
   const { currentProject } = useAppStore();
-  const { data: invitesData, isPending: getInvitesIsPending } =
-    useGetUserInvites();
-  const { mutate: updateProject } = useUpdateProject();
+  const getInvitesIsPending = false;
 
-  const hasInvite = invitesData?.invitations.some(
-    invite =>
-      invite.project.slug === params.project_slug &&
-      invite.status === "pending",
-  );
+  const hasInvite = false;
 
-  const handleUpdate = (updates: any) => {
-    if (currentProject?.id) {
-      updateProject({
-        projectId: currentProject.id,
-        updates,
-      });
-    }
-  };
+  const handleUpdate = () => {};
 
   if (!currentProject && !hasInvite && !getInvitesIsPending)
     return (
@@ -54,8 +38,6 @@ export default function ProjectOverviewPage({ params }: ProjectPageProps) {
         </CardContent>
       </Card>
     );
-
-  if (!currentProject) return <InvitePage params={params} />;
 
   return <ProjectPage projectData={currentProject} onUpdate={handleUpdate} />;
 }

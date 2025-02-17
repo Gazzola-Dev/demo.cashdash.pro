@@ -1,6 +1,7 @@
 "use client";
 
 import LogoText from "@/components/SVG/LogoText";
+import DemoHeader from "@/components/layout/DemoHeader";
 import NavUser from "@/components/layout/NavUser";
 import { ProjectSwitcher } from "@/components/layout/ProjectSwitcher";
 import RouteBreadcrumb from "@/components/layout/RouteBreadCrumb";
@@ -32,7 +33,7 @@ import { User } from "@supabase/supabase-js";
 
 import { Dot, LayoutDashboard } from "lucide-react";
 import Link from "next/link";
-import React, { useEffect } from "react";
+import React from "react";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -40,24 +41,15 @@ interface AppLayoutProps {
   user?: User | null;
 }
 
-export function AppLayout({
-  children,
-  profile: initialProfile,
-  user,
-}: AppLayoutProps) {
-  const { setProfile, profile: profileData, setUser } = useAppStore();
-  useEffect(() => {
-    if (!profileData && user && initialProfile) {
-      setProfile(initialProfile);
-      setUser(user);
-    }
-  }, [profileData, setProfile, user, initialProfile, setUser]);
+export function AppLayout({ children }: AppLayoutProps) {
+  const { profile: profileData } = useAppStore();
 
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
         <AppSidebar profileData={profileData} />
         <SidebarInset>
+          <DemoHeader />
           <header className="flex h-12 shrink-0 items-center justify-between gap-2">
             <RouteBreadcrumb />
             <Link

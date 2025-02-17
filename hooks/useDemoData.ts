@@ -2,7 +2,7 @@ import { ParsedDemoData, getDemoDataFromPath } from "@/data/demo.util";
 import useIsMounted from "@/hooks/useIsMounted";
 import { usePathname } from "next/navigation";
 
-const useGetDemoData = (): ParsedDemoData => {
+const useDemoData = (): ParsedDemoData => {
   const isMounted = useIsMounted();
   const pathname = usePathname();
   if (!isMounted)
@@ -13,4 +13,4 @@ const useGetDemoData = (): ParsedDemoData => {
   return getDemoDataFromPath(pathname);
 };
 
-export default useGetDemoData;
+export default useDemoData;
