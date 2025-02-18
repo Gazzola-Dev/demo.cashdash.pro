@@ -1,5 +1,7 @@
+import WorkFlowPage from "@/components/workflow/WorkFlowPage";
+
 const page = () => {
-  return <div>page</div>;
+  return <WorkFlowPage />;
 };
 
 export default page;

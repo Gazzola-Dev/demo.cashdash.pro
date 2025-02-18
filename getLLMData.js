@@ -11,7 +11,7 @@ const whitelistedDirs = [
   "app", // Page components and routing
   // "supabase/migrations", // Database schema and functions
   "middleware", // Middleware functions
-  "styles",
+  // "styles",
   "docs",
   "providers",
   "data",

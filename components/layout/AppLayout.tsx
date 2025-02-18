@@ -31,7 +31,13 @@ import { cn } from "@/lib/utils";
 import { ProfileWithDetails } from "@/types/profile.types";
 import { User } from "@supabase/supabase-js";
 
-import { Cable, Dot, Gauge, GitPullRequestDraft, Settings } from "lucide-react";
+import {
+  Dot,
+  Gauge,
+  GitPullRequestDraft,
+  Settings,
+  Settings2,
+} from "lucide-react";
 import Link from "next/link";
 import React from "react";
 
@@ -197,7 +203,7 @@ function AppSidebar() {
                         project_slug: project?.slug,
                       })}
                     >
-                      <Cable className="size-5" />
+                      <Settings2 className="size-5" />
                       <span>Workflow</span>
                     </SidebarButton>
                   </SidebarMenuItem>
