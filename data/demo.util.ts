@@ -1,7 +1,7 @@
 import { Tables } from "@/types/database.types";
 import { ProjectWithDetails } from "@/types/project.types";
 import { TaskResult } from "@/types/task.types";
-import { demoData, teamMembers } from "./demo.db";
+import { demoData, demoProjects, teamMembers } from "./demo.db";
 
 export interface ParsedDemoData {
   project: ProjectWithDetails | null;
@@ -10,7 +10,7 @@ export interface ParsedDemoData {
   projects: ProjectWithDetails[];
 }
 
-export const USER_ID = teamMembers[0].id;
+export const USER_ID = "admin-user-id";
 
 export function getDraftTask(projectId: string): TaskResult {
   const project = demoData.projects.find(p => p.id === projectId);
@@ -58,44 +58,50 @@ export function getDraftTask(projectId: string): TaskResult {
   };
 }
 
-export function getDraftProject(): ProjectWithDetails {
-  const nextProjectNumber = demoData.projects.length + 1;
+// Define valid project IDs type
+type ProjectId = "proj-1" | "proj-2" | "proj-3";
 
-  return {
-    id: `draft-proj-${Date.now()}`,
-    name: "",
-    description: "",
-    status: "active",
-    slug: `project-${nextProjectNumber}`,
-    prefix: `P${nextProjectNumber}`,
-    github_repo_url: "",
-    github_owner: "",
-    github_repo: "",
+// Type guard to check if a string is a valid ProjectId
+function isValidProjectId(id: string): id is ProjectId {
+  return ["proj-1", "proj-2", "proj-3"].includes(id);
+}
+
+// Divide team members among projects, including admin in all projects
+const teamMemberAllocation: Record<ProjectId, typeof teamMembers> = {
+  "proj-1": [demoData.adminProfile, ...teamMembers.slice(0, 4)], // GoTask - 5 members (including admin)
+  "proj-2": [demoData.adminProfile, ...teamMembers.slice(4, 8)], // Eco3D - 5 members (including admin)
+  "proj-3": [demoData.adminProfile, ...teamMembers.slice(8, 15)], // Menu.run - 8 members (including admin)
+};
+
+// Function to get team members for a project
+function getProjectMembers(projectId: string) {
+  if (!isValidProjectId(projectId)) {
+    return []; // Return empty array for invalid project IDs
+  }
+  return teamMemberAllocation[projectId].map(member => ({
+    id: `member-${member.id}`,
+    project_id: projectId,
+    user_id: member.id,
+    role: member.id === USER_ID ? "owner" : "member",
     created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    project_members: [],
-    project_invitations: [],
-    tasks: [],
-    icon_color_bg: "gray",
-    icon_color_fg: "white",
-    icon_name: "lucide:code-2",
-  };
+    profile: member,
+  }));
 }
 
 export function getDemoDataFromPath(pathname: string): ParsedDemoData {
   // Initialize return object
   const result: ParsedDemoData = {
     project: {
-      ...demoData.projects[0],
-      tasks: demoData.tasks?.project1.map(t => t.task) || [],
-      project_members: [],
+      ...demoData.projects[1],
+      tasks: demoData.tasks?.project2.map(t => t.task) || [],
+      project_members: getProjectMembers("proj-2"),
       project_invitations: [],
     },
     task: null,
-    profile: demoData.teamMembers[0],
+    profile: demoData.adminProfile,
     projects: demoData.projects.map(p => ({
       ...p,
-      project_members: [],
+      project_members: getProjectMembers(p.id),
       project_invitations: [],
       tasks: [],
     })),
@@ -104,7 +110,7 @@ export function getDemoDataFromPath(pathname: string): ParsedDemoData {
   // Split path into segments and remove empty strings
   const segments = pathname.split("/").filter(Boolean);
   // Return early if no segments
-  if (!segments.length) {
+  if (segments.length === 0) {
     return result;
   }
 
@@ -125,35 +131,25 @@ export function getDemoDataFromPath(pathname: string): ParsedDemoData {
         ...demoData.projects[0],
         tasks: demoData.tasks.project1.map(t => t.task),
         project_invitations: [],
-        project_members: [],
+        project_members: getProjectMembers("proj-1"),
       },
       task: null,
-      profile: null,
+      profile: demoData.adminProfile,
       projects: demoData.projects.map((p, i) => ({
         ...p,
-        project_members: [],
+        project_members: getProjectMembers(p.id),
         project_invitations: [],
         tasks: (i === 0
           ? demoData.tasks.project1
           : i === 1
             ? demoData.tasks.project2
             : i === 2
-              ? demoData.tasks.project1
+              ? demoData.tasks.project3
               : []
         ).map(t => t.task),
       })),
     };
   }
-
-  // Build full project details
-  const projectMembers = demoData.teamMembers.map(member => ({
-    id: `member-${member.id}`,
-    project_id: project.id,
-    user_id: member.id,
-    role: "member",
-    created_at: new Date().toISOString(),
-    profile: member,
-  }));
 
   // Get all tasks for this project with full details
   const allProjectTasks = [
@@ -162,10 +158,10 @@ export function getDemoDataFromPath(pathname: string): ParsedDemoData {
     ...demoData.tasks.project3,
   ].filter(task => task.project?.id === project.id);
 
-  // Build the full project object with complete task details
+  // Build the full project object with complete task details and allocated members
   result.project = {
     ...project,
-    project_members: projectMembers,
+    project_members: getProjectMembers(project.id),
     project_invitations: [],
     tasks: allProjectTasks.map(taskResult => ({
       ...taskResult.task,
@@ -190,4 +186,28 @@ export function getDemoDataFromPath(pathname: string): ParsedDemoData {
   }
 
   return result;
+}
+
+export function getDraftProject(): ProjectWithDetails {
+  const nextProjectNumber = demoProjects.length + 1;
+
+  return {
+    id: `draft-proj-${Date.now()}`,
+    name: "",
+    description: "",
+    status: "active",
+    slug: `project-${nextProjectNumber}`,
+    prefix: `P${nextProjectNumber}`,
+    github_repo_url: "",
+    github_owner: "",
+    github_repo: "",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    project_members: [],
+    project_invitations: [],
+    tasks: [],
+    icon_color_bg: "gray",
+    icon_color_fg: "white",
+    icon_name: "lucide:code-2",
+  };
 }
