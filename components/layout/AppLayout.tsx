@@ -62,7 +62,9 @@ export function AppLayout({ children }: AppLayoutProps) {
             </Link>
           </header>
           <div className="flex flex-1 flex-col gap-4 p-4 justify-between w-full pb-1">
-            <main className="flex flex-col items-center">{children}</main>
+            <main className="flex flex-col items-center overflow-auto">
+              {children}
+            </main>
             <footer className="flex items-center justify-between w-full text-xs text-gray-500 gap-2">
               <a
                 href={"https://cashdash.pro"}
