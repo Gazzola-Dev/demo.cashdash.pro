@@ -9,7 +9,6 @@ import {
 } from "@/components/tasks/TaskSelectComponents";
 import { Card, CardContent } from "@/components/ui/card";
 import useDemoData from "@/hooks/useDemoData";
-import { format } from "date-fns";
 
 export function TaskSidebar() {
   const { project: projectData, task: taskData } = useDemoData();
@@ -63,11 +62,11 @@ export function TaskSidebar() {
           </div>
 
           {/* Created */}
-          <div className="pt-2">
+          {/* <div className="pt-2">
             <div className="text-sm text-muted-foreground">
               Created {format(new Date(task?.created_at || ""), "MMM d, yyyy")}
             </div>
-          </div>
+          </div> */}
         </div>
       </CardContent>
     </Card>

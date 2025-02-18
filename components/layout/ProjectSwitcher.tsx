@@ -78,11 +78,17 @@ export function ProjectSwitcher() {
                 <Tooltip key={p.id}>
                   <TooltipTrigger asChild>
                     <Link
-                      href={configuration.paths.project.overview({
+                      href={configuration.paths.project.view({
                         project_slug: p.slug,
                       })}
                     >
-                      <DropdownMenuItem className="py-2.5 cursor-pointer dark:hover:bg-gray-800 dark:focus:bg-gray-800">
+                      <DropdownMenuItem
+                        className={cn(
+                          "py-2.5 cursor-pointer dark:hover:bg-gray-800 dark:focus:bg-gray-800 rounded",
+                          project?.id === p.id &&
+                            "border-r-2 border-primary bg-sidebar-accent text-sidebar-accent-foreground",
+                        )}
+                      >
                         <div className="flex size-6 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-700">
                           <ProjectIcon
                             iconName={p.icon_name}

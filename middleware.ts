@@ -1,4 +1,4 @@
-import configuration from "@/configuration";
+import configuration, { secondRouteSegments } from "@/configuration";
 import { allTaskSlugs, demoProjects } from "@/data/demo.db";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -11,61 +11,62 @@ export const config = {
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const segments = pathname.split("/").filter(Boolean);
-  const firstSegment = segments[0];
-  const secondSegment = segments[1];
-  const thirdSegment = segments[2];
-
+  const [firstSegment, secondSegment, thirdSegment] = segments;
   const projectSlugs = demoProjects.map(project => project.slug);
   const pathIsHome = pathname === "/";
 
-  // If we're on the home page or have no segments, allow the request
+  const log = (action: string, reason: string, destination?: string) => {
+    console.log(
+      `MIDDLEWARE | path: ${pathname} | segments: [${segments.join(",")}] | action: ${action} | reason: ${reason}${destination ? ` | destination: ${destination}` : ""}`,
+    );
+  };
+
   if (pathIsHome || segments.length === 0) {
+    log("allow", "home or no segments");
     return NextResponse.next();
   }
 
-  // Validate first segment
   const firstSegmentIsValid =
     firstSegment && projectSlugs.includes(firstSegment);
-
-  // If first segment isn't valid, redirect to home
   if (!firstSegmentIsValid) {
+    log("redirect", "invalid first segment", configuration.paths.appHome);
     return NextResponse.redirect(
       new URL(configuration.paths.appHome, request.url),
     );
   }
 
-  // If only one segment and it's valid, allow
   if (segments.length === 1) {
+    log("allow", "valid single segment");
     return NextResponse.next();
   }
 
-  // Validate second segment
   const secondSegmentIsValid =
     secondSegment &&
     (allTaskSlugs.includes(secondSegment) ||
-      ["tasks", "kanban", "timeline", "prototype"].includes(secondSegment));
-
-  // If second segment isn't valid, redirect to first valid segment
+      secondRouteSegments.includes(secondSegment));
   if (!secondSegmentIsValid) {
+    log("redirect", "invalid second segment", `/${firstSegment}`);
     return NextResponse.redirect(new URL(`/${firstSegment}`, request.url));
   }
 
-  // If only two segments and they're valid, allow
   if (segments.length === 2) {
+    log("allow", "valid two segments");
     return NextResponse.next();
   }
 
-  // For third segment, only allow "new" under tasks
   const thirdSegmentIsValid =
     secondSegment === "tasks" && thirdSegment === "new";
-
-  // If third segment isn't valid, redirect to first two valid segments
   if (!thirdSegmentIsValid) {
+    log(
+      "redirect",
+      "invalid third segment",
+      `/${firstSegment}/${secondSegment}`,
+    );
     return NextResponse.redirect(
       new URL(`/${firstSegment}/${secondSegment}`, request.url),
     );
   }
 
-  // If we reach here, all segments are valid
+  log("allow", "all segments valid");
   return NextResponse.next();
 }

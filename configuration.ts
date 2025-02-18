@@ -14,10 +14,11 @@ export const firstRouteSegments = [
 ];
 
 export const secondRouteSegments = [
-  "prototype",
+  "deployments",
+  "workflow",
+  "contracts",
   "timeline",
   "kanban",
-  "invite",
   "tasks",
   "new",
   "billing",
@@ -42,11 +43,13 @@ const configuration = {
   paths: {
     appHome: "/",
     project: {
-      prototype: ({ project_slug = "" }: Slugs) => `/${project_slug}/prototype`,
-      overview: ({ project_slug = "" }: Slugs) => `/${project_slug}`,
+      deployments: ({ project_slug = "" }: Slugs) =>
+        `/${project_slug}/deployments`,
+      workflow: ({ project_slug = "" }: Slugs) => `/${project_slug}/workflow`,
+      contracts: ({ project_slug = "" }: Slugs) => `/${project_slug}/contracts`,
+      view: ({ project_slug = "" }: Slugs) => `/${project_slug}`,
       timeline: ({ project_slug = "" }: Slugs) => `/${project_slug}/timeline`,
       kanban: ({ project_slug = "" }: Slugs) => `/${project_slug}/kanban`,
-      invite: ({ project_slug = "" }: Slugs) => `/${project_slug}/invite`,
       all: "/projects",
       new: "/projects/new",
     },

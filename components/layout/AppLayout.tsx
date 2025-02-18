@@ -31,7 +31,7 @@ import { cn } from "@/lib/utils";
 import { ProfileWithDetails } from "@/types/profile.types";
 import { User } from "@supabase/supabase-js";
 
-import { Dot, Images } from "lucide-react";
+import { Cable, Dot, Gauge, GitPullRequestDraft, Settings } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 
@@ -91,20 +91,141 @@ function AppSidebar() {
                 <TooltipTrigger>
                   <SidebarMenuItem>
                     <SidebarButton
-                      href={configuration.paths.project.prototype({
-                        project_slug: project?.slug,
-                      })}
-                      matchPattern={configuration.paths.project.prototype({
-                        project_slug: project?.slug,
-                      })}
+                      href={configuration.paths.appHome}
+                      matchPattern={configuration.paths.appHome + "$"}
                     >
-                      <Images className="size-4" />
-                      <span>Prototype</span>
+                      <Gauge className="size-5" />
+                      <span>Dashboard</span>
                     </SidebarButton>
                   </SidebarMenuItem>
                 </TooltipTrigger>
                 <TooltipContent side="right">
-                  {open ? "View project dashboard and key metrics" : "Overview"}
+                  {open ? "Project roadmap" : "Calendar"}
+                </TooltipContent>
+              </Tooltip>
+
+              {/* <Tooltip>
+                <TooltipTrigger>
+                  <SidebarMenuItem>
+                    <SidebarButton
+                      href={configuration.paths.project.deployments({
+                        project_slug: project?.slug,
+                      })}
+                      matchPattern={configuration.paths.project.deployments({
+                        project_slug: project?.slug,
+                      })}
+                    >
+                      <Rocket className="size-5" />
+                      <span>Deployments</span>
+                    </SidebarButton>
+                  </SidebarMenuItem>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  {open ? "Preview deployments" : "Prototype"}
+                </TooltipContent>
+              </Tooltip> */}
+              <Tooltip>
+                <TooltipTrigger>
+                  <SidebarMenuItem>
+                    <SidebarButton
+                      href={configuration.paths.project.timeline({
+                        project_slug: project?.slug,
+                      })}
+                      matchPattern={configuration.paths.project.timeline({
+                        project_slug: project?.slug,
+                      })}
+                    >
+                      <GitPullRequestDraft className="size-5" />
+                      <span>Timeline</span>
+                    </SidebarButton>
+                  </SidebarMenuItem>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  {open ? "Project roadmap" : "Calendar"}
+                </TooltipContent>
+              </Tooltip>
+              {/* <Tooltip>
+                <TooltipTrigger>
+                  <SidebarMenuItem>
+                    <SidebarButton
+                      href={configuration.paths.project.kanban({
+                        project_slug: project?.slug,
+                      })}
+                      matchPattern={configuration.paths.project.kanban({
+                        project_slug: project?.slug,
+                      })}
+                    >
+                      <Kanban className="size-5" />
+                      <span>Kanban</span>
+                    </SidebarButton>
+                  </SidebarMenuItem>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  {open ? "Preview deployments" : "Prototype"}
+                </TooltipContent>
+              </Tooltip> */}
+
+              {/* <Tooltip>
+                <TooltipTrigger>
+                  <SidebarMenuItem>
+                    <SidebarButton
+                      href={configuration.paths.project.contracts({
+                        project_slug: project?.slug,
+                      })}
+                      matchPattern={configuration.paths.project.contracts({
+                        project_slug: project?.slug,
+                      })}
+                    >
+                      <Signature className="size-5" />
+                      <span>Contracts</span>
+                    </SidebarButton>
+                  </SidebarMenuItem>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  {open ? "Preview deployments" : "Prototype"}
+                </TooltipContent>
+              </Tooltip> */}
+
+              <Tooltip>
+                <TooltipTrigger>
+                  <SidebarMenuItem>
+                    <SidebarButton
+                      href={configuration.paths.project.workflow({
+                        project_slug: project?.slug,
+                      })}
+                      matchPattern={configuration.paths.project.workflow({
+                        project_slug: project?.slug,
+                      })}
+                    >
+                      <Cable className="size-5" />
+                      <span>Workflow</span>
+                    </SidebarButton>
+                  </SidebarMenuItem>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  {open ? "Project roadmap" : "Calendar"}
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger>
+                  <SidebarMenuItem>
+                    <SidebarButton
+                      href={configuration.paths.project.view({
+                        project_slug: project?.slug,
+                      })}
+                      matchPattern={
+                        configuration.paths.project.view({
+                          project_slug: project?.slug,
+                        }) + "$"
+                      }
+                    >
+                      <Settings className="size-5" />
+                      <span>Project</span>
+                    </SidebarButton>
+                  </SidebarMenuItem>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  {open ? "Project roadmap" : "Calendar"}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -113,7 +234,7 @@ function AppSidebar() {
         <div className="px-4 pt-4 space-y-2.5">
           <h3
             className={cn(
-              "text-xs text-gray-800 dark:text-gray-200 font-medium",
+              "text-sm text-gray-800 dark:text-gray-200 font-medium",
             )}
           >
             Tasks

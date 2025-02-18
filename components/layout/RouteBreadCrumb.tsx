@@ -8,7 +8,10 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import configuration from "@/configuration";
+import configuration, {
+  firstRouteSegments,
+  secondRouteSegments,
+} from "@/configuration";
 import useDemoData from "@/hooks/useDemoData";
 import { capitalizeFirstLetter, truncateString } from "@/lib/string.util";
 import { usePathname } from "next/navigation";
@@ -21,7 +24,11 @@ export default function RouteBreadcrumb() {
   const { project } = useDemoData();
   const tasks = project?.tasks;
 
-  const homeBreadcrumb = (
+  const homeBreadcrumb = !segments.length ? (
+    <BreadcrumbItem className="h-full p-2">
+      <Logo className="w-8 fill-blue-700 dark:fill-blue-400" />
+    </BreadcrumbItem>
+  ) : (
     <BreadcrumbItem className="h-full p-2">
       <BreadcrumbLink
         href={configuration.paths.appHome}
@@ -37,6 +44,12 @@ export default function RouteBreadcrumb() {
       <Breadcrumb className="flex-grow">
         <BreadcrumbList className="h-full !gap-0">
           {homeBreadcrumb}
+          <BreadcrumbSeparator className="h-full flex items-center" />
+          <BreadcrumbItem className="h-full">
+            <BreadcrumbPage className="h-full flex items-center px-2">
+              {project?.name}
+            </BreadcrumbPage>
+          </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
     );
@@ -147,7 +160,8 @@ export default function RouteBreadcrumb() {
     // Handle task view route
     if (
       segments.length === 2 &&
-      !["timeline", "kanban", "tasks"].includes(segments[1])
+      !firstRouteSegments.includes(segments[0]) &&
+      !secondRouteSegments.includes(segments[1])
     ) {
       const task = tasks?.find(t => t?.slug.includes(segments[1]));
       return (
@@ -207,7 +221,9 @@ export default function RouteBreadcrumb() {
           <BreadcrumbSeparator className="h-full flex items-center" />
           <BreadcrumbItem className="h-full">
             <BreadcrumbPage className="h-full flex items-center px-2">
-              {segments.length === 1 ? "Overview" : capitalize(segments[1])}
+              {segments.length === 1
+                ? "Project details"
+                : capitalize(segments[1])}
             </BreadcrumbPage>
           </BreadcrumbItem>
           {segments.length > 2 && (
