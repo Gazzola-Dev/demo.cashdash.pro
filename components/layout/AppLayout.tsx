@@ -1,7 +1,6 @@
 "use client";
 
 import LogoText from "@/components/SVG/LogoText";
-import DemoHeader from "@/components/layout/DemoHeader";
 import NavUser from "@/components/layout/NavUser";
 import { ProjectSwitcher } from "@/components/layout/ProjectSwitcher";
 import RouteBreadcrumb from "@/components/layout/RouteBreadCrumb";
@@ -53,7 +52,6 @@ export function AppLayout({ children }: AppLayoutProps) {
       <div className="flex min-h-screen w-full">
         <AppSidebar />
         <SidebarInset>
-          <DemoHeader />
           <header className="flex h-12 shrink-0 items-center justify-between gap-2">
             <RouteBreadcrumb />
             <Link
@@ -65,12 +63,24 @@ export function AppLayout({ children }: AppLayoutProps) {
           </header>
           <div className="flex flex-1 flex-col gap-4 p-4 justify-between w-full pb-1">
             <main className="flex flex-col items-center">{children}</main>
-            <footer className="flex items-center justify-end w-full text-xs text-gray-500 gap-2">
-              <Link href={configuration.paths.privacy}>Privacy</Link>
-              <Dot className="size-3" />
-              <Link href={configuration.paths.terms}>Terms</Link>
-              <Dot className="size-3" />
-              <p className="">&copy; {new Date().getFullYear()} Apex Apps</p>
+            <footer className="flex items-center justify-between w-full text-xs text-gray-500 gap-2">
+              <a
+                href={"https://cashdash.pro"}
+                rel="noopener noreferrer"
+                target="_blank"
+                className="border-amber-400 rounded border bg-amber-50 px-1.5 py-0.5 text-amber-900 font-semibold"
+              >
+                You are viewing a demo version of Cash Dash, click here to visit
+                the full web app at{" "}
+                <span className="font-bold italic underline">CashDash.Pro</span>
+              </a>
+              <div className="flex items-center gap-2">
+                <Link href={configuration.paths.privacy}>Privacy</Link>
+                <Dot className="size-3" />
+                <Link href={configuration.paths.terms}>Terms</Link>
+                <Dot className="size-3" />
+                <p className="">&copy; {new Date().getFullYear()} Apex Apps</p>
+              </div>
             </footer>
           </div>
         </SidebarInset>
