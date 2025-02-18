@@ -13,6 +13,21 @@ export const firstRouteSegments = [
   "terms",
 ];
 
+export const secondRouteSegments = [
+  "prototype",
+  "timeline",
+  "kanban",
+  "invite",
+  "tasks",
+  "new",
+  "billing",
+  "profile",
+  "notifications",
+  "team",
+];
+
+export const thirdRouteSegments = ["new"];
+
 const configuration = {
   site: {
     name: "Cash Dash Pro",
