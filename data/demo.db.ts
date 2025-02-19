@@ -1,5 +1,4 @@
 import { Tables } from "@/types/database.types";
-import { TaskResult } from "@/types/task.types";
 
 export const demoAdminProfile: Tables<"profiles"> = {
   id: "admin-user-id",
@@ -312,8 +311,7 @@ export const teamMembers: Tables<"profiles">[] = [
     current_project_id: "proj-15",
   },
 ];
-
-const PROJECT_1_TASKS: TaskResult[] = [
+const PROJECT_1_TASKS = [
   {
     task: {
       id: "task-1-1",
@@ -327,7 +325,11 @@ const PROJECT_1_TASKS: TaskResult[] = [
       prefix: "GO",
       slug: "go-1",
       ordinal_id: 1,
+      ordinal_priority: 1,
       budget_cents: 800000,
+      estimated_minutes: 2400,
+      recorded_minutes: 2100,
+      start_time: 1706227200,
       created_at: "2024-01-05T00:00:00Z",
       updated_at: "2024-01-20T00:00:00Z",
     },
@@ -399,7 +401,11 @@ const PROJECT_1_TASKS: TaskResult[] = [
       prefix: "GO",
       slug: "go-2",
       ordinal_id: 2,
+      ordinal_priority: 2,
       budget_cents: 600000,
+      estimated_minutes: 2100,
+      recorded_minutes: 900,
+      start_time: 1706313600,
       created_at: "2024-01-21T00:00:00Z",
       updated_at: "2024-01-21T00:00:00Z",
     },
@@ -450,7 +456,7 @@ const PROJECT_1_TASKS: TaskResult[] = [
   },
 ];
 
-const PROJECT_2_TASKS: TaskResult[] = [
+const PROJECT_2_TASKS = [
   {
     task: {
       id: "task-2-1",
@@ -463,7 +469,11 @@ const PROJECT_2_TASKS: TaskResult[] = [
       prefix: "ECO",
       slug: "eco-1",
       ordinal_id: 1,
+      ordinal_priority: 1,
       budget_cents: 900000,
+      estimated_minutes: 2700,
+      recorded_minutes: 2520,
+      start_time: 1706918400,
       created_at: "2024-02-01T00:00:00Z",
       updated_at: "2024-02-15T00:00:00Z",
     },
@@ -536,7 +546,11 @@ const PROJECT_2_TASKS: TaskResult[] = [
       prefix: "ECO",
       slug: "eco-2",
       ordinal_id: 2,
+      ordinal_priority: 2,
       budget_cents: 750000,
+      estimated_minutes: 2400,
+      recorded_minutes: 1500,
+      start_time: 1707004800,
       created_at: "2024-02-16T00:00:00Z",
       updated_at: "2024-02-20T00:00:00Z",
     },
@@ -611,7 +625,11 @@ const PROJECT_2_TASKS: TaskResult[] = [
       prefix: "ECO",
       slug: "eco-3",
       ordinal_id: 3,
+      ordinal_priority: 3,
       budget_cents: 600000,
+      estimated_minutes: 2100,
+      recorded_minutes: 0,
+      start_time: null,
       created_at: "2024-02-20T00:00:00Z",
       updated_at: "2024-02-20T00:00:00Z",
     },
@@ -654,7 +672,7 @@ const PROJECT_2_TASKS: TaskResult[] = [
   },
 ];
 
-const PROJECT_3_TASKS: TaskResult[] = [
+const PROJECT_3_TASKS = [
   {
     task: {
       id: "task-3-1",
@@ -668,7 +686,11 @@ const PROJECT_3_TASKS: TaskResult[] = [
       prefix: "MENU",
       slug: "menu-1",
       ordinal_id: 1,
+      ordinal_priority: 1,
       budget_cents: 700000,
+      estimated_minutes: 2400,
+      recorded_minutes: 1500,
+      start_time: 1709251200,
       created_at: "2024-03-01T00:00:00Z",
       updated_at: "2024-03-10T00:00:00Z",
     },
@@ -742,7 +764,11 @@ const PROJECT_3_TASKS: TaskResult[] = [
       prefix: "MENU",
       slug: "menu-2",
       ordinal_id: 2,
+      ordinal_priority: 2,
       budget_cents: 600000,
+      estimated_minutes: 2100,
+      recorded_minutes: 1200,
+      start_time: 1709856000,
       created_at: "2024-03-08T00:00:00Z",
       updated_at: "2024-03-15T00:00:00Z",
     },

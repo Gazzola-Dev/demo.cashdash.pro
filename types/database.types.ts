@@ -562,12 +562,16 @@ export type Database = {
           budget_cents: number | null
           created_at: string
           description: string | null
+          estimated_minutes: number | null
           id: string
           ordinal_id: number
+          ordinal_priority: number
           prefix: string
           priority: Database["public"]["Enums"]["task_priority"]
           project_id: string
+          recorded_minutes: number | null
           slug: string
+          start_time: number | null
           status: Database["public"]["Enums"]["task_status"]
           title: string
           updated_at: string
@@ -577,12 +581,16 @@ export type Database = {
           budget_cents?: number | null
           created_at?: string
           description?: string | null
+          estimated_minutes?: number | null
           id?: string
           ordinal_id: number
+          ordinal_priority: number
           prefix: string
           priority?: Database["public"]["Enums"]["task_priority"]
           project_id: string
+          recorded_minutes?: number | null
           slug: string
+          start_time?: number | null
           status?: Database["public"]["Enums"]["task_status"]
           title: string
           updated_at?: string
@@ -592,12 +600,16 @@ export type Database = {
           budget_cents?: number | null
           created_at?: string
           description?: string | null
+          estimated_minutes?: number | null
           id?: string
           ordinal_id?: number
+          ordinal_priority?: number
           prefix?: string
           priority?: Database["public"]["Enums"]["task_priority"]
           project_id?: string
+          recorded_minutes?: number | null
           slug?: string
+          start_time?: number | null
           status?: Database["public"]["Enums"]["task_status"]
           title?: string
           updated_at?: string
@@ -878,6 +890,14 @@ export type Database = {
           task_updates: Json
         }
         Returns: Json
+      }
+      update_task_priority: {
+        Args: {
+          p_task_id: string
+          p_new_priority: Database["public"]["Enums"]["task_priority"]
+          p_new_ordinal_priority?: number
+        }
+        Returns: undefined
       }
       upsert_draft_task: {
         Args: {

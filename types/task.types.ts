@@ -5,7 +5,7 @@ import { ProfileWithDetails } from "@/types/profile.types";
 
 // Base types from database
 type Project = Tables<"projects">;
-type Task = Tables<"tasks">;
+export type Task = Tables<"tasks">;
 type Profile = Tables<"profiles">;
 type Subtask = Tables<"subtasks">;
 type BaseComment = Tables<"comments">;

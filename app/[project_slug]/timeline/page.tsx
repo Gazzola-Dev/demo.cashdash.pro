@@ -1,5 +1,7 @@
+import TimelinePage from "@/components/timeline/TimelinePage";
+
 const Page = async () => {
-  return <div>page</div>;
+  return <TimelinePage />;
 };
 
 export default Page;

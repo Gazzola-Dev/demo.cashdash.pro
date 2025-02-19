@@ -89,28 +89,31 @@ function getProjectMembers(projectId: string) {
 }
 
 export function getDemoDataFromPath(pathname: string): ParsedDemoData {
-  // Initialize return object
+  // Initialize return object with mapped projects and tasks
   const result: ParsedDemoData = {
-    project: {
-      ...demoData.projects[1],
-      tasks: demoData.tasks?.project2.map(t => t.task) || [],
-      project_members: getProjectMembers("proj-2"),
-      project_invitations: [],
-    },
+    project: null,
     task: null,
     profile: demoData.adminProfile,
     projects: demoData.projects.map(p => ({
       ...p,
       project_members: getProjectMembers(p.id),
       project_invitations: [],
-      tasks: [],
+      tasks: [], // Will be populated below
     })),
   };
 
   // Split path into segments and remove empty strings
   const segments = pathname.split("/").filter(Boolean);
+
   // Return early if no segments
   if (segments.length === 0) {
+    // Set default project and populate its tasks
+    result.project = {
+      ...demoData.projects[1],
+      project_members: getProjectMembers("proj-2"),
+      project_invitations: [],
+      tasks: demoData.tasks.project2,
+    };
     return result;
   }
 
@@ -126,47 +129,45 @@ export function getDemoDataFromPath(pathname: string): ParsedDemoData {
   // Find matching project from demo data
   const project = demoData.projects.find(p => p.slug === projectSlug);
   if (!project) {
-    return {
-      project: {
-        ...demoData.projects[0],
-        tasks: demoData.tasks.project1.map(t => t.task),
-        project_invitations: [],
-        project_members: getProjectMembers("proj-1"),
-      },
-      task: null,
-      profile: demoData.adminProfile,
-      projects: demoData.projects.map((p, i) => ({
-        ...p,
-        project_members: getProjectMembers(p.id),
-        project_invitations: [],
-        tasks: (i === 0
+    // Set default project if none found
+    const defaultProject = demoData.projects[0];
+    result.project = {
+      ...defaultProject,
+      project_members: getProjectMembers(defaultProject.id),
+      project_invitations: [],
+      tasks: demoData.tasks.project1,
+    };
+
+    // Update projects array with tasks
+    result.projects = result.projects.map((p, i) => ({
+      ...p,
+      tasks:
+        i === 0
           ? demoData.tasks.project1
           : i === 1
             ? demoData.tasks.project2
             : i === 2
               ? demoData.tasks.project3
-              : []
-        ).map(t => t.task),
-      })),
-    };
+              : [],
+    }));
+
+    return result;
   }
 
-  // Get all tasks for this project with full details
-  const allProjectTasks = [
-    ...demoData.tasks.project1,
-    ...demoData.tasks.project2,
-    ...demoData.tasks.project3,
-  ].filter(task => task.project?.id === project.id);
+  // Get all tasks for this project
+  const projectTasks =
+    {
+      "proj-1": demoData.tasks.project1,
+      "proj-2": demoData.tasks.project2,
+      "proj-3": demoData.tasks.project3,
+    }[project.id] || [];
 
-  // Build the full project object with complete task details and allocated members
+  // Build the full project object with complete task details
   result.project = {
     ...project,
     project_members: getProjectMembers(project.id),
     project_invitations: [],
-    tasks: allProjectTasks.map(taskResult => ({
-      ...taskResult.task,
-      assignee: taskResult.assignee_profile?.id || null,
-    })),
+    tasks: projectTasks,
   };
 
   // Handle "/[project_slug]/tasks/new" path
@@ -182,7 +183,7 @@ export function getDemoDataFromPath(pathname: string): ParsedDemoData {
   // If there's a second segment and it's not "tasks/new", it's a task slug
   if (segments.length > 1 && segments[1] !== "tasks") {
     const taskSlug = segments[1];
-    result.task = allProjectTasks.find(t => t.task.slug === taskSlug) || null;
+    result.task = projectTasks.find(t => t.task.slug === taskSlug) || null;
   }
 
   return result;

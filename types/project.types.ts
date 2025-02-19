@@ -1,12 +1,12 @@
 import { ActionResponse } from "@/types/action.types";
 import { Tables } from "@/types/database.types";
 import { ProfileWithDetails } from "@/types/profile.types";
+import { TaskResult } from "@/types/task.types";
 
 // Base types from database
 export type Project = Tables<"projects">;
 type ProjectMember = Tables<"project_members">;
 type ProjectInvitation = Tables<"project_invitations">;
-type Task = Tables<"tasks">;
 type Profile = Tables<"profiles">;
 
 // Required project type ensures all project fields are non-null
@@ -45,7 +45,7 @@ export interface ProjectInvitationWithProfile extends ProjectInvitation {
 export interface ProjectWithDetails extends Project {
   project_members: ProjectMemberWithProfile[];
   project_invitations: ProjectInvitationWithProfile[];
-  tasks: Task[];
+  tasks: TaskResult[];
 }
 
 // Input types for invitations

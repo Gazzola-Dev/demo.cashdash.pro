@@ -32,10 +32,10 @@ import { User } from "@supabase/supabase-js";
 
 import {
   Dot,
+  GanttChart,
   Gauge,
-  GitPullRequestDraft,
+  PanelsRightBottom,
   Settings,
-  Settings2,
 } from "lucide-react";
 import Link from "next/link";
 import React from "react";
@@ -153,7 +153,7 @@ function AppSidebar() {
                         project_slug: project?.slug,
                       })}
                     >
-                      <GitPullRequestDraft className="size-5" />
+                      <GanttChart className="size-5" />
                       <span>Timeline</span>
                     </SidebarButton>
                   </SidebarMenuItem>
@@ -208,15 +208,15 @@ function AppSidebar() {
                 <TooltipTrigger>
                   <SidebarMenuItem>
                     <SidebarButton
-                      href={configuration.paths.project.workflow({
+                      href={configuration.paths.project.ai({
                         project_slug: project?.slug,
                       })}
-                      matchPattern={configuration.paths.project.workflow({
+                      matchPattern={configuration.paths.project.ai({
                         project_slug: project?.slug,
                       })}
                     >
-                      <Settings2 className="size-5" />
-                      <span>Workflow</span>
+                      <PanelsRightBottom className="size-5" />
+                      <span>AI</span>
                     </SidebarButton>
                   </SidebarMenuItem>
                 </TooltipTrigger>

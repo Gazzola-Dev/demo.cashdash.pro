@@ -15,7 +15,7 @@ export const firstRouteSegments = [
 
 export const secondRouteSegments = [
   "deployments",
-  "workflow",
+  "ai",
   "contracts",
   "timeline",
   "kanban",
@@ -45,7 +45,7 @@ const configuration = {
     project: {
       deployments: ({ project_slug = "" }: Slugs) =>
         `/${project_slug}/deployments`,
-      workflow: ({ project_slug = "" }: Slugs) => `/${project_slug}/workflow`,
+      ai: ({ project_slug = "" }: Slugs) => `/${project_slug}/ai`,
       contracts: ({ project_slug = "" }: Slugs) => `/${project_slug}/contracts`,
       view: ({ project_slug = "" }: Slugs) => `/${project_slug}`,
       timeline: ({ project_slug = "" }: Slugs) => `/${project_slug}/timeline`,
