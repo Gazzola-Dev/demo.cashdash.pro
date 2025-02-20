@@ -24,7 +24,7 @@ export const project1Notifications: Tables<"notifications">[] = [
     content_type: "task",
     recipient_id: demoAdminProfile.id,
     message: "GO-1: AI Task Prioritization Engine is ready for review",
-    created_at: "2024-01-15T08:00:00Z",
+    created_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), // 4 hours ago
     seen: false,
     url_path: "/go-task/go-1",
   },
@@ -34,7 +34,7 @@ export const project1Notifications: Tables<"notifications">[] = [
     content_type: "task",
     recipient_id: demoAdminProfile.id,
     message: "GO-2: Desktop App Performance Optimization requires attention",
-    created_at: "2024-01-21T09:30:00Z",
+    created_at: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(), // 8 hours ago
     seen: false,
     url_path: "/go-task/go-2",
   },
@@ -47,7 +47,7 @@ export const project2Notifications: Tables<"notifications">[] = [
     content_type: "task",
     recipient_id: demoAdminProfile.id,
     message: "ECO-1: PHA Material Testing results are ready for review",
-    created_at: "2024-02-15T14:20:00Z",
+    created_at: new Date(Date.now() - 18 * 60 * 60 * 1000).toISOString(), // 18 hours ago
     seen: true,
     url_path: "/eco3d-shop/eco-1",
   },
@@ -57,7 +57,7 @@ export const project2Notifications: Tables<"notifications">[] = [
     content_type: "task",
     recipient_id: demoAdminProfile.id,
     message: "ECO-2: 3D Printer Calibration requires immediate attention",
-    created_at: "2024-02-19T11:45:00Z",
+    created_at: new Date(Date.now() - 36 * 60 * 60 * 1000).toISOString(), // 36 hours ago
     seen: false,
     url_path: "/eco3d-shop/eco-2",
   },
@@ -67,7 +67,7 @@ export const project2Notifications: Tables<"notifications">[] = [
     content_type: "project",
     recipient_id: demoAdminProfile.id,
     message: "New team member Lucas Green joined Eco3D.shop",
-    created_at: "2024-02-01T10:00:00Z",
+    created_at: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString(), // 72 hours ago
     seen: true,
     url_path: "/eco3d-shop",
   },
@@ -80,7 +80,7 @@ export const project3Notifications: Tables<"notifications">[] = [
     content_type: "task",
     recipient_id: demoAdminProfile.id,
     message: "MENU-1: Real-time Delivery Tracking UI implementation started",
-    created_at: "2024-03-01T15:30:00Z",
+    created_at: new Date(Date.now() - 10 * 60 * 60 * 1000).toISOString(), // 10 hours ago
     seen: false,
     url_path: "/menu-run/menu-1",
   },
@@ -90,7 +90,7 @@ export const project3Notifications: Tables<"notifications">[] = [
     content_type: "task",
     recipient_id: demoAdminProfile.id,
     message: "MENU-2: Restaurant Partner Dashboard is ready for testing",
-    created_at: "2024-03-12T16:45:00Z",
+    created_at: new Date(Date.now() - 22 * 60 * 60 * 1000).toISOString(), // 22 hours ago
     seen: false,
     url_path: "/menu-run/menu-2",
   },
@@ -100,7 +100,7 @@ export const project3Notifications: Tables<"notifications">[] = [
     content_type: "project",
     recipient_id: demoAdminProfile.id,
     message: "Menu.run project milestone: MVP features completed",
-    created_at: "2024-03-15T09:15:00Z",
+    created_at: new Date(Date.now() - 96 * 60 * 60 * 1000).toISOString(), // 96 hours ago
     seen: true,
     url_path: "/menu-run",
   },
