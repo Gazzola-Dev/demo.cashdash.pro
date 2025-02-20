@@ -7,6 +7,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import {
   SidebarMenu,
   SidebarMenuItem,
@@ -30,6 +31,7 @@ export function NavUser() {
   const { isMobile } = useSidebar();
   const { open } = useSidebar();
   const { profile } = useDemoData();
+  const [nameInputIsFocused, setNameInputIsFocused] = useState(false);
 
   const [isOpen, setOpen] = useState(false);
 
@@ -63,7 +65,11 @@ export function NavUser() {
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <DropdownMenu open={isOpen} onOpenChange={setOpen}>
+        <DropdownMenu
+          modal
+          open={isOpen || nameInputIsFocused}
+          onOpenChange={setOpen}
+        >
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
@@ -90,7 +96,30 @@ export function NavUser() {
                       href={configuration.paths.appHome}
                       className="flex items-center gap-2 p-1 cursor-pointer dark:hover:bg-gray-800 rounded-md space-x-1.5"
                     >
-                      {avatarContent}
+                      <Avatar className="size-8 rounded-lg">
+                        <AvatarImage
+                          src={profile?.avatar_url ?? ""}
+                          alt={profile?.display_name ?? "User"}
+                        />
+                        <AvatarFallback className="rounded-lg bg-gray-200 dark:bg-gray-700 dark:text-gray-100">
+                          {capitalizeFirstLetter(
+                            profile?.display_name?.slice(0, 2) ??
+                              profile?.email.slice(0, 2) ??
+                              "?",
+                          )}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="grid flex-1 text-left text-sm leading-tight">
+                        <Input
+                          onFocus={() => setNameInputIsFocused(false)}
+                          onBlur={() => setNameInputIsFocused(false)}
+                          value={
+                            profile?.display_name ||
+                            profile?.email.split("@")?.[0] ||
+                            "Unnamed User"
+                          }
+                        />
+                      </div>
                     </Link>
                   </DropdownMenuLabel>
                 </TooltipTrigger>

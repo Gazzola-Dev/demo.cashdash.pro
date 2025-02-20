@@ -21,21 +21,13 @@ import { useState } from "react";
 const PriorityIcon = ({ priority }: { priority: string }) => {
   switch (priority) {
     case "urgent":
-      return (
-        <Signal className="h-4 w-4 flex-shrink-0 text-rose-500 dark:text-rose-400" />
-      );
+      return <Signal className="h-4 w-4 flex-shrink-0" />;
     case "high":
-      return (
-        <SignalHigh className="h-4 w-4 flex-shrink-0 text-amber-500 dark:text-amber-400" />
-      );
+      return <SignalHigh className="h-4 w-4 flex-shrink-0" />;
     case "medium":
-      return (
-        <SignalMedium className="h-4 w-4 flex-shrink-0 text-emerald-500 dark:text-emerald-400" />
-      );
+      return <SignalMedium className="h-4 w-4 flex-shrink-0" />;
     case "low":
-      return (
-        <SignalLow className="h-4 w-4 flex-shrink-0 text-sky-500 dark:text-sky-400" />
-      );
+      return <SignalLow className="h-4 w-4 flex-shrink-0" />;
     default:
       return null;
   }
@@ -188,7 +180,7 @@ const TaskList = () => {
   });
 
   return (
-    <div className="flex-1 min-h-0">
+    <div className="">
       <div className="px-4 pt-4 space-y-2.5">
         <h3
           className={cn("text-sm text-gray-800 dark:text-gray-200 font-medium")}
@@ -197,7 +189,6 @@ const TaskList = () => {
         </h3>
         <hr className={cn("w-full dark:border-blue-900")} />
       </div>
-
       <SidebarGroup className="h-full flex flex-col overflow-hidden">
         <div className="flex-1 overflow-y-auto">
           {filteredTasks?.map(taskData => (

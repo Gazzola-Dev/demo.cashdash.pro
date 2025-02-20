@@ -370,6 +370,39 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          content_id: string
+          content_type: Database["public"]["Enums"]["content_type"]
+          created_at: string
+          id: string
+          message: string
+          recipient_id: string
+          seen: boolean
+          url_path: string | null
+        }
+        Insert: {
+          content_id: string
+          content_type: Database["public"]["Enums"]["content_type"]
+          created_at?: string
+          id?: string
+          message: string
+          recipient_id: string
+          seen?: boolean
+          url_path?: string | null
+        }
+        Update: {
+          content_id?: string
+          content_type?: Database["public"]["Enums"]["content_type"]
+          created_at?: string
+          id?: string
+          message?: string
+          recipient_id?: string
+          seen?: boolean
+          url_path?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -897,6 +930,25 @@ export type Database = {
         }
         Returns: Json
       }
+      create_notification: {
+        Args: {
+          p_recipient_id: string
+          p_content_id: string
+          p_content_type: Database["public"]["Enums"]["content_type"]
+          p_message: string
+          p_url_path?: string
+        }
+        Returns: {
+          content_id: string
+          content_type: Database["public"]["Enums"]["content_type"]
+          created_at: string
+          id: string
+          message: string
+          recipient_id: string
+          seen: boolean
+          url_path: string | null
+        }
+      }
       create_project_with_owner: {
         Args: {
           p_name: string
@@ -1021,6 +1073,12 @@ export type Database = {
         }
         Returns: Json
       }
+      mark_all_notifications_seen: {
+        Args: {
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       set_user_current_project: {
         Args: {
           p_user_id: string
@@ -1100,7 +1158,7 @@ export type Database = {
         | "users.manage"
         | "site.settings"
       app_role: "admin"
-      content_type: "project" | "task" | "subtask" | "comment"
+      content_type: "project" | "task" | "milestone" | "subtask" | "comment"
       contract_milestone_status: "pending" | "funded" | "released"
       contract_status: "active" | "completed" | "cancelled"
       invitation_status: "pending" | "accepted" | "declined" | "expired"

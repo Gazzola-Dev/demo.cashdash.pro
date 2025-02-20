@@ -17,6 +17,95 @@ export const demoAdminProfile: Tables<"profiles"> = {
   current_project_id: null,
 };
 
+export const project1Notifications: Tables<"notifications">[] = [
+  {
+    id: "notif-1-1",
+    content_id: "task-1-1",
+    content_type: "task",
+    recipient_id: demoAdminProfile.id,
+    message: "GO-1: AI Task Prioritization Engine is ready for review",
+    created_at: "2024-01-15T08:00:00Z",
+    seen: false,
+    url_path: "/go-task/go-1",
+  },
+  {
+    id: "notif-1-2",
+    content_id: "task-1-2",
+    content_type: "task",
+    recipient_id: demoAdminProfile.id,
+    message: "GO-2: Desktop App Performance Optimization requires attention",
+    created_at: "2024-01-21T09:30:00Z",
+    seen: false,
+    url_path: "/go-task/go-2",
+  },
+];
+
+export const project2Notifications: Tables<"notifications">[] = [
+  {
+    id: "notif-2-1",
+    content_id: "task-2-1",
+    content_type: "task",
+    recipient_id: demoAdminProfile.id,
+    message: "ECO-1: PHA Material Testing results are ready for review",
+    created_at: "2024-02-15T14:20:00Z",
+    seen: true,
+    url_path: "/eco3d-shop/eco-1",
+  },
+  {
+    id: "notif-2-2",
+    content_id: "task-2-2",
+    content_type: "task",
+    recipient_id: demoAdminProfile.id,
+    message: "ECO-2: 3D Printer Calibration requires immediate attention",
+    created_at: "2024-02-19T11:45:00Z",
+    seen: false,
+    url_path: "/eco3d-shop/eco-2",
+  },
+  {
+    id: "notif-2-3",
+    content_id: "proj-2",
+    content_type: "project",
+    recipient_id: demoAdminProfile.id,
+    message: "New team member Lucas Green joined Eco3D.shop",
+    created_at: "2024-02-01T10:00:00Z",
+    seen: true,
+    url_path: "/eco3d-shop",
+  },
+];
+
+export const project3Notifications: Tables<"notifications">[] = [
+  {
+    id: "notif-3-1",
+    content_id: "task-3-1",
+    content_type: "task",
+    recipient_id: demoAdminProfile.id,
+    message: "MENU-1: Real-time Delivery Tracking UI implementation started",
+    created_at: "2024-03-01T15:30:00Z",
+    seen: false,
+    url_path: "/menu-run/menu-1",
+  },
+  {
+    id: "notif-3-2",
+    content_id: "task-3-2",
+    content_type: "task",
+    recipient_id: demoAdminProfile.id,
+    message: "MENU-2: Restaurant Partner Dashboard is ready for testing",
+    created_at: "2024-03-12T16:45:00Z",
+    seen: false,
+    url_path: "/menu-run/menu-2",
+  },
+  {
+    id: "notif-3-3",
+    content_id: "proj-3",
+    content_type: "project",
+    recipient_id: demoAdminProfile.id,
+    message: "Menu.run project milestone: MVP features completed",
+    created_at: "2024-03-15T09:15:00Z",
+    seen: true,
+    url_path: "/menu-run",
+  },
+];
+
 export const demoProjects: Tables<"projects">[] = [
   {
     id: "proj-1",
@@ -834,6 +923,11 @@ const PROJECT_3_TASKS = [
 export const demoData = {
   adminProfile: demoAdminProfile,
   projects: demoProjects,
+  notifications: {
+    project1: project1Notifications,
+    project2: project2Notifications,
+    project3: project3Notifications,
+  },
   teamMembers,
   tasks: {
     project1: PROJECT_1_TASKS,

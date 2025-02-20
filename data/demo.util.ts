@@ -8,6 +8,7 @@ export interface ParsedDemoData {
   task: TaskResult | null;
   profile: Tables<"profiles"> | null;
   projects: ProjectWithDetails[];
+  notifications: Tables<"notifications">[];
 }
 
 export const USER_ID = "admin-user-id";
@@ -62,6 +63,30 @@ export function getDraftTask(projectId: string): TaskResult {
   };
 }
 
+export function getDraftProject(): ProjectWithDetails {
+  const nextProjectNumber = demoProjects.length + 1;
+
+  return {
+    id: `draft-proj-${Date.now()}`,
+    name: "",
+    description: "",
+    status: "active" as const,
+    slug: `project-${nextProjectNumber}`,
+    prefix: `P${nextProjectNumber}`,
+    github_repo_url: "",
+    github_owner: "",
+    github_repo: "",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    project_members: [],
+    project_invitations: [],
+    tasks: [],
+    icon_color_bg: "gray",
+    icon_color_fg: "white",
+    icon_name: "lucide:code-2",
+  };
+}
+
 // Define valid project IDs type
 type ProjectId = "proj-1" | "proj-2" | "proj-3";
 
@@ -92,6 +117,20 @@ function getProjectMembers(projectId: string) {
   }));
 }
 
+// Function to get notifications for a project
+function getProjectNotifications(projectId: string): Tables<"notifications">[] {
+  switch (projectId) {
+    case "proj-1":
+      return demoData.notifications.project1;
+    case "proj-2":
+      return demoData.notifications.project2;
+    case "proj-3":
+      return demoData.notifications.project3;
+    default:
+      return [];
+  }
+}
+
 export function getDemoDataFromPath(pathname: string): ParsedDemoData {
   // Initialize return object with mapped projects and tasks
   const result: ParsedDemoData = {
@@ -104,6 +143,7 @@ export function getDemoDataFromPath(pathname: string): ParsedDemoData {
       project_invitations: [],
       tasks: [], // Will be populated below
     })),
+    notifications: [],
   };
 
   // Split path into segments and remove empty strings
@@ -118,6 +158,7 @@ export function getDemoDataFromPath(pathname: string): ParsedDemoData {
       project_invitations: [],
       tasks: demoData.tasks.project2 as TaskResult[],
     };
+    result.notifications = getProjectNotifications("proj-2");
     return result;
   }
 
@@ -141,6 +182,7 @@ export function getDemoDataFromPath(pathname: string): ParsedDemoData {
       project_invitations: [],
       tasks: demoData.tasks.project1 as TaskResult[],
     };
+    result.notifications = getProjectNotifications("proj-1");
 
     // Update projects array with tasks
     result.projects = result.projects.map((p, i) => ({
@@ -173,6 +215,9 @@ export function getDemoDataFromPath(pathname: string): ParsedDemoData {
     tasks: projectTasks,
   };
 
+  // Add notifications for the current project
+  result.notifications = getProjectNotifications(project.id);
+
   // Handle "/[project_slug]/tasks/new" path
   if (
     segments.length >= 3 &&
@@ -191,28 +236,4 @@ export function getDemoDataFromPath(pathname: string): ParsedDemoData {
   }
 
   return result;
-}
-
-export function getDraftProject(): ProjectWithDetails {
-  const nextProjectNumber = demoProjects.length + 1;
-
-  return {
-    id: `draft-proj-${Date.now()}`,
-    name: "",
-    description: "",
-    status: "active" as const,
-    slug: `project-${nextProjectNumber}`,
-    prefix: `P${nextProjectNumber}`,
-    github_repo_url: "",
-    github_owner: "",
-    github_repo: "",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    project_members: [],
-    project_invitations: [],
-    tasks: [],
-    icon_color_bg: "gray",
-    icon_color_fg: "white",
-    icon_name: "lucide:code-2",
-  };
 }

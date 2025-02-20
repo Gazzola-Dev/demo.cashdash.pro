@@ -2,7 +2,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { USER_ID } from "@/data/demo.util";
 import useDemoData from "@/hooks/useDemoData";
 import { capitalizeFirstLetter } from "@/lib/string.util";
 import { TaskResult } from "@/types/task.types";
@@ -25,7 +24,9 @@ function CommentItem({ comment, onUpdateComment }: CommentItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(comment.content || "");
 
-  const isAuthor = USER_ID === comment.user_id;
+  const { profile } = useDemoData();
+
+  const isAuthor = profile?.id === comment.user_id;
 
   const handleSave = () => {
     if (onUpdateComment && editedContent.trim()) {

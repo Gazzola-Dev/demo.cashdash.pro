@@ -15,7 +15,6 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
-import { USER_ID } from "@/data/demo.util";
 
 import { useToast } from "@/hooks/use-toast";
 import useDemoData from "@/hooks/useDemoData";
@@ -168,7 +167,7 @@ export function ProjectMemberList({ isDraft = false }: { isDraft?: boolean }) {
                 </p>
               )}
             </div>
-            {member.user_id !== USER_ID && (
+            {member.user_id !== profile?.id && (
               <Button
                 variant="ghost"
                 className="px-2"
