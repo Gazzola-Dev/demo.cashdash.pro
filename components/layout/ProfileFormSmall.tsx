@@ -60,7 +60,10 @@ const ProfileFormSmall = () => {
 
   return (
     <div className="flex items-center gap-2 p-2 rounded-md">
-      <Avatar className="size-8 rounded-lg">
+      <Avatar
+        className="size-8 rounded-lg cursor-pointer"
+        onClick={() => setIsDialogOpen(true)}
+      >
         <AvatarImage
           src={profile?.avatar_url ?? ""}
           alt={profile?.display_name ?? "User"}
