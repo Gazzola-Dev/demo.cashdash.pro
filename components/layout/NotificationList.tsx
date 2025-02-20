@@ -81,9 +81,12 @@ const NotificationList = () => {
     setDismissed([...dismissed, id]);
   };
 
-  const activeNotifications = notifications.filter(
-    n => !dismissed.includes(n.id),
-  );
+  const activeNotifications = notifications
+    .sort(
+      (a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+    )
+    .filter(n => !dismissed.includes(n.id));
 
   return (
     <div className="px-4 space-y-2">
