@@ -1,12 +1,12 @@
 "use client";
 import LogoText from "@/components/SVG/LogoText";
 import NotificationList from "@/components/layout/NotificationList";
+import ProfileFormSmall from "@/components/layout/ProfileFormSmall";
 import { ProjectSwitcher } from "@/components/layout/ProjectSwitcher";
 import RouteBreadcrumb from "@/components/layout/RouteBreadCrumb";
 import { SidebarButton } from "@/components/layout/SidebarComponents";
 import TaskList from "@/components/layout/TaskList";
 import ThemeSwitcher from "@/components/layout/ThemeSwitcher";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Sidebar,
   SidebarContent,
@@ -29,8 +29,7 @@ import configuration from "@/configuration";
 import useDemoData from "@/hooks/useDemoData";
 import { useDialogQueue } from "@/hooks/useDialogQueue";
 import useSupabase from "@/hooks/useSupabase";
-import { capitalizeFirstLetter } from "@/lib/string.util";
-import { Dot, Gauge, LogOut, PanelsRightBottom, Settings2 } from "lucide-react";
+import { Dot, Gauge, LogOut, PanelsRightBottom, Settings } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React from "react";
@@ -113,7 +112,7 @@ function AppSidebar() {
                         }) + "$"
                       }
                     >
-                      <Settings2 className="size-5" />
+                      <Settings className="size-5" />
                       <span>Project</span>
                     </SidebarButton>
                   </SidebarMenuItem>
@@ -155,30 +154,7 @@ function AppSidebar() {
               Change theme (Dark mode is still in beta!)
             </TooltipContent>
           </Tooltip>
-          <div className="flex items-center gap-2 p-1 cursor-pointer dark:hover:bg-gray-800 rounded-md space-x-1.5">
-            <Avatar className="size-8 rounded-lg">
-              <AvatarImage
-                src={profile?.avatar_url ?? ""}
-                alt={profile?.display_name ?? "User"}
-              />
-              <AvatarFallback className="rounded-lg bg-gray-200 dark:bg-gray-700 dark:text-gray-100">
-                {capitalizeFirstLetter(
-                  profile?.display_name?.slice(0, 2) ??
-                    profile?.email?.slice(0, 2) ??
-                    "?",
-                )}
-              </AvatarFallback>
-            </Avatar>
-            <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-semibold dark:text-gray-100">
-                {capitalizeFirstLetter(
-                  profile?.display_name ||
-                    profile?.email?.split("@")?.[0] ||
-                    "Unnamed User",
-                )}
-              </span>
-            </div>
-          </div>
+          <ProfileFormSmall />
         </SidebarFooter>
       </SidebarContent>
     </Sidebar>
