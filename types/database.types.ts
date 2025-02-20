@@ -158,6 +158,109 @@ export type Database = {
           },
         ]
       }
+      contract_milestones: {
+        Row: {
+          amount_cents: number
+          completed_at: string | null
+          contract_id: string
+          created_at: string
+          due_date: string
+          id: string
+          status: Database["public"]["Enums"]["contract_milestone_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          completed_at?: string | null
+          contract_id: string
+          created_at?: string
+          due_date: string
+          id?: string
+          status?: Database["public"]["Enums"]["contract_milestone_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          completed_at?: string | null
+          contract_id?: string
+          created_at?: string
+          due_date?: string
+          id?: string
+          status?: Database["public"]["Enums"]["contract_milestone_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_milestones_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contracts: {
+        Row: {
+          client_company: string | null
+          client_name: string
+          created_at: string
+          currency: string
+          description: string | null
+          end_date: string | null
+          id: string
+          project_id: string
+          start_date: string
+          status: Database["public"]["Enums"]["contract_status"]
+          title: string
+          total_amount_cents: number
+          updated_at: string
+          upwork_contract_id: string
+        }
+        Insert: {
+          client_company?: string | null
+          client_name: string
+          created_at?: string
+          currency: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          project_id: string
+          start_date: string
+          status?: Database["public"]["Enums"]["contract_status"]
+          title: string
+          total_amount_cents: number
+          updated_at?: string
+          upwork_contract_id: string
+        }
+        Update: {
+          client_company?: string | null
+          client_name?: string
+          created_at?: string
+          currency?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          project_id?: string
+          start_date?: string
+          status?: Database["public"]["Enums"]["contract_status"]
+          title?: string
+          total_amount_cents?: number
+          updated_at?: string
+          upwork_contract_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contracts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       external_integrations: {
         Row: {
           credentials: Json | null
@@ -183,6 +286,83 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "external_integrations_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      milestone_tasks: {
+        Row: {
+          created_at: string
+          milestone_id: string
+          task_id: string
+        }
+        Insert: {
+          created_at?: string
+          milestone_id: string
+          task_id: string
+        }
+        Update: {
+          created_at?: string
+          milestone_id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "milestone_tasks_milestone_id_fkey"
+            columns: ["milestone_id"]
+            isOneToOne: false
+            referencedRelation: "milestones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "milestone_tasks_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      milestones: {
+        Row: {
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          project_id: string
+          start_date: string | null
+          status: Database["public"]["Enums"]["milestone_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          project_id: string
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["milestone_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          project_id?: string
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["milestone_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "milestones_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
@@ -921,7 +1101,16 @@ export type Database = {
         | "site.settings"
       app_role: "admin"
       content_type: "project" | "task" | "subtask" | "comment"
+      contract_milestone_status: "pending" | "funded" | "released"
+      contract_status: "active" | "completed" | "cancelled"
       invitation_status: "pending" | "accepted" | "declined" | "expired"
+      milestone_status:
+        | "draft"
+        | "backlog"
+        | "planned"
+        | "in_progress"
+        | "in_review"
+        | "completed"
       project_status: "active" | "archived" | "completed"
       task_priority: "low" | "medium" | "high" | "urgent"
       task_status:

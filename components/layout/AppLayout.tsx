@@ -2,6 +2,7 @@
 
 import LogoText from "@/components/SVG/LogoText";
 import NavUser from "@/components/layout/NavUser";
+import NotificationList from "@/components/layout/NotificationList";
 import { ProjectSwitcher } from "@/components/layout/ProjectSwitcher";
 import RouteBreadcrumb from "@/components/layout/RouteBreadCrumb";
 import { SidebarButton } from "@/components/layout/SidebarComponents";
@@ -26,17 +27,10 @@ import {
 } from "@/components/ui/tooltip";
 import configuration from "@/configuration";
 import useDemoData from "@/hooks/useDemoData";
-import { cn } from "@/lib/utils";
 import { ProfileWithDetails } from "@/types/profile.types";
 import { User } from "@supabase/supabase-js";
 
-import {
-  Dot,
-  GanttChart,
-  Gauge,
-  PanelsRightBottom,
-  Settings,
-} from "lucide-react";
+import { Dot, Gauge, PanelsRightBottom, Settings } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 
@@ -76,6 +70,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                 the full web app at{" "}
                 <span className="font-bold italic underline">CashDash.Pro</span>
               </a>
+
               <div className="flex items-center gap-2">
                 <Link href={configuration.paths.privacy}>Privacy</Link>
                 <Dot className="size-3" />
@@ -101,7 +96,6 @@ function AppSidebar() {
         <SidebarHeader>
           <ProjectSwitcher />
         </SidebarHeader>
-
         <SidebarGroup>
           <SidebarMenu>
             <TooltipProvider>
@@ -113,7 +107,7 @@ function AppSidebar() {
                       matchPattern={configuration.paths.appHome + "$"}
                     >
                       <Gauge className="size-5" />
-                      <span>Dashboard</span>
+                      <span>Dash</span>
                     </SidebarButton>
                   </SidebarMenuItem>
                 </TooltipTrigger>
@@ -121,102 +115,19 @@ function AppSidebar() {
                   {open ? "Project roadmap" : "Calendar"}
                 </TooltipContent>
               </Tooltip>
-
-              {/* <Tooltip>
-                <TooltipTrigger>
-                  <SidebarMenuItem>
-                    <SidebarButton
-                      href={configuration.paths.project.deployments({
-                        project_slug: project?.slug,
-                      })}
-                      matchPattern={configuration.paths.project.deployments({
-                        project_slug: project?.slug,
-                      })}
-                    >
-                      <Rocket className="size-5" />
-                      <span>Deployments</span>
-                    </SidebarButton>
-                  </SidebarMenuItem>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  {open ? "Preview deployments" : "Prototype"}
-                </TooltipContent>
-              </Tooltip> */}
               <Tooltip>
                 <TooltipTrigger>
                   <SidebarMenuItem>
                     <SidebarButton
-                      href={configuration.paths.project.timeline({
+                      href={configuration.paths.project.workflow({
                         project_slug: project?.slug,
                       })}
-                      matchPattern={configuration.paths.project.timeline({
-                        project_slug: project?.slug,
-                      })}
-                    >
-                      <GanttChart className="size-5" />
-                      <span>Timeline</span>
-                    </SidebarButton>
-                  </SidebarMenuItem>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  {open ? "Project roadmap" : "Calendar"}
-                </TooltipContent>
-              </Tooltip>
-              {/* <Tooltip>
-                <TooltipTrigger>
-                  <SidebarMenuItem>
-                    <SidebarButton
-                      href={configuration.paths.project.kanban({
-                        project_slug: project?.slug,
-                      })}
-                      matchPattern={configuration.paths.project.kanban({
-                        project_slug: project?.slug,
-                      })}
-                    >
-                      <Kanban className="size-5" />
-                      <span>Kanban</span>
-                    </SidebarButton>
-                  </SidebarMenuItem>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  {open ? "Preview deployments" : "Prototype"}
-                </TooltipContent>
-              </Tooltip> */}
-
-              {/* <Tooltip>
-                <TooltipTrigger>
-                  <SidebarMenuItem>
-                    <SidebarButton
-                      href={configuration.paths.project.contracts({
-                        project_slug: project?.slug,
-                      })}
-                      matchPattern={configuration.paths.project.contracts({
-                        project_slug: project?.slug,
-                      })}
-                    >
-                      <Signature className="size-5" />
-                      <span>Contracts</span>
-                    </SidebarButton>
-                  </SidebarMenuItem>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  {open ? "Preview deployments" : "Prototype"}
-                </TooltipContent>
-              </Tooltip> */}
-
-              <Tooltip>
-                <TooltipTrigger>
-                  <SidebarMenuItem>
-                    <SidebarButton
-                      href={configuration.paths.project.ai({
-                        project_slug: project?.slug,
-                      })}
-                      matchPattern={configuration.paths.project.ai({
+                      matchPattern={configuration.paths.project.workflow({
                         project_slug: project?.slug,
                       })}
                     >
                       <PanelsRightBottom className="size-5" />
-                      <span>AI</span>
+                      <span>Workflow</span>
                     </SidebarButton>
                   </SidebarMenuItem>
                 </TooltipTrigger>
@@ -238,7 +149,7 @@ function AppSidebar() {
                       }
                     >
                       <Settings className="size-5" />
-                      <span>Project</span>
+                      <span>Project settings</span>
                     </SidebarButton>
                   </SidebarMenuItem>
                 </TooltipTrigger>
@@ -249,20 +160,8 @@ function AppSidebar() {
             </TooltipProvider>
           </SidebarMenu>
         </SidebarGroup>
-        <div className="px-4 pt-4 space-y-2.5">
-          <h3
-            className={cn(
-              "text-sm text-gray-800 dark:text-gray-200 font-medium",
-            )}
-          >
-            Tasks
-          </h3>
-          <hr className={cn("w-full dark:border-gray-00")} />
-        </div>
-        <div className="flex-1 min-h-0">
-          <TaskList />
-        </div>
-
+        <NotificationList />
+        <TaskList />
         <SidebarFooter>
           <NavUser />
         </SidebarFooter>

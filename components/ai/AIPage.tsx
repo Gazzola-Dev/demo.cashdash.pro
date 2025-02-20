@@ -71,14 +71,16 @@ const PromptTab = ({
         </div>
 
         <div className="space-y-2">
-          {tasks?.map(task => (
-            <Card key={task.id} className="p-4">
-              <h3 className="font-medium">{task.title}</h3>
-              <p className="text-sm text-muted-foreground">
-                {task.description || "No description"}
-              </p>
-            </Card>
-          ))}
+          {tasks
+            ?.map(t => t.task)
+            .map(task => (
+              <Card key={task.id} className="p-4">
+                <h3 className="font-medium">{task.title}</h3>
+                <p className="text-sm text-muted-foreground">
+                  {task.description || "No description"}
+                </p>
+              </Card>
+            ))}
         </div>
       </div>
 
@@ -144,7 +146,6 @@ console.log(greet("World"));`;
             <Progress value={progress} className="w-full" />
           ) : (
             <div className="prose dark:prose-invert">
-              <p>Here's a simple greeting function in JavaScript:</p>
               <p>
                 This function takes a name parameter and returns a greeting
                 message using template literals.

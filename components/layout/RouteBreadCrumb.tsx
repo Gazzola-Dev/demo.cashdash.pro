@@ -163,7 +163,9 @@ export default function RouteBreadcrumb() {
       !firstRouteSegments.includes(segments[0]) &&
       !secondRouteSegments.includes(segments[1])
     ) {
-      const task = tasks?.find(t => t?.slug.includes(segments[1]));
+      const task = tasks
+        ?.map(t => t.task)
+        .find(t => t?.slug.includes(segments[1]));
       return (
         <Breadcrumb className="flex-grow">
           <BreadcrumbList className="h-full !gap-0">

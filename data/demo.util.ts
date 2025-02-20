@@ -31,14 +31,18 @@ export function getDraftTask(projectId: string): TaskResult {
       id: `draft-task-${Date.now()}`,
       title: "",
       description: "",
-      status: "draft",
-      priority: "medium",
+      status: "draft" as Tables<"tasks">["status"],
+      priority: "medium" as Tables<"tasks">["priority"],
       project_id: projectId,
       assignee: null,
       prefix: project.prefix,
       slug: `${project.prefix.toLowerCase()}-${nextOrdinalId}`,
       ordinal_id: nextOrdinalId,
+      ordinal_priority: nextOrdinalId,
       budget_cents: 0,
+      estimated_minutes: null,
+      recorded_minutes: null,
+      start_time: null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
@@ -49,8 +53,8 @@ export function getDraftTask(projectId: string): TaskResult {
       task_id: `draft-task-${Date.now()}`,
       start_date: new Date().toISOString(),
       due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 2 weeks from now
-      estimated_hours: 0,
-      actual_hours: 0,
+      estimated_hours: null,
+      actual_hours: null,
       completed_at: null,
     },
     assignee_profile: null,
@@ -104,15 +108,15 @@ export function getDemoDataFromPath(pathname: string): ParsedDemoData {
 
   // Split path into segments and remove empty strings
   const segments = pathname.split("/").filter(Boolean);
+  const pathIsHome = pathname === "/";
 
-  // Return early if no segments
-  if (segments.length === 0) {
+  if (pathIsHome || segments.length === 0) {
     // Set default project and populate its tasks
     result.project = {
       ...demoData.projects[1],
       project_members: getProjectMembers("proj-2"),
       project_invitations: [],
-      tasks: demoData.tasks.project2,
+      tasks: demoData.tasks.project2 as TaskResult[],
     };
     return result;
   }
@@ -135,7 +139,7 @@ export function getDemoDataFromPath(pathname: string): ParsedDemoData {
       ...defaultProject,
       project_members: getProjectMembers(defaultProject.id),
       project_invitations: [],
-      tasks: demoData.tasks.project1,
+      tasks: demoData.tasks.project1 as TaskResult[],
     };
 
     // Update projects array with tasks
@@ -143,11 +147,11 @@ export function getDemoDataFromPath(pathname: string): ParsedDemoData {
       ...p,
       tasks:
         i === 0
-          ? demoData.tasks.project1
+          ? (demoData.tasks.project1 as TaskResult[])
           : i === 1
-            ? demoData.tasks.project2
+            ? (demoData.tasks.project2 as TaskResult[])
             : i === 2
-              ? demoData.tasks.project3
+              ? (demoData.tasks.project3 as TaskResult[])
               : [],
     }));
 
@@ -155,12 +159,11 @@ export function getDemoDataFromPath(pathname: string): ParsedDemoData {
   }
 
   // Get all tasks for this project
-  const projectTasks =
-    {
-      "proj-1": demoData.tasks.project1,
-      "proj-2": demoData.tasks.project2,
-      "proj-3": demoData.tasks.project3,
-    }[project.id] || [];
+  const projectTasks = ({
+    "proj-1": demoData.tasks.project1,
+    "proj-2": demoData.tasks.project2,
+    "proj-3": demoData.tasks.project3,
+  }[project.id] || []) as TaskResult[];
 
   // Build the full project object with complete task details
   result.project = {
@@ -183,7 +186,8 @@ export function getDemoDataFromPath(pathname: string): ParsedDemoData {
   // If there's a second segment and it's not "tasks/new", it's a task slug
   if (segments.length > 1 && segments[1] !== "tasks") {
     const taskSlug = segments[1];
-    result.task = projectTasks.find(t => t.task.slug === taskSlug) || null;
+    result.task =
+      (projectTasks.find(t => t.task.slug === taskSlug) as TaskResult) || null;
   }
 
   return result;
@@ -196,7 +200,7 @@ export function getDraftProject(): ProjectWithDetails {
     id: `draft-proj-${Date.now()}`,
     name: "",
     description: "",
-    status: "active",
+    status: "active" as const,
     slug: `project-${nextProjectNumber}`,
     prefix: `P${nextProjectNumber}`,
     github_repo_url: "",

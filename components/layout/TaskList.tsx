@@ -147,6 +147,7 @@ const TaskList = () => {
   };
 
   const filteredTasks = tasks
+    ?.map(t => t.task)
     ?.filter(
       task =>
         task.status !==
@@ -197,199 +198,217 @@ const TaskList = () => {
   });
 
   return (
-    <SidebarGroup className="h-full flex flex-col overflow-hidden">
-      <div className="flex items-center justify-between p-2 pt-0">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => toggleSort("priority")}
-                className={
-                  getIconStyles(sortConfig.field === "priority").button
-                }
-              >
-                <Signal
+    <div className="flex-1 min-h-0">
+      <div className="px-4 pt-4 space-y-2.5">
+        <h3
+          className={cn("text-sm text-gray-800 dark:text-gray-200 font-medium")}
+        >
+          Tasks
+        </h3>
+        <hr className={cn("w-full dark:border-gray-500")} />
+      </div>
+
+      <SidebarGroup className="h-full flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between p-2 pt-0">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => toggleSort("priority")}
                   className={
-                    getIconStyles(sortConfig.field === "priority").icon
+                    getIconStyles(sortConfig.field === "priority").button
                   }
-                />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent
-              side="top"
-              className="dark:bg-gray-800 dark:text-gray-100"
-            >
-              Sort by priority{" "}
-              <span className="font-semibold italic">
-                (
-                {sortConfig.order === "desc" ? "Highest first" : "Lowest first"}
-                )
-              </span>
-            </TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => toggleSort("created_at")}
-                className={
-                  getIconStyles(sortConfig.field === "created_at").button
-                }
+                >
+                  <Signal
+                    className={
+                      getIconStyles(sortConfig.field === "priority").icon
+                    }
+                  />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent
+                side="top"
+                className="dark:bg-gray-800 dark:text-gray-100"
               >
-                <Clock
-                  className={
-                    getIconStyles(sortConfig.field === "created_at").icon
-                  }
-                />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent
-              side="top"
-              className="dark:bg-gray-800 dark:text-gray-100"
-            >
-              Sort by creation date{" "}
-              <span className="font-semibold italic">
-                ({sortConfig.order === "desc" ? "Newest first" : "Oldest first"}
-                )
-              </span>
-            </TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={cycleStatus}
-                className={cn(
-                  "border",
-                  getBorderColorForStatus(currentStatus),
-                  getIconStyles(!!currentStatus).button,
-                )}
-              >
-                {currentStatus ? (
-                  <StatusIconSimple status={currentStatus} />
-                ) : (
-                  <Filter className={getIconStyles(false).icon} />
-                )}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent
-              side="top"
-              className="dark:bg-gray-800 dark:text-gray-100"
-            >
-              Filter by status
-              {currentStatus && (
+                Sort by priority{" "}
                 <span className="font-semibold italic">
-                  {" "}
-                  ({getStatusDisplayName(currentStatus)})
+                  (
+                  {sortConfig.order === "desc"
+                    ? "Highest first"
+                    : "Lowest first"}
+                  )
                 </span>
-              )}
-            </TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                asChild
-                className={
-                  getIconStyles(pathname === allTasksPath, true).button
-                }
-              >
-                <Link href={allTasksPath}>
-                  <ListIcon
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => toggleSort("created_at")}
+                  className={
+                    getIconStyles(sortConfig.field === "created_at").button
+                  }
+                >
+                  <Clock
                     className={
-                      getIconStyles(pathname === allTasksPath, true).icon
+                      getIconStyles(sortConfig.field === "created_at").icon
                     }
                   />
-                </Link>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent
-              side="top"
-              className="dark:bg-gray-800 dark:text-gray-100"
-            >
-              View all tasks
-            </TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                asChild
-                className={getIconStyles(pathname === newTaskPath, true).button}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent
+                side="top"
+                className="dark:bg-gray-800 dark:text-gray-100"
               >
-                <Link href={newTaskPath}>
-                  <Plus
-                    className={
-                      getIconStyles(pathname === newTaskPath, true).icon
-                    }
-                  />
-                </Link>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent
-              side="top"
-              className="dark:bg-gray-800 dark:text-gray-100"
-            >
-              Create new task
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </div>
-
-      <div className="flex-1 overflow-y-auto">
-        {filteredTasks?.map(taskData => (
-          <SidebarMenuItem key={taskData.id}>
-            <Link
-              href={configuration.paths.tasks.view({
-                project_slug: project?.slug,
-                task_slug: taskData.slug,
-              })}
-              className={cn(
-                "flex items-center gap-2 px-2 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 select-none",
-                "text-sm",
-                pathname ===
-                  configuration.paths.tasks.view({
-                    project_slug: project?.slug,
-                    task_slug: taskData.slug,
-                  }) && "bg-gray-100 dark:bg-gray-800 font-medium",
-              )}
-            >
-              <div className="flex items-center gap-2">
-                <PriorityIcon priority={taskData.priority} />
-                <StatusIconSimple status={taskData.status} />
-              </div>
-              <span className="truncate">
-                {open ? (
-                  taskData.title
-                ) : (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span>{taskData.title}</span>
-                      </TooltipTrigger>
-                      <TooltipContent
-                        side="right"
-                        className="dark:bg-gray-800 dark:text-gray-100"
-                      >
-                        {taskData.title}
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                Sort by creation date{" "}
+                <span className="font-semibold italic">
+                  (
+                  {sortConfig.order === "desc"
+                    ? "Newest first"
+                    : "Oldest first"}
+                  )
+                </span>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={cycleStatus}
+                  className={cn(
+                    "border",
+                    getBorderColorForStatus(currentStatus),
+                    getIconStyles(!!currentStatus).button,
+                  )}
+                >
+                  {currentStatus ? (
+                    <StatusIconSimple status={currentStatus} />
+                  ) : (
+                    <Filter className={getIconStyles(false).icon} />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent
+                side="top"
+                className="dark:bg-gray-800 dark:text-gray-100"
+              >
+                Filter by status
+                {currentStatus && (
+                  <span className="font-semibold italic">
+                    {" "}
+                    ({getStatusDisplayName(currentStatus)})
+                  </span>
                 )}
-              </span>
-            </Link>
-          </SidebarMenuItem>
-        ))}
-      </div>
-    </SidebarGroup>
+              </TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  asChild
+                  className={
+                    getIconStyles(pathname === allTasksPath, true).button
+                  }
+                >
+                  <Link href={allTasksPath}>
+                    <ListIcon
+                      className={
+                        getIconStyles(pathname === allTasksPath, true).icon
+                      }
+                    />
+                  </Link>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent
+                side="top"
+                className="dark:bg-gray-800 dark:text-gray-100"
+              >
+                View all tasks
+              </TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  asChild
+                  className={
+                    getIconStyles(pathname === newTaskPath, true).button
+                  }
+                >
+                  <Link href={newTaskPath}>
+                    <Plus
+                      className={
+                        getIconStyles(pathname === newTaskPath, true).icon
+                      }
+                    />
+                  </Link>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent
+                side="top"
+                className="dark:bg-gray-800 dark:text-gray-100"
+              >
+                Create new task
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+
+        <div className="flex-1 overflow-y-auto">
+          {filteredTasks?.map(taskData => (
+            <SidebarMenuItem key={taskData.id}>
+              <Link
+                href={configuration.paths.tasks.view({
+                  project_slug: project?.slug,
+                  task_slug: taskData.slug,
+                })}
+                className={cn(
+                  "flex items-center gap-2 px-2 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 select-none",
+                  "text-sm",
+                  pathname ===
+                    configuration.paths.tasks.view({
+                      project_slug: project?.slug,
+                      task_slug: taskData.slug,
+                    }) && "bg-gray-100 dark:bg-gray-800 font-medium",
+                )}
+              >
+                <div className="flex items-center gap-2">
+                  <PriorityIcon priority={taskData.priority} />
+                  <StatusIconSimple status={taskData.status} />
+                </div>
+                <span className="truncate">
+                  {open ? (
+                    taskData.title
+                  ) : (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span>{taskData.title}</span>
+                        </TooltipTrigger>
+                        <TooltipContent
+                          side="right"
+                          className="dark:bg-gray-800 dark:text-gray-100"
+                        >
+                          {taskData.title}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+                </span>
+              </Link>
+            </SidebarMenuItem>
+          ))}
+        </div>
+      </SidebarGroup>
+    </div>
   );
 };
 
