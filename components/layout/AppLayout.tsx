@@ -28,7 +28,6 @@ import {
 import configuration from "@/configuration";
 import useDemoData from "@/hooks/useDemoData";
 import { useDialogQueue } from "@/hooks/useDialogQueue";
-import useSupabase from "@/hooks/useSupabase";
 import { Dot, Gauge, LogOut, PanelsRightBottom, Settings } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -36,8 +35,7 @@ import React from "react";
 
 function AppSidebar() {
   const { open } = useSidebar();
-  const { project, profile } = useDemoData();
-  const supabase = useSupabase();
+  const { project } = useDemoData();
   const router = useRouter();
   const { dialog } = useDialogQueue();
 
@@ -48,7 +46,6 @@ function AppSidebar() {
       confirmText: "Sign Out",
       cancelText: "Cancel",
       onConfirm: async () => {
-        await supabase.auth.signOut();
         router.refresh();
       },
     });
