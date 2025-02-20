@@ -49,7 +49,7 @@ export function SidebarButton({
       className={cn(
         "relative text-sm",
         isActive &&
-          "bg-sidebar-accent text-blue-800 font-semibold cursor-default",
+          "bg-sidebar-accent text-blue-800 dark:text-blue-200 font-bold cursor-default",
         isActive &&
           "after:absolute after:right-0 after:top-1/2 after:-translate-y-1/2 after:h-8 after:w-[2px] after:bg-primary after:rounded-l",
       )}

@@ -1,5 +1,4 @@
 import { StatusIconSimple } from "@/components/tasks/SimpleTaskSelectComponents";
-import { Button } from "@/components/ui/button";
 import {
   SidebarGroup,
   SidebarMenuItem,
@@ -14,16 +13,7 @@ import {
 import configuration from "@/configuration";
 import useDemoData from "@/hooks/useDemoData";
 import { cn } from "@/lib/utils";
-import {
-  Clock,
-  Filter,
-  ListIcon,
-  Plus,
-  Signal,
-  SignalHigh,
-  SignalLow,
-  SignalMedium,
-} from "lucide-react";
+import { Signal, SignalHigh, SignalLow, SignalMedium } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -203,165 +193,12 @@ const TaskList = () => {
         <h3
           className={cn("text-sm text-gray-800 dark:text-gray-200 font-medium")}
         >
-          Tasks
+          Tasks ({filteredTasks?.length})
         </h3>
-        <hr className={cn("w-full dark:border-gray-500")} />
+        <hr className={cn("w-full dark:border-blue-900")} />
       </div>
 
       <SidebarGroup className="h-full flex flex-col overflow-hidden">
-        <div className="flex items-center justify-between p-2 pt-0">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => toggleSort("priority")}
-                  className={
-                    getIconStyles(sortConfig.field === "priority").button
-                  }
-                >
-                  <Signal
-                    className={
-                      getIconStyles(sortConfig.field === "priority").icon
-                    }
-                  />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent
-                side="top"
-                className="dark:bg-gray-800 dark:text-gray-100"
-              >
-                Sort by priority{" "}
-                <span className="font-semibold italic">
-                  (
-                  {sortConfig.order === "desc"
-                    ? "Highest first"
-                    : "Lowest first"}
-                  )
-                </span>
-              </TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => toggleSort("created_at")}
-                  className={
-                    getIconStyles(sortConfig.field === "created_at").button
-                  }
-                >
-                  <Clock
-                    className={
-                      getIconStyles(sortConfig.field === "created_at").icon
-                    }
-                  />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent
-                side="top"
-                className="dark:bg-gray-800 dark:text-gray-100"
-              >
-                Sort by creation date{" "}
-                <span className="font-semibold italic">
-                  (
-                  {sortConfig.order === "desc"
-                    ? "Newest first"
-                    : "Oldest first"}
-                  )
-                </span>
-              </TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={cycleStatus}
-                  className={cn(
-                    "border",
-                    getBorderColorForStatus(currentStatus),
-                    getIconStyles(!!currentStatus).button,
-                  )}
-                >
-                  {currentStatus ? (
-                    <StatusIconSimple status={currentStatus} />
-                  ) : (
-                    <Filter className={getIconStyles(false).icon} />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent
-                side="top"
-                className="dark:bg-gray-800 dark:text-gray-100"
-              >
-                Filter by status
-                {currentStatus && (
-                  <span className="font-semibold italic">
-                    {" "}
-                    ({getStatusDisplayName(currentStatus)})
-                  </span>
-                )}
-              </TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  asChild
-                  className={
-                    getIconStyles(pathname === allTasksPath, true).button
-                  }
-                >
-                  <Link href={allTasksPath}>
-                    <ListIcon
-                      className={
-                        getIconStyles(pathname === allTasksPath, true).icon
-                      }
-                    />
-                  </Link>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent
-                side="top"
-                className="dark:bg-gray-800 dark:text-gray-100"
-              >
-                View all tasks
-              </TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  asChild
-                  className={
-                    getIconStyles(pathname === newTaskPath, true).button
-                  }
-                >
-                  <Link href={newTaskPath}>
-                    <Plus
-                      className={
-                        getIconStyles(pathname === newTaskPath, true).icon
-                      }
-                    />
-                  </Link>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent
-                side="top"
-                className="dark:bg-gray-800 dark:text-gray-100"
-              >
-                Create new task
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-
         <div className="flex-1 overflow-y-auto">
           {filteredTasks?.map(taskData => (
             <SidebarMenuItem key={taskData.id}>

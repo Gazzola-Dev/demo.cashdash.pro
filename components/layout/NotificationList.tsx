@@ -147,7 +147,7 @@ const NotificationList = () => {
       >
         Notifications ({notifications.length})
       </h3>
-      <hr className={cn("w-full dark:border-gray-500")} />
+      <hr className={cn("w-full dark:border-blue-900")} />
 
       {notifications
         .sort((a, b) => a.createdAt - b.createdAt)
