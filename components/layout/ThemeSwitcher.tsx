@@ -9,8 +9,8 @@ export function ThemeSwitcher() {
   return (
     <div
       className={cn(
-        "flex items-center px-3 pb-2 pt-4 cursor-pointer",
-        "transition-all duration-200 ease-in-out justify-between w-full",
+        "flex items-center px-3 pb-2 pt-3 cursor-pointer",
+        "transition-all duration-200 ease-in-out justify-between w-full hover:bg-gray-100 dark:hover:bg-gray-800",
       )}
       onClick={toggleDarkMode}
       role="button"
