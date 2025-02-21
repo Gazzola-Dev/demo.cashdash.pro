@@ -8,7 +8,7 @@ const PasswordForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
@@ -24,7 +24,7 @@ const PasswordForm = () => {
   };
 
   return (
-    <div className="w-full h-screen flex items-center justify-center bg-background">
+    <div className="w-full h-full flex items-center justify-center bg-background pt-36">
       <form
         onSubmit={handleSubmit}
         className="w-full max-w-sm p-6 space-y-4 bg-card border rounded-lg shadow-sm"
