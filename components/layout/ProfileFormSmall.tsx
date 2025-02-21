@@ -59,7 +59,7 @@ const ProfileFormSmall = () => {
   };
 
   return (
-    <div className="flex items-center gap-2 p-2 pt-0 rounded-md">
+    <div className="flex items-center gap-2 p-2 pt-3 rounded-md">
       <Avatar
         className="size-8 rounded-lg cursor-pointer"
         onClick={() => setIsDialogOpen(true)}

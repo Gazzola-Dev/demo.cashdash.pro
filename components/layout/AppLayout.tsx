@@ -38,7 +38,14 @@ import {
 import configuration from "@/configuration";
 import useDemoData from "@/hooks/useDemoData";
 import { useDialogQueue } from "@/hooks/useDialogQueue";
-import { Dot, Gauge, LogOut, PanelsRightBottom, Settings } from "lucide-react";
+import {
+  CreditCard,
+  Dot,
+  Gauge,
+  LogOut,
+  PanelsRightBottom,
+  Settings,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
@@ -136,7 +143,18 @@ function AppSidebar() {
           <TaskList />
         </div>
 
-        <SidebarFooter>
+        <SidebarFooter className="gap-0.5">
+          <Tooltip>
+            <TooltipTrigger>
+              <SidebarMenuItem className="flex items-center gap-2.5 px-3 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 select-none text-sm">
+                <CreditCard className="size-4" />
+                <span className="py-1">Billing</span>
+              </SidebarMenuItem>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              Manage your billing details
+            </TooltipContent>
+          </Tooltip>
           <Tooltip>
             <TooltipTrigger>
               <SidebarMenuItem
