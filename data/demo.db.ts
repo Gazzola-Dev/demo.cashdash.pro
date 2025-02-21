@@ -3,7 +3,7 @@ import { Tables } from "@/types/database.types";
 export const demoAdminProfile: Tables<"profiles"> = {
   id: "admin-user-id",
   email: "admin@example.com",
-  display_name: "Admin User (That's you!)",
+  display_name: "Admin Display Name",
   avatar_url: null,
   professional_title: "Project Administrator",
   bio: "Just a terrific Administrator!",

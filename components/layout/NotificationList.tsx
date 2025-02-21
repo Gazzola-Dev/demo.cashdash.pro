@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
@@ -7,7 +8,8 @@ import {
 import useDemoData from "@/hooks/useDemoData";
 import { cn } from "@/lib/utils";
 import {
-  CheckSquare,
+  BellMinus,
+  CheckCircle2,
   FolderGit2,
   GitPullRequest,
   MessagesSquare,
@@ -45,7 +47,7 @@ const getVariantConfig = (contentType: string) => {
       borderColor: "border-purple-200 dark:border-purple-800",
     },
     task: {
-      icon: CheckSquare,
+      icon: CheckCircle2,
       color: "text-blue-700 dark:text-blue-300",
       bgColor: "bg-blue-50 dark:bg-blue-900/10",
       borderColor: "border-blue-200 dark:border-blue-800",
@@ -81,20 +83,44 @@ const NotificationList = () => {
     setDismissed([...dismissed, id]);
   };
 
+  const handleClearAll = () => {
+    setDismissed(notifications.map(n => n.id));
+  };
+
   const activeNotifications = notifications
     .sort(
       (a, b) =>
-        new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
     )
     .filter(n => !dismissed.includes(n.id));
 
   return (
     <div className="px-4 space-y-2">
-      <h3
-        className={cn("text-sm text-gray-800 dark:text-gray-200 font-medium")}
-      >
-        Notifications ({activeNotifications.length})
-      </h3>
+      <div className="flex items-center justify-between">
+        <h3
+          className={cn("text-sm text-gray-800 dark:text-gray-200 font-medium")}
+        >
+          Notifications ({activeNotifications.length})
+        </h3>
+        {activeNotifications.length > 0 && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={handleClearAll}
+                >
+                  <BellMinus className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Clear all notifications</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+      </div>
+
       <hr className={cn("w-full dark:border-blue-900")} />
 
       {activeNotifications.map(notification => {
@@ -113,17 +139,24 @@ const NotificationList = () => {
             )}
           >
             <TooltipProvider>
-              <div className="flex items-center gap-3 min-w-0">
-                <Tooltip>
-                  <TooltipTrigger>
-                    <AgeIcon className={cn("h-4 w-4")} />
-                  </TooltipTrigger>
-                  <TooltipContent>{ageTooltip}</TooltipContent>
-                </Tooltip>
-                <span className="truncate flex-1 text-sm">
+              <Tooltip>
+                <TooltipTrigger>
+                  <AgeIcon className="size-4 pb-px" />
+                </TooltipTrigger>
+                <TooltipContent>{ageTooltip}</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="truncate flex-1 text-sm">
+                      {notification.message}
+                    </span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="right">
                   {notification.message}
-                </span>
-              </div>
+                </TooltipContent>
+              </Tooltip>
             </TooltipProvider>
           </div>
         );

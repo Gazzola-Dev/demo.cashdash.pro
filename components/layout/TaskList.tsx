@@ -84,7 +84,7 @@ const TaskList = () => {
                         {task.ordinal_priority}
                       </span>
                     </TooltipTrigger>
-                    <TooltipContent>
+                    <TooltipContent side="right">
                       This task is the {task.ordinal_priority}
                       {getOrdinalSuffix(task.ordinal_priority)} highest priority
                     </TooltipContent>
@@ -96,7 +96,7 @@ const TaskList = () => {
                         <StatusIconSimple status={task.status} />
                       </span>
                     </TooltipTrigger>
-                    <TooltipContent>
+                    <TooltipContent side="right">
                       Status: {getStatusText(task.status)}
                     </TooltipContent>
                   </Tooltip>
@@ -110,7 +110,7 @@ const TaskList = () => {
                         {task.title}
                       </span>
                     </TooltipTrigger>
-                    <TooltipContent>{task.title}</TooltipContent>
+                    <TooltipContent side="right">{task.title}</TooltipContent>
                   </Tooltip>
 
                   <Tooltip>
@@ -129,7 +129,7 @@ const TaskList = () => {
                         </AvatarFallback>
                       </Avatar>
                     </TooltipTrigger>
-                    <TooltipContent>
+                    <TooltipContent side="right">
                       Assigned to:{" "}
                       {assigneeProfile?.display_name || "Unassigned"}
                     </TooltipContent>
