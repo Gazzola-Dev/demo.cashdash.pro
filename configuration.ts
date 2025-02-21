@@ -36,6 +36,7 @@ const configuration = {
     youtubeHandle: "",
   },
   paths: {
+    delete: "/delete",
     appHome: "/",
     project: {
       workflow: ({ project_slug = "" }: Slugs) => `/${project_slug}/workflow`,

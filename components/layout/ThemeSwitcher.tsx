@@ -9,8 +9,8 @@ export function ThemeSwitcher() {
   return (
     <div
       className={cn(
-        "flex items-center px-3 pb-2 pt-3 cursor-pointer",
-        "transition-all duration-200 ease-in-out justify-between w-full hover:bg-gray-100 dark:hover:bg-gray-800",
+        "flex items-center px-3 py-0.5 cursor-pointer",
+        "transition-all duration-200 ease-in-out justify-between w-full hover:bg-gray-100 dark:hover:bg-gray-800 ",
       )}
       onClick={toggleDarkMode}
       role="button"
@@ -22,12 +22,12 @@ export function ThemeSwitcher() {
         }
       }}
     >
-      <div className="flex items-center gap-4">
-        <Eclipse className={cn("size-4 ")} />
+      <div className="flex items-center mb-px gap-4 ">
+        <Eclipse className={cn("size-4")} />
         <span className="text-sm ">Theme</span>
       </div>
 
-      <div className={cn("flex items-center gap-2", !open && "flex-col")}>
+      <div className={cn("flex items-center gap-2 ", !open && "flex-col")}>
         <Switch
           checked={isDarkMode}
           onCheckedChange={toggleDarkMode}

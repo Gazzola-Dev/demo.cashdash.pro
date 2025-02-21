@@ -7,6 +7,16 @@ import RouteBreadcrumb from "@/components/layout/RouteBreadCrumb";
 import { SidebarButton } from "@/components/layout/SidebarComponents";
 import TaskList from "@/components/layout/TaskList";
 import ThemeSwitcher from "@/components/layout/ThemeSwitcher";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import {
   Sidebar,
   SidebarContent,
@@ -31,7 +41,7 @@ import { useDialogQueue } from "@/hooks/useDialogQueue";
 import { Dot, Gauge, LogOut, PanelsRightBottom, Settings } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React from "react";
+import React, { useState } from "react";
 
 function AppSidebar() {
   const { open } = useSidebar();
@@ -133,7 +143,7 @@ function AppSidebar() {
                 className="flex items-center gap-2.5 px-3 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 select-none text-sm"
                 onClick={handleSignOut}
               >
-                <LogOut className="size-5" />
+                <LogOut className="size-4" />
                 <span className="py-1">Sign out</span>
               </SidebarMenuItem>
             </TooltipTrigger>
@@ -158,7 +168,61 @@ function AppSidebar() {
   );
 }
 
+function DeleteAccountDialog({
+  open,
+  onOpenChange,
+  email,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  email: string;
+}) {
+  const [confirmText, setConfirmText] = useState("");
+  const { profile } = useDemoData();
+  const expectedText = `delete ${profile?.display_name}`;
+  const isValid = confirmText === expectedText;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Delete Account</DialogTitle>
+          <DialogDescription className="space-y-4">
+            <p>
+              Are you sure you want to permanently delete your account and all
+              related data? This cannot be undone.
+            </p>
+            <p>Type &quot;delete {profile?.display_name}&quot; to confirm</p>
+          </DialogDescription>
+        </DialogHeader>
+        <div className="py-4">
+          <Input
+            value={confirmText}
+            onChange={e => setConfirmText(e.target.value)}
+            placeholder={`delete ${profile?.display_name}`}
+          />
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            disabled={!isValid}
+            onClick={() => onOpenChange(false)}
+          >
+            Delete Account
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function AppLayout({ children }: { children: React.ReactNode }) {
+  const { profile } = useDemoData();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
@@ -186,20 +250,46 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               >
                 You are viewing a demo version of Cash Dash, click here to visit
                 the full web app at{" "}
-                <span className="tracking-wider underline">CashDash.Pro</span>
+                <span className="tracking-wider underline italic">
+                  CashDash.Pro
+                </span>
               </a>
 
               <div className="flex items-center gap-2">
-                <Link href={configuration.paths.privacy}>Privacy</Link>
+                <button
+                  className="dark:hover:text-gray-200 hover:text-gray-800"
+                  onClick={() => setDeleteDialogOpen(true)}
+                >
+                  Delete my account
+                </button>
                 <Dot className="size-3" />
-                <Link href={configuration.paths.terms}>Terms</Link>
+                <Link
+                  className="dark:hover:text-gray-200 hover:text-gray-800"
+                  href={configuration.paths.privacy}
+                >
+                  Privacy
+                </Link>
                 <Dot className="size-3" />
-                <p className="">&copy; {new Date().getFullYear()} Apex Apps</p>
+                <Link
+                  className="dark:hover:text-gray-200 hover:text-gray-800"
+                  href={configuration.paths.terms}
+                >
+                  Terms
+                </Link>
+                <Dot className="size-3" />
+                <p className="select-none cursor-default">
+                  &copy; {new Date().getFullYear()} Apex Apps
+                </p>
               </div>
             </footer>
           </div>
         </SidebarInset>
       </div>
+      <DeleteAccountDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        email={profile?.email || ""}
+      />
     </SidebarProvider>
   );
 }
