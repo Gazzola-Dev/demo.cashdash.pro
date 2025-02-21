@@ -95,7 +95,7 @@ const NotificationList = () => {
     .filter(n => !dismissed.includes(n.id));
 
   return (
-    <div className="px-4 space-y-2">
+    <div className="px-3 space-y-2 pt-1">
       <div className="flex items-center justify-between">
         <h3
           className={cn("text-sm text-gray-800 dark:text-gray-200 font-medium")}
@@ -134,7 +134,7 @@ const NotificationList = () => {
             key={notification.id}
             onClick={() => handleNotificationClick(notification.id)}
             className={cn(
-              "flex items-center gap-3 px-1.5 py-1 rounded-md cursor-pointer",
+              "flex items-center gap-3 px-1 py-1 rounded-md cursor-pointer",
               "transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-800",
             )}
           >

@@ -13,18 +13,73 @@ export interface ParsedDemoData {
 
 export const USER_ID = "admin-user-id";
 
+// Define valid project IDs type
+type ProjectId = "proj-1" | "proj-2" | "proj-3";
+
+// Type guard to check if a string is a valid ProjectId
+function isValidProjectId(id: string): id is ProjectId {
+  return ["proj-1", "proj-2", "proj-3"].includes(id);
+}
+
+// Divide team members among projects, including admin in all projects
+const teamMemberAllocation: Record<ProjectId, typeof teamMembers> = {
+  "proj-1": [demoData.adminProfile, ...teamMembers.slice(0, 4)], // GoTask - 5 members (including admin)
+  "proj-2": [demoData.adminProfile, ...teamMembers.slice(4, 8)], // Eco3D - 5 members (including admin)
+  "proj-3": [demoData.adminProfile, ...teamMembers.slice(8, 15)], // Menu.run - 8 members (including admin)
+};
+
+// Function to check if a user is a member of a project
+function isProjectMember(projectId: string, userId: string): boolean {
+  if (!isValidProjectId(projectId)) return false;
+  return teamMemberAllocation[projectId].some(member => member.id === userId);
+}
+
+// Function to get team members for a project
+function getProjectMembers(projectId: string) {
+  if (!isValidProjectId(projectId)) {
+    return []; // Return empty array for invalid project IDs
+  }
+  return teamMemberAllocation[projectId].map(member => ({
+    id: `member-${member.id}`,
+    project_id: projectId,
+    user_id: member.id,
+    role: member.id === USER_ID ? "owner" : "member",
+    created_at: new Date().toISOString(),
+    profile: member,
+  }));
+}
+
+// Function to get notifications for a project
+function getProjectNotifications(projectId: string): Tables<"notifications">[] {
+  switch (projectId) {
+    case "proj-1":
+      return demoData.notifications.project1;
+    case "proj-2":
+      return demoData.notifications.project2;
+    case "proj-3":
+      return demoData.notifications.project3;
+    default:
+      return [];
+  }
+}
+
 export function getDraftTask(projectId: string): TaskResult {
   const project = demoData.projects.find(p => p.id === projectId);
   if (!project) {
     throw new Error(`Project not found: ${projectId}`);
   }
 
+  // Get project members
+  const projectMembers = getProjectMembers(projectId);
+
+  // Get next ordinal ID
   const nextOrdinalId =
     Math.max(
       ...Object.values(demoData.tasks)
         .flat()
         .filter(t => t.task.project_id === projectId)
         .map(t => t.task.ordinal_id),
+      0, // Include 0 as default in case there are no tasks
     ) + 1;
 
   return {
@@ -35,7 +90,7 @@ export function getDraftTask(projectId: string): TaskResult {
       status: "draft" as Tables<"tasks">["status"],
       priority: "medium" as Tables<"tasks">["priority"],
       project_id: projectId,
-      assignee: null,
+      assignee: null, // Start with no assignee, can only be set to project members
       prefix: project.prefix,
       slug: `${project.prefix.toLowerCase()}-${nextOrdinalId}`,
       ordinal_id: nextOrdinalId,
@@ -85,50 +140,6 @@ export function getDraftProject(): ProjectWithDetails {
     icon_color_fg: "white",
     icon_name: "lucide:code-2",
   };
-}
-
-// Define valid project IDs type
-type ProjectId = "proj-1" | "proj-2" | "proj-3";
-
-// Type guard to check if a string is a valid ProjectId
-function isValidProjectId(id: string): id is ProjectId {
-  return ["proj-1", "proj-2", "proj-3"].includes(id);
-}
-
-// Divide team members among projects, including admin in all projects
-const teamMemberAllocation: Record<ProjectId, typeof teamMembers> = {
-  "proj-1": [demoData.adminProfile, ...teamMembers.slice(0, 4)], // GoTask - 5 members (including admin)
-  "proj-2": [demoData.adminProfile, ...teamMembers.slice(4, 8)], // Eco3D - 5 members (including admin)
-  "proj-3": [demoData.adminProfile, ...teamMembers.slice(8, 15)], // Menu.run - 8 members (including admin)
-};
-
-// Function to get team members for a project
-function getProjectMembers(projectId: string) {
-  if (!isValidProjectId(projectId)) {
-    return []; // Return empty array for invalid project IDs
-  }
-  return teamMemberAllocation[projectId].map(member => ({
-    id: `member-${member.id}`,
-    project_id: projectId,
-    user_id: member.id,
-    role: member.id === USER_ID ? "owner" : "member",
-    created_at: new Date().toISOString(),
-    profile: member,
-  }));
-}
-
-// Function to get notifications for a project
-function getProjectNotifications(projectId: string): Tables<"notifications">[] {
-  switch (projectId) {
-    case "proj-1":
-      return demoData.notifications.project1;
-    case "proj-2":
-      return demoData.notifications.project2;
-    case "proj-3":
-      return demoData.notifications.project3;
-    default:
-      return [];
-  }
 }
 
 export function getDemoDataFromPath(pathname: string): ParsedDemoData {
@@ -237,3 +248,6 @@ export function getDemoDataFromPath(pathname: string): ParsedDemoData {
 
   return result;
 }
+
+// Export helper functions that might be useful elsewhere
+export { getProjectMembers, getProjectNotifications, isProjectMember };

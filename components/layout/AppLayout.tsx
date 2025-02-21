@@ -175,9 +175,7 @@ function AppSidebar() {
                 <ThemeSwitcher />
               </div>
             </TooltipTrigger>
-            <TooltipContent side="right">
-              Change theme (Dark mode is still in beta!)
-            </TooltipContent>
+            <TooltipContent side="right">Change theme</TooltipContent>
           </Tooltip>
           <ProfileFormSmall />
         </SidebarFooter>
