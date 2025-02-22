@@ -1,6 +1,5 @@
 "use client";
 import LogoText from "@/components/SVG/LogoText";
-import NotificationList from "@/components/layout/NotificationList";
 import ProfileFormSmall from "@/components/layout/ProfileFormSmall";
 import { ProjectSwitcher } from "@/components/layout/ProjectSwitcher";
 import RouteBreadcrumb from "@/components/layout/RouteBreadCrumb";
@@ -38,14 +37,7 @@ import {
 import configuration from "@/configuration";
 import useDemoData from "@/hooks/useDemoData";
 import { useDialogQueue } from "@/hooks/useDialogQueue";
-import {
-  CreditCard,
-  Dot,
-  Gauge,
-  LogOut,
-  PanelsRightBottom,
-  Settings,
-} from "lucide-react";
+import { Dot, Gauge, LogOut, Settings } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
@@ -93,7 +85,7 @@ function AppSidebar() {
                   {open ? "Project roadmap" : "Calendar"}
                 </TooltipContent>
               </Tooltip>
-              <Tooltip>
+              {/* <Tooltip>
                 <TooltipTrigger>
                   <SidebarMenuItem>
                     <SidebarButton
@@ -112,7 +104,7 @@ function AppSidebar() {
                 <TooltipContent side="right">
                   {open ? "Project roadmap" : "Calendar"}
                 </TooltipContent>
-              </Tooltip>
+              </Tooltip> */}
               <Tooltip>
                 <TooltipTrigger>
                   <SidebarMenuItem>
@@ -139,12 +131,12 @@ function AppSidebar() {
           </SidebarMenu>
         </SidebarGroup>
         <div className="flex-grow overflow-auto">
-          <NotificationList />
+          {/* <NotificationList /> */}
           <TaskList />
         </div>
 
         <SidebarFooter className="gap-0.5">
-          <Tooltip>
+          {/* <Tooltip>
             <TooltipTrigger>
               <SidebarMenuItem className="flex items-center gap-2.5 px-3 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 select-none text-sm">
                 <CreditCard className="size-4" />
@@ -154,7 +146,7 @@ function AppSidebar() {
             <TooltipContent side="right">
               Manage your billing details
             </TooltipContent>
-          </Tooltip>
+          </Tooltip> */}
           <Tooltip>
             <TooltipTrigger>
               <SidebarMenuItem
@@ -257,28 +249,15 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <main className="flex flex-col items-center overflow-auto">
               {children}
             </main>
-            <footer className="flex items-center justify-between w-full text-xs text-gray-500 gap-2">
-              <a
-                href={"https://cashdash.pro"}
-                rel="noopener noreferrer"
-                target="_blank"
-                className="border-amber-400 dark:border-amber-600 rounded border bg-amber-50 dark:bg-amber-950 px-1.5 py-0.5 text-amber-900 dark:text-amber-100 font-semibold"
-              >
-                You are viewing a demo version of Cash Dash, click here to visit
-                the full web app at{" "}
-                <span className="tracking-wider underline italic">
-                  CashDash.Pro
-                </span>
-              </a>
-
+            <footer className="flex items-center justify-end w-full text-xs text-gray-500 gap-2">
               <div className="flex items-center gap-2">
-                <button
+                {/* <button
                   className="dark:hover:text-gray-200 hover:text-gray-800"
                   onClick={() => setDeleteDialogOpen(true)}
                 >
                   Delete my account
-                </button>
-                <Dot className="size-3" />
+                </button> */}
+                {/* <Dot className="size-3" /> */}
                 <Link
                   className="dark:hover:text-gray-200 hover:text-gray-800"
                   href={configuration.paths.privacy}
