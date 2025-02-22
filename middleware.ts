@@ -22,21 +22,21 @@ export async function middleware(request: NextRequest) {
   };
 
   if (pathIsHome || segments.length === 0) {
-    log("allow", "home or no segments");
+    log("__ALLOW__", "home or no segments");
     return NextResponse.next();
   }
 
   const firstSegmentIsValid =
     firstSegment && projectSlugs.includes(firstSegment);
   if (!firstSegmentIsValid) {
-    log("redirect", "invalid first segment", configuration.paths.appHome);
+    log("__REDIRECT__", "invalid first segment", configuration.paths.appHome);
     return NextResponse.redirect(
       new URL(configuration.paths.appHome, request.url),
     );
   }
 
   if (segments.length === 1) {
-    log("allow", "valid single segment");
+    log("__ALLOW__", "valid single segment");
     return NextResponse.next();
   }
 
@@ -45,12 +45,13 @@ export async function middleware(request: NextRequest) {
     (allTaskSlugs.includes(secondSegment) ||
       secondRouteSegments.includes(secondSegment));
   if (!secondSegmentIsValid) {
-    log("redirect", "invalid second segment", `/${firstSegment}`);
+    console.log(allTaskSlugs, secondSegment);
+    log("__REDIRECT__", "invalid second segment", `/${firstSegment}`);
     return NextResponse.redirect(new URL(`/${firstSegment}`, request.url));
   }
 
   if (segments.length === 2) {
-    log("allow", "valid two segments");
+    log("__ALLOW__", "valid two segments");
     return NextResponse.next();
   }
 
@@ -58,7 +59,7 @@ export async function middleware(request: NextRequest) {
     secondSegment === "tasks" && thirdSegment === "new";
   if (!thirdSegmentIsValid) {
     log(
-      "redirect",
+      "__REDIRECT__",
       "invalid third segment",
       `/${firstSegment}/${secondSegment}`,
     );
@@ -67,6 +68,6 @@ export async function middleware(request: NextRequest) {
     );
   }
 
-  log("allow", "all segments valid");
+  log("__ALLOW__", "all segments valid");
   return NextResponse.next();
 }

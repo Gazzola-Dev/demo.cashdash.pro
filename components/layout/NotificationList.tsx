@@ -94,6 +94,8 @@ const NotificationList = () => {
     )
     .filter(n => !dismissed.includes(n.id));
 
+  if (!activeNotifications.length) return null;
+
   return (
     <div className="px-3 space-y-2 pt-1">
       <div className="flex items-center justify-between">

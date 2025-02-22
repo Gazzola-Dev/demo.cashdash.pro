@@ -936,6 +936,12 @@ export const demoData = {
   },
 };
 
-export const allTaskSlugs = Object.values(demoData.tasks)
-  .flat()
-  .map(taskResult => taskResult.task.slug);
+export const allTaskSlugs = [
+  ...Object.values(demoData.tasks)
+    .flat()
+    .map(taskResult => taskResult.task.slug),
+  ...Object.values(demoData.tasks)
+    .flat()
+    .map(taskResult => taskResult.task.ordinal_id.toString())
+    .flat(),
+];

@@ -13,31 +13,26 @@ export interface ParsedDemoData {
 
 export const USER_ID = "admin-user-id";
 
-// Define valid project IDs type
 type ProjectId = "proj-1" | "proj-2" | "proj-3";
 
-// Type guard to check if a string is a valid ProjectId
 function isValidProjectId(id: string): id is ProjectId {
   return ["proj-1", "proj-2", "proj-3"].includes(id);
 }
 
-// Divide team members among projects, including admin in all projects
 const teamMemberAllocation: Record<ProjectId, typeof teamMembers> = {
-  "proj-1": [demoData.adminProfile, ...teamMembers.slice(0, 4)], // GoTask - 5 members (including admin)
-  "proj-2": [demoData.adminProfile, ...teamMembers.slice(4, 8)], // Eco3D - 5 members (including admin)
-  "proj-3": [demoData.adminProfile, ...teamMembers.slice(8, 15)], // Menu.run - 8 members (including admin)
+  "proj-1": [demoData.adminProfile, ...teamMembers.slice(0, 4)],
+  "proj-2": [demoData.adminProfile, ...teamMembers.slice(4, 8)],
+  "proj-3": [demoData.adminProfile, ...teamMembers.slice(8, 15)],
 };
 
-// Function to check if a user is a member of a project
 function isProjectMember(projectId: string, userId: string): boolean {
   if (!isValidProjectId(projectId)) return false;
   return teamMemberAllocation[projectId].some(member => member.id === userId);
 }
 
-// Function to get team members for a project
 function getProjectMembers(projectId: string) {
   if (!isValidProjectId(projectId)) {
-    return []; // Return empty array for invalid project IDs
+    return [];
   }
   return teamMemberAllocation[projectId].map(member => ({
     id: `member-${member.id}`,
@@ -49,7 +44,6 @@ function getProjectMembers(projectId: string) {
   }));
 }
 
-// Function to get notifications for a project
 function getProjectNotifications(projectId: string): Tables<"notifications">[] {
   switch (projectId) {
     case "proj-1":
@@ -69,17 +63,15 @@ export function getDraftTask(projectId: string): TaskResult {
     throw new Error(`Project not found: ${projectId}`);
   }
 
-  // Get project members
   const projectMembers = getProjectMembers(projectId);
 
-  // Get next ordinal ID
   const nextOrdinalId =
     Math.max(
       ...Object.values(demoData.tasks)
         .flat()
         .filter(t => t.task.project_id === projectId)
         .map(t => t.task.ordinal_id),
-      0, // Include 0 as default in case there are no tasks
+      0,
     ) + 1;
 
   return {
@@ -90,7 +82,7 @@ export function getDraftTask(projectId: string): TaskResult {
       status: "draft" as Tables<"tasks">["status"],
       priority: "medium" as Tables<"tasks">["priority"],
       project_id: projectId,
-      assignee: null, // Start with no assignee, can only be set to project members
+      assignee: null,
       prefix: project.prefix,
       slug: `${project.prefix.toLowerCase()}-${nextOrdinalId}`,
       ordinal_id: nextOrdinalId,
@@ -108,7 +100,7 @@ export function getDraftTask(projectId: string): TaskResult {
       id: `draft-schedule-${Date.now()}`,
       task_id: `draft-task-${Date.now()}`,
       start_date: new Date().toISOString(),
-      due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 2 weeks from now
+      due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
       estimated_hours: null,
       actual_hours: null,
       completed_at: null,
@@ -142,8 +134,20 @@ export function getDraftProject(): ProjectWithDetails {
   };
 }
 
+function findTaskByIdentifier(
+  tasks: TaskResult[],
+  identifier: string,
+): TaskResult | null {
+  // First try to parse as ordinal_id (number)
+  const ordinalId = parseInt(identifier, 10);
+  if (!isNaN(ordinalId)) {
+    return tasks.find(t => t.task.ordinal_id === ordinalId) || null;
+  }
+  // If not a number, try to match by slug
+  return tasks.find(t => t.task.slug === identifier) || null;
+}
+
 export function getDemoDataFromPath(pathname: string): ParsedDemoData {
-  // Initialize return object with mapped projects and tasks
   const result: ParsedDemoData = {
     project: null,
     task: null,
@@ -152,17 +156,15 @@ export function getDemoDataFromPath(pathname: string): ParsedDemoData {
       ...p,
       project_members: getProjectMembers(p.id),
       project_invitations: [],
-      tasks: [], // Will be populated below
+      tasks: [],
     })),
     notifications: [],
   };
 
-  // Split path into segments and remove empty strings
   const segments = pathname.split("/").filter(Boolean);
   const pathIsHome = pathname === "/";
 
   if (pathIsHome || segments.length === 0) {
-    // Set default project and populate its tasks
     result.project = {
       ...demoData.projects[1],
       project_members: getProjectMembers("proj-2"),
@@ -173,19 +175,15 @@ export function getDemoDataFromPath(pathname: string): ParsedDemoData {
     return result;
   }
 
-  // Handle "/projects/new" path
   if (segments[0] === "projects" && segments[1] === "new") {
     result.project = getDraftProject();
     return result;
   }
 
-  // First segment is always project slug (except for /projects/new)
   const projectSlug = segments[0];
 
-  // Find matching project from demo data
   const project = demoData.projects.find(p => p.slug === projectSlug);
   if (!project) {
-    // Set default project if none found
     const defaultProject = demoData.projects[0];
     result.project = {
       ...defaultProject,
@@ -195,7 +193,6 @@ export function getDemoDataFromPath(pathname: string): ParsedDemoData {
     };
     result.notifications = getProjectNotifications("proj-1");
 
-    // Update projects array with tasks
     result.projects = result.projects.map((p, i) => ({
       ...p,
       tasks:
@@ -211,14 +208,12 @@ export function getDemoDataFromPath(pathname: string): ParsedDemoData {
     return result;
   }
 
-  // Get all tasks for this project
   const projectTasks = ({
     "proj-1": demoData.tasks.project1,
     "proj-2": demoData.tasks.project2,
     "proj-3": demoData.tasks.project3,
   }[project.id] || []) as TaskResult[];
 
-  // Build the full project object with complete task details
   result.project = {
     ...project,
     project_members: getProjectMembers(project.id),
@@ -226,10 +221,8 @@ export function getDemoDataFromPath(pathname: string): ParsedDemoData {
     tasks: projectTasks,
   };
 
-  // Add notifications for the current project
   result.notifications = getProjectNotifications(project.id);
 
-  // Handle "/[project_slug]/tasks/new" path
   if (
     segments.length >= 3 &&
     segments[1] === "tasks" &&
@@ -239,15 +232,12 @@ export function getDemoDataFromPath(pathname: string): ParsedDemoData {
     return result;
   }
 
-  // If there's a second segment and it's not "tasks/new", it's a task slug
   if (segments.length > 1 && segments[1] !== "tasks") {
-    const taskSlug = segments[1];
-    result.task =
-      (projectTasks.find(t => t.task.slug === taskSlug) as TaskResult) || null;
+    const taskIdentifier = segments[1];
+    result.task = findTaskByIdentifier(projectTasks, taskIdentifier);
   }
 
   return result;
 }
 
-// Export helper functions that might be useful elsewhere
 export { getProjectMembers, getProjectNotifications, isProjectMember };

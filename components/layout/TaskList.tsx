@@ -155,7 +155,7 @@ const TaskList = () => {
             const assigneeProfile = taskResult.assignee_profile;
             const taskPath = configuration.paths.tasks.view({
               project_slug: project?.slug,
-              task_slug: task.slug,
+              ordinal_id: task.ordinal_id,
             });
 
             return (

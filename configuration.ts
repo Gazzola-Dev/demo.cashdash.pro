@@ -47,8 +47,8 @@ const configuration = {
     tasks: {
       all: ({ project_slug = "" }: Slugs) => `/${project_slug}/tasks`,
       new: ({ project_slug = "" }: Slugs) => `/${project_slug}/tasks/new`,
-      view: ({ project_slug = "", task_slug = "" }: Slugs) =>
-        `/${project_slug}/${task_slug}`,
+      view: ({ project_slug = "", ordinal_id = 0 }: Slugs) =>
+        `/${project_slug}/${ordinal_id}`,
     },
     settings: {
       all: "/settings",
