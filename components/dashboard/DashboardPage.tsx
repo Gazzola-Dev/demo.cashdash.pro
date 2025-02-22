@@ -1,5 +1,6 @@
 "use client";
 
+import TaskListCard from "@/components/dashboard/TaskListCard";
 import useDemoData from "@/hooks/useDemoData";
 
 const DashboardPage = () => {
@@ -13,8 +14,8 @@ const DashboardPage = () => {
     <div className="container mx-auto p-4 space-y-6">
       <div className="grid grid-cols-12 gap-6">
         {/* TaskListCard - Spans 8 columns */}
-        <div className="col-span-8">
-          {/* <TaskListCard tasks={tasks} milestoneDueDate={milestoneDueDate} /> */}
+        <div className="col-span-9">
+          <TaskListCard />
         </div>
 
         {/* TaskPriorityCard - Spans 4 columns */}

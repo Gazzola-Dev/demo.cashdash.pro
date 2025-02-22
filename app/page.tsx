@@ -1,7 +1,7 @@
 "use client";
 
-import PasswordForm from "@/components/layout/PasswordForm";
+import DashboardPage from "@/components/dashboard/DashboardPage";
 
 export default function HomePage() {
-  return <PasswordForm />;
+  return <DashboardPage />;
 }
