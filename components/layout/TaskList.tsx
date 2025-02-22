@@ -11,28 +11,42 @@ import configuration from "@/configuration";
 import useDemoData from "@/hooks/useDemoData";
 import { capitalizeFirstLetter } from "@/lib/string.util";
 import { cn } from "@/lib/utils";
-import { CalendarDays, CircleAlert } from "lucide-react";
+import { Tables } from "@/types/database.types";
+import { CalendarDays, CircleAlert, ListFilter } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+
+type TaskStatus = Tables<"tasks">["status"];
+
+const statusOrder: TaskStatus[] = [
+  "backlog",
+  "todo",
+  "in_progress",
+  "in_review",
+  "completed",
+  "draft",
+];
 
 const TaskList = () => {
   const { project } = useDemoData();
   const [sortByPriority, setSortByPriority] = useState(true);
   const [sortById, setSortById] = useState(false);
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<TaskStatus | null>(null);
 
   // Get all tasks from the project
   const tasks = project?.tasks || [];
   const members = project?.project_members || [];
 
-  // Filter tasks by selected member
+  // Filter tasks by selected member and status
   const filteredTasks = tasks.filter(taskResult => {
     if (["completed", "draft", "backlog"].includes(taskResult.task.status))
       return false;
-    if (!selectedMemberId) return true;
-    if (taskResult.task.assignee === selectedMemberId)
-      console.log(taskResult.task.assignee, selectedMemberId);
-    return taskResult.task.assignee === selectedMemberId;
+    if (selectedMemberId && taskResult.task.assignee !== selectedMemberId)
+      return false;
+    if (selectedStatus && taskResult.task.status !== selectedStatus)
+      return false;
+    return true;
   });
 
   // Sort tasks based on active sorting button
@@ -56,6 +70,16 @@ const TaskList = () => {
     setSortByPriority(false);
   };
 
+  const handleStatusCycle = () => {
+    const currentIndex = selectedStatus
+      ? statusOrder.indexOf(selectedStatus)
+      : -1;
+    const nextIndex = (currentIndex + 1) % (statusOrder.length + 1);
+    setSelectedStatus(
+      nextIndex === statusOrder.length ? null : statusOrder[nextIndex],
+    );
+  };
+
   const handleMemberCycle = () => {
     const memberIds = [null, ...members.map(m => m.user_id)];
     const currentIndex = memberIds.indexOf(selectedMemberId);
@@ -73,7 +97,7 @@ const TaskList = () => {
   };
 
   return (
-    <div className="px-3 space-y-2 pt-6">
+    <div className="px-3 space-y-2 pt-4">
       <div className="flex items-center justify-between">
         <h3 className="text-sm text-gray-800 dark:text-gray-200 font-medium">
           Tasks ({sortedTasks.length})
@@ -86,8 +110,8 @@ const TaskList = () => {
                   variant="ghost"
                   onClick={handlePrioritySort}
                   className={cn(
-                    "w-1 h-8",
-                    sortByPriority && " dark:bg-gray-800 bg-gray-100",
+                    "w-8 h-8",
+                    sortByPriority && "dark:bg-gray-800 bg-gray-100",
                   )}
                 >
                   <CircleAlert className="size-4" />
@@ -97,14 +121,39 @@ const TaskList = () => {
                 Highest priority first {sortByPriority ? "(active)" : ""}
               </TooltipContent>
             </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  onClick={handleStatusCycle}
+                  className={cn(
+                    "w-8 h-8",
+                    selectedStatus && "dark:bg-gray-800 bg-gray-100",
+                  )}
+                >
+                  {selectedStatus ? (
+                    <StatusIconSimple status={selectedStatus} />
+                  ) : (
+                    <ListFilter className="size-4" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {selectedStatus
+                  ? `Filter by ${selectedStatus.replace("_", " ")} status (active)`
+                  : "Filter by status"}
+              </TooltipContent>
+            </Tooltip>
+
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   onClick={handleIdSort}
                   className={cn(
-                    "w-10 h-8",
-                    sortById && " dark:bg-gray-800 bg-gray-100",
+                    "w-8 h-8",
+                    sortById && "dark:bg-gray-800 bg-gray-100",
                   )}
                 >
                   <CalendarDays className="size-4" />
@@ -114,6 +163,7 @@ const TaskList = () => {
                 Newest first {sortById ? "(active)" : ""}
               </TooltipContent>
             </Tooltip>
+
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -125,8 +175,9 @@ const TaskList = () => {
                     <AvatarFallback className="text-lg bg-gray-200 dark:bg-gray-700 dark:text-gray-100">
                       <span
                         className={cn(
-                          "mb-[3px]",
-                          selectedMemberId && "mb-0 text-sm",
+                          selectedMemberId
+                            ? "text-sm mb-px"
+                            : "mb-[3px] text-lg font-light text-gray-200",
                         )}
                       >
                         {getSelectedMemberName()}
