@@ -17,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 
 import { useToast } from "@/hooks/use-toast";
-import useDemoData from "@/hooks/useDemoData";
+import useAppData from "@/hooks/useAppData";
 import { useDialogQueue } from "@/hooks/useDialogQueue";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -41,7 +41,7 @@ type InviteFormValues = z.infer<typeof inviteSchema>;
 export function ProjectMemberList({ isDraft = false }: { isDraft?: boolean }) {
   const [isInviteOpen, setIsInviteOpen] = useState(false);
 
-  const { profile, project } = useDemoData();
+  const { profile, project } = useAppData();
   const { dialog } = useDialogQueue();
   const { toast } = useToast();
 

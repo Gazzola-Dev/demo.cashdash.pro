@@ -6,12 +6,10 @@ import { TaskHeader } from "@/components/tasks/TaskPage/TaskHeader";
 import TaskSidebar from "@/components/tasks/TaskPage/TaskSidebar";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import useDemoData from "@/hooks/useDemoData";
 import { TerminalIcon, Trash2 } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 export function TaskPage() {
-  const { task: taskData } = useDemoData();
   const pathname = usePathname();
   const isDraft = pathname.endsWith("/new");
 
@@ -59,7 +57,7 @@ export function TaskPage() {
       <div className="flex gap-6">
         <div className="flex-1 space-y-6">
           <div className="flex justify-between items-center">
-            <TaskHeader task={taskData?.task} onSave={() => {}} />
+            <TaskHeader />
             {!isDraft && (
               <Button variant="destructive" size="sm" onClick={handleDelete}>
                 <Trash2 className="h-4 w-4 mr-2" />
@@ -68,10 +66,7 @@ export function TaskPage() {
             )}
           </div>
 
-          <TaskDescription
-            description={taskData?.task?.description || ""}
-            onSave={() => {}}
-          />
+          <TaskDescription />
 
           <TaskComments />
         </div>

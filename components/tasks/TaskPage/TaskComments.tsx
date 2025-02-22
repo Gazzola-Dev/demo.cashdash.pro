@@ -2,21 +2,21 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import useDemoData from "@/hooks/useDemoData";
+import useAppData from "@/hooks/useAppData";
 import { capitalizeFirstLetter } from "@/lib/string.util";
-import { TaskResult } from "@/types/task.types";
+import { CommentWithProfile } from "@/types/app.types";
 import { format } from "date-fns";
 import { Edit2, Save } from "lucide-react";
 import { KeyboardEvent, useState } from "react";
 
 interface TaskCommentsProps {
-  comments: TaskResult["comments"];
+  comments: CommentWithProfile[];
   onSubmitComment: (comment: string) => void;
   onUpdateComment?: (commentId: string, content: string) => void;
 }
 
 interface CommentItemProps {
-  comment: NonNullable<TaskResult["comments"]>[0];
+  comment: CommentWithProfile;
   onUpdateComment?: (commentId: string, content: string) => void;
 }
 
@@ -24,9 +24,9 @@ function CommentItem({ comment, onUpdateComment }: CommentItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(comment.content || "");
 
-  const { profile } = useDemoData();
+  const { profile } = useAppData();
 
-  const isAuthor = profile?.id === comment.user_id;
+  const isAuthor = profile?.id === comment.user.id;
 
   const handleSave = () => {
     if (onUpdateComment && editedContent.trim()) {
@@ -110,7 +110,7 @@ function CommentItem({ comment, onUpdateComment }: CommentItemProps) {
 
 export function TaskComments() {
   const [newComment, setNewComment] = useState("");
-  const { task } = useDemoData();
+  const { task } = useAppData();
   const comments = task?.comments;
 
   const handleSubmit = (e: React.FormEvent) => {

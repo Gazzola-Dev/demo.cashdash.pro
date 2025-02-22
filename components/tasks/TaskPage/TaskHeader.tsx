@@ -1,20 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { TaskResult } from "@/types/task.types";
+import useAppData from "@/hooks/useAppData";
 import { Edit2, Save } from "lucide-react";
 import { useState } from "react";
 
-interface TaskHeaderProps {
-  task?: TaskResult["task"] | null;
-  onSave: (title: string) => void;
-}
-
-export function TaskHeader({ task, onSave }: TaskHeaderProps) {
+export function TaskHeader() {
+  const { task } = useAppData();
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(task?.title || "");
 
   const handleSave = () => {
-    onSave(editedTitle);
+    // onSave(editedTitle);
     setIsEditing(false);
   };
 

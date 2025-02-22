@@ -1,12 +1,8 @@
 "use client";
 
 import TaskListCard from "@/components/dashboard/TaskListCard";
-import useDemoData from "@/hooks/useDemoData";
 
 const DashboardPage = () => {
-  const { task: taskData, project } = useDemoData();
-  const tasks = project?.tasks || [];
-
   // Simple milestone due date
   const milestoneDueDate = "23-Feb-25";
 

@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import useDemoData from "@/hooks/useDemoData";
+import useAppData from "@/hooks/useAppData";
 import { cn } from "@/lib/utils";
 import { Tables } from "@/types/database.types";
 import { Edit2, Plus, Save } from "lucide-react";
@@ -16,7 +16,7 @@ export function SubtaskSidebar() {
 
   const [isLoading, setIsLoading] = useState<string | null>(null);
 
-  const { task } = useDemoData();
+  const { task } = useAppData();
 
   const subtasks = task?.subtasks || [];
 

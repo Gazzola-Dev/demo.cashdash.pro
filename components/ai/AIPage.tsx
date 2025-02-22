@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/resizable";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import useDemoData from "@/hooks/useDemoData";
+import useAppData from "@/hooks/useAppData";
 import { cn } from "@/lib/utils";
 import React, { useState } from "react";
 enum Tab {
@@ -29,8 +29,8 @@ const PromptTab = ({
 }) => {
   const [commitMessage, setCommitMessage] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<MockFiles[]>([]);
-  const { project } = useDemoData();
-  const tasks = project?.tasks;
+  const { tasks } = useAppData();
+
   const onSubmit = (message: string) => {
     onToggleTab();
   };
@@ -71,16 +71,14 @@ const PromptTab = ({
         </div>
 
         <div className="space-y-2">
-          {tasks
-            ?.map(t => t.task)
-            .map(task => (
-              <Card key={task.id} className="p-4">
-                <h3 className="font-medium">{task.title}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {task.description || "No description"}
-                </p>
-              </Card>
-            ))}
+          {tasks.map(task => (
+            <Card key={task.id} className="p-4">
+              <h3 className="font-medium">{task.title}</h3>
+              <p className="text-sm text-muted-foreground">
+                {task.description || "No description"}
+              </p>
+            </Card>
+          ))}
         </div>
       </div>
 

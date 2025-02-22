@@ -993,6 +993,57 @@ export type Database = {
         }
         Returns: string
       }
+      get_app_data: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      get_current_project_data:
+        | {
+            Args: Record<PropertyKey, never>
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_user_id: string
+            }
+            Returns: Json
+          }
+      get_layout_data:
+        | {
+            Args: Record<PropertyKey, never>
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_user_id: string
+            }
+            Returns: Json
+          }
+      get_layout_user_data:
+        | {
+            Args: Record<PropertyKey, never>
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_user_id: string
+            }
+            Returns: Json
+          }
+      get_priority_tasks_data:
+        | {
+            Args: {
+              p_limit?: number
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_user_id: string
+              p_limit?: number
+            }
+            Returns: Json
+          }
       get_profile_data:
         | {
             Args: Record<PropertyKey, never>
@@ -1010,6 +1061,26 @@ export type Database = {
         }
         Returns: Json
       }
+      get_recent_tasks_data:
+        | {
+            Args: {
+              p_limit?: number
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_user_id: string
+              p_limit?: number
+            }
+            Returns: Json
+          }
+      get_task: {
+        Args: {
+          task_identifier: string
+        }
+        Returns: Json
+      }
       get_task_data: {
         Args: {
           task_slug: string
@@ -1022,6 +1093,17 @@ export type Database = {
         }
         Returns: Json
       }
+      get_user_projects_data:
+        | {
+            Args: Record<PropertyKey, never>
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_user_id: string
+            }
+            Returns: Json
+          }
       handle_invitation_response: {
         Args: {
           p_invitation_id: string

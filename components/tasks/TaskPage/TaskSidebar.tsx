@@ -8,13 +8,12 @@ import {
   StatusSelect,
 } from "@/components/tasks/TaskSelectComponents";
 import { Card, CardContent } from "@/components/ui/card";
-import useDemoData from "@/hooks/useDemoData";
+import useAppData from "@/hooks/useAppData";
 
 export function TaskSidebar() {
-  const { project: projectData, task: taskData } = useDemoData();
+  const { project: projectData, task } = useAppData();
   const members = projectData?.project_members || [];
 
-  const task = taskData?.task;
   const handleStatusChange = () => {};
 
   const handlePriorityChange = () => {};

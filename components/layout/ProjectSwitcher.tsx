@@ -20,14 +20,14 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import configuration from "@/configuration";
-import useDemoData from "@/hooks/useDemoData";
+import useAppData from "@/hooks/useAppData";
 import { cn } from "@/lib/utils";
 import { MailPlus, Plus } from "lucide-react";
 import Link from "next/link";
 
 export function ProjectSwitcher() {
   const { isMobile, open } = useSidebar();
-  const { projects, project } = useDemoData();
+  const { projects, project } = useAppData();
 
   return (
     <SidebarMenu>

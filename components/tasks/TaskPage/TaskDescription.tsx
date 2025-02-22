@@ -1,20 +1,18 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { useAppData } from "@/stores/app.store";
 import { Edit2, Save } from "lucide-react";
 import { useState } from "react";
 
-interface TaskDescriptionProps {
-  description: string;
-  onSave: (description: string) => void;
-}
+export function TaskDescription() {
+  const { task } = useAppData();
 
-export function TaskDescription({ description, onSave }: TaskDescriptionProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [editedDescription, setEditedDescription] = useState(description);
+  const [editedDescription, setEditedDescription] = useState(task?.description);
 
   const handleSave = () => {
-    onSave(editedDescription);
+    // onSave(editedDescription || "");
     setIsEditing(false);
   };
 
@@ -39,13 +37,13 @@ export function TaskDescription({ description, onSave }: TaskDescriptionProps) {
       <CardContent>
         {isEditing ? (
           <Textarea
-            value={editedDescription}
+            value={editedDescription ?? ""}
             onChange={e => setEditedDescription(e.target.value)}
             className="min-h-[100px]"
           />
         ) : (
           <div className="prose dark:prose-invert whitespace-pre-line">
-            {description || "No description provided"}
+            {task?.description || "No description provided"}
           </div>
         )}
       </CardContent>

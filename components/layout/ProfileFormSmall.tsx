@@ -7,13 +7,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import useDemoData from "@/hooks/useDemoData";
+import useAppData from "@/hooks/useAppData";
 import { capitalizeFirstLetter } from "@/lib/string.util";
 import { Upload } from "lucide-react";
 import { useState } from "react";
 
 const ProfileFormSmall = () => {
-  const { profile } = useDemoData();
+  const { profile } = useAppData();
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(profile?.display_name || "");
   const [isDialogOpen, setIsDialogOpen] = useState(false);

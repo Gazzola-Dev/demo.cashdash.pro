@@ -8,9 +8,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import configuration from "@/configuration";
-import useDemoData from "@/hooks/useDemoData";
 import { capitalizeFirstLetter } from "@/lib/string.util";
 import { cn } from "@/lib/utils";
+import { useAppData } from "@/stores/app.store";
 import { Tables } from "@/types/database.types";
 import { Award, CalendarDays, ListFilter } from "lucide-react";
 import Link from "next/link";
@@ -28,34 +28,30 @@ const statusOrder: TaskStatus[] = [
 ];
 
 const TaskList = () => {
-  const { project } = useDemoData();
+  const { tasks, project } = useAppData();
   const [sortByPriority, setSortByPriority] = useState(true);
   const [sortById, setSortById] = useState(false);
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<TaskStatus | null>(null);
 
   // Get all tasks from the project
-  const tasks = project?.tasks || [];
   const members = project?.project_members || [];
 
   // Filter tasks by selected member and status
-  const filteredTasks = tasks.filter(taskResult => {
-    if (["completed", "draft", "backlog"].includes(taskResult.task.status))
-      return false;
-    if (selectedMemberId && taskResult.task.assignee !== selectedMemberId)
-      return false;
-    if (selectedStatus && taskResult.task.status !== selectedStatus)
-      return false;
+  const filteredTasks = tasks.filter(task => {
+    if (["completed", "draft", "backlog"].includes(task.status)) return false;
+    if (selectedMemberId && task.assignee !== selectedMemberId) return false;
+    if (selectedStatus && task.status !== selectedStatus) return false;
     return true;
   });
 
   // Sort tasks based on active sorting button
   const sortedTasks = [...filteredTasks].sort((a, b) => {
     if (sortByPriority) {
-      return a.task.ordinal_priority - b.task.ordinal_priority;
+      return a.ordinal_priority - b.ordinal_priority;
     }
     if (sortById) {
-      return a.task.ordinal_id - b.task.ordinal_id;
+      return a.ordinal_id - b.ordinal_id;
     }
     return 0;
   });
@@ -203,10 +199,8 @@ const TaskList = () => {
 
       <div className="flex-1 overflow-y-auto">
         <TooltipProvider>
-          {sortedTasks.map(taskResult => {
-            const task = taskResult.task;
-
-            const assigneeProfile = taskResult.assignee_profile;
+          {sortedTasks.map(task => {
+            const assigneeProfile = task.assignee_profile;
             const taskPath = configuration.paths.tasks.view({
               project_slug: project?.slug,
               ordinal_id: task.ordinal_id,

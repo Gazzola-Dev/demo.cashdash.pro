@@ -22,18 +22,25 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import configuration from "@/configuration";
-import useDemoData from "@/hooks/useDemoData";
+import useAppData from "@/hooks/useAppData";
 import { capitalizeFirstLetter } from "@/lib/string.util";
 import { cn } from "@/lib/utils";
-import { TaskResult } from "@/types/task.types";
+import { Database } from "@/types/database.types";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
-import { Check, ChevronDown, Menu, Search, ShieldEllipsis } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  ExternalLink,
+  Menu,
+  Search,
+  ShieldEllipsis,
+} from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
 const TaskListCard = () => {
-  const { project } = useDemoData();
-  const [tasks, setTasks] = useState<TaskResult[]>(project?.tasks || []);
+  const { project, tasks, setTasks } = useAppData();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [ordinalSearch, setOrdinalSearch] = useState("");
   const [selectedAssignees, setSelectedAssignees] = useState<string[]>([]);
@@ -42,23 +49,23 @@ const TaskListCard = () => {
   const members = project?.project_members || [];
 
   // Filter tasks based on search queries and selected assignees
-  const filteredTasks = tasks.filter(taskResult => {
-    const titleMatch = taskResult.task.title
+  const filteredTasks = tasks.filter(task => {
+    const titleMatch = task.title
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
     const ordinalMatch = ordinalSearch
-      ? taskResult.task.ordinal_id.toString().includes(ordinalSearch)
+      ? task.ordinal_id.toString().includes(ordinalSearch)
       : true;
     const assigneeMatch =
       selectedAssignees.length === 0
         ? true
-        : selectedAssignees.includes(taskResult.task.assignee || "");
+        : selectedAssignees.includes(task.assignee || "");
     return titleMatch && ordinalMatch && assigneeMatch;
   });
 
   // Sort tasks by ordinal priority
   const sortedTasks = [...filteredTasks].sort(
-    (a, b) => a.task.ordinal_priority - b.task.ordinal_priority,
+    (a, b) => a.ordinal_priority - b.ordinal_priority,
   );
 
   const handleDragEnd = (result: any) => {
@@ -72,7 +79,7 @@ const TaskListCard = () => {
     const updatedItems = items.map((item, index) => ({
       ...item,
       task: {
-        ...item.task,
+        ...item,
         ordinal_priority: index + 1,
       },
     }));
@@ -81,12 +88,14 @@ const TaskListCard = () => {
   };
 
   const handleStatusChange = (taskId: string, newStatus: string) => {
-    setTasks(prevTasks =>
-      prevTasks.map(task =>
-        task.task.id === taskId
-          ? { ...task, task: { ...task.task, status: newStatus as any } }
-          : task,
-      ),
+    setTasks(
+      tasks.map(task => ({
+        ...task,
+        status:
+          task.id === taskId
+            ? (newStatus as Database["public"]["Enums"]["task_status"])
+            : task.status,
+      })),
     );
   };
 
@@ -94,12 +103,11 @@ const TaskListCard = () => {
     taskId: string,
     newAssigneeId: string | null,
   ) => {
-    setTasks(prevTasks =>
-      prevTasks.map(task =>
-        task.task.id === taskId
-          ? { ...task, task: { ...task.task, assignee: newAssigneeId } }
-          : task,
-      ),
+    setTasks(
+      tasks.map(task => ({
+        ...task,
+        assignee: task.id === taskId ? newAssigneeId : task.assignee,
+      })),
     );
   };
 
@@ -123,11 +131,23 @@ const TaskListCard = () => {
   return (
     <div className="relative">
       <div className="absolute inset-0 flex items-center justify-center z-10">
-        <Card className="w-96 bg-white/70 dark:bg-black/70 ">
-          <CardHeader className="flex items-center justify-between text-gray-700">
+        <Card className="w-56 bg-white/70 dark:bg-black/70">
+          <CardHeader className="flex items-center justify-between text-gray-700 gap-2 pb-5">
             <CardTitle className="text-lg">Admin Required</CardTitle>
             <ShieldEllipsis className="size-8" />
           </CardHeader>
+          <CardContent className="flex justify-center ">
+            <Link
+              rel="noopener noreferrer"
+              target="_blank"
+              href="https://demo.cashdash.pro"
+            >
+              <Button variant="outline">
+                View demo
+                <ExternalLink className="size-4" />
+              </Button>
+            </Link>
+          </CardContent>
         </Card>
       </div>
       <Card className="blur">
@@ -202,9 +222,8 @@ const TaskListCard = () => {
                       <div>Title</div>
                       <div>Assignee</div>
                     </div>
-                    {sortedTasks.map((taskResult, index) => {
-                      const task = taskResult.task;
-                      const assigneeProfile = taskResult.assignee_profile;
+                    {sortedTasks.map((task, index) => {
+                      const assigneeProfile = task.assignee_profile;
                       const taskPath = configuration.paths.tasks.view({
                         project_slug: project?.slug,
                         ordinal_id: task.ordinal_id,

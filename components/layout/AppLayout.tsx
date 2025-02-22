@@ -35,7 +35,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import configuration from "@/configuration";
-import useDemoData from "@/hooks/useDemoData";
+import useAppData from "@/hooks/useAppData";
 import { useDialogQueue } from "@/hooks/useDialogQueue";
 import { Dot, Gauge, LogOut, Settings } from "lucide-react";
 import Link from "next/link";
@@ -44,7 +44,7 @@ import React, { useState } from "react";
 
 function AppSidebar() {
   const { open } = useSidebar();
-  const { project } = useDemoData();
+  const { project } = useAppData();
   const router = useRouter();
   const { dialog } = useDialogQueue();
 
@@ -186,7 +186,7 @@ function DeleteAccountDialog({
   email: string;
 }) {
   const [confirmText, setConfirmText] = useState("");
-  const { profile } = useDemoData();
+  const { profile } = useAppData();
   const expectedText = `delete ${profile?.display_name}`;
   const isValid = confirmText === expectedText;
 
@@ -228,7 +228,7 @@ function DeleteAccountDialog({
 }
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
-  const { profile } = useDemoData();
+  const { profile } = useAppData();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   return (

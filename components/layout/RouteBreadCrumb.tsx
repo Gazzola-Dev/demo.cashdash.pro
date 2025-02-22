@@ -12,7 +12,7 @@ import configuration, {
   firstRouteSegments,
   secondRouteSegments,
 } from "@/configuration";
-import useDemoData from "@/hooks/useDemoData";
+import useAppData from "@/hooks/useAppData";
 import { capitalizeFirstLetter, truncateString } from "@/lib/string.util";
 import { usePathname } from "next/navigation";
 
@@ -21,8 +21,7 @@ const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
 export default function RouteBreadcrumb() {
   const pathname = usePathname();
   const segments = pathname.split("/").filter(Boolean);
-  const { project } = useDemoData();
-  const tasks = project?.tasks;
+  const { project, tasks } = useAppData();
 
   const homeBreadcrumb = !segments.length ? (
     <BreadcrumbItem className="h-full p-2">
@@ -163,9 +162,7 @@ export default function RouteBreadcrumb() {
       !firstRouteSegments.includes(segments[0]) &&
       !secondRouteSegments.includes(segments[1])
     ) {
-      const task = tasks
-        ?.map(t => t.task)
-        .find(t => t?.slug.includes(segments[1]));
+      const task = tasks.find(t => t?.slug.includes(segments[1]));
       return (
         <Breadcrumb className="flex-grow">
           <BreadcrumbList className="h-full !gap-0">
