@@ -24,21 +24,25 @@ import useAppData from "@/hooks/useAppData";
 import { cn } from "@/lib/utils";
 import { MailPlus, Plus } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 
 export function ProjectSwitcher() {
   const { isMobile, open } = useSidebar();
-  const { projects, project } = useAppData();
+  const { projects, project, profile } = useAppData();
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <DropdownMenu>
+        <DropdownMenu
+          onOpenChange={open => setIsOpen(!!profile && open)}
+          open={isOpen}
+        >
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
               className={cn(
                 "px-2 h-auto flex items-center justify-between w-full space-x-1 hover:bg-gray-100 dark:hover:bg-gray-800 relative",
-                !project && "border border-blue-300",
               )}
             >
               <div
@@ -46,11 +50,7 @@ export function ProjectSwitcher() {
                   "flex aspect-square size-8 items-center justify-center rounded-lg",
                 )}
               >
-                <ProjectIcon
-                  iconName={project?.icon_name}
-                  iconColorFg={project?.icon_color_fg}
-                  iconColorBg={project?.icon_color_bg}
-                />
+                <ProjectIcon />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold dark:text-gray-100">
@@ -90,12 +90,7 @@ export function ProjectSwitcher() {
                         )}
                       >
                         <div className="flex size-6 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-700">
-                          <ProjectIcon
-                            iconName={p.icon_name}
-                            iconColorFg={p.icon_color_fg}
-                            iconColorBg={p.icon_color_bg}
-                            className="size-4 shrink-0 dark:text-gray-100"
-                          />
+                          <ProjectIcon className="size-4 shrink-0 dark:text-gray-100" />
                         </div>
                         <div className="ml-2 flex-1 truncate dark:text-gray-100">
                           {p.name}

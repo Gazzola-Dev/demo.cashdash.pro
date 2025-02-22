@@ -1,4 +1,5 @@
 "use client";
+import Logo from "@/components/SVG/Logo";
 import LogoText from "@/components/SVG/LogoText";
 import ProfileFormSmall from "@/components/layout/ProfileFormSmall";
 import { ProjectSwitcher } from "@/components/layout/ProjectSwitcher";
@@ -15,6 +16,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
   Sidebar,
@@ -37,16 +46,43 @@ import {
 import configuration from "@/configuration";
 import useAppData from "@/hooks/useAppData";
 import { useDialogQueue } from "@/hooks/useDialogQueue";
-import { Dot, Gauge, LogOut, Settings } from "lucide-react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Dot, Gauge, LogOut, MailOpen, Settings } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+
+const formSchema = z.object({
+  email: z
+    .string()
+    .min(1, { message: "Email is required" })
+    .email("Please enter a valid email address"),
+  password: z.string().optional(),
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 function AppSidebar() {
   const { open } = useSidebar();
-  const { project } = useAppData();
+  const { project, profile } = useAppData();
   const router = useRouter();
   const { dialog } = useDialogQueue();
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  const emailValue = form.watch("email");
+  const { isValid } = form.formState;
+  const emailIsValid = emailValue && isValid;
+
+  const handleSubmit = (data: FormValues) => {};
 
   const handleSignOut = () => {
     dialog({
@@ -66,26 +102,69 @@ function AppSidebar() {
         <SidebarHeader>
           <ProjectSwitcher />
         </SidebarHeader>
-        <SidebarGroup>
-          <SidebarMenu>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <SidebarMenuItem>
-                    <SidebarButton
-                      href={configuration.paths.appHome}
-                      matchPattern={configuration.paths.appHome + "$"}
-                    >
-                      <Gauge className="size-5" />
-                      <span>Dashboard</span>
-                    </SidebarButton>
-                  </SidebarMenuItem>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  {open ? "Project roadmap" : "Calendar"}
-                </TooltipContent>
-              </Tooltip>
-              {/* <Tooltip>
+        {!profile ? (
+          <div className="flex-grow flex flex-col items-center justify-center gap-7 pb-16 pt-4">
+            <div className="p-5 flex flex-col items-center justify-center gap-6">
+              <Logo className="size-20 fill-blue-800/70 dark:fill-blue-400/70 mr-4" />
+              <LogoText className="w-48 fill-blue-800/70 dark:fill-blue-400/70" />
+            </div>
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(handleSubmit)}
+                className="space-y-4"
+              >
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email address</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="you@example.com"
+                          type="email"
+                          autoComplete="email"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={!emailIsValid}
+                >
+                  Send Magic Link
+                  <MailOpen className="ml-2 h-4 w-4" />
+                </Button>
+              </form>
+            </Form>
+          </div>
+        ) : (
+          <>
+            <SidebarGroup>
+              <SidebarMenu>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <SidebarMenuItem>
+                        <SidebarButton
+                          href={configuration.paths.appHome}
+                          matchPattern={configuration.paths.appHome + "$"}
+                        >
+                          <Gauge className="size-5" />
+                          <span>Dashboard</span>
+                        </SidebarButton>
+                      </SidebarMenuItem>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      {open ? "Project roadmap" : "Calendar"}
+                    </TooltipContent>
+                  </Tooltip>
+                  {/* <Tooltip>
                 <TooltipTrigger>
                   <SidebarMenuItem>
                     <SidebarButton
@@ -105,35 +184,37 @@ function AppSidebar() {
                   {open ? "Project roadmap" : "Calendar"}
                 </TooltipContent>
               </Tooltip> */}
-              <Tooltip>
-                <TooltipTrigger>
-                  <SidebarMenuItem>
-                    <SidebarButton
-                      href={configuration.paths.project.view({
-                        project_slug: project?.slug,
-                      })}
-                      matchPattern={
-                        configuration.paths.project.view({
-                          project_slug: project?.slug,
-                        }) + "$"
-                      }
-                    >
-                      <Settings className="size-5" />
-                      <span>Project</span>
-                    </SidebarButton>
-                  </SidebarMenuItem>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  {open ? "Project roadmap" : "Calendar"}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </SidebarMenu>
-        </SidebarGroup>
-        <div className="flex-grow overflow-auto">
-          {/* <NotificationList /> */}
-          <TaskList />
-        </div>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <SidebarMenuItem>
+                        <SidebarButton
+                          href={configuration.paths.project.view({
+                            project_slug: project?.slug,
+                          })}
+                          matchPattern={
+                            configuration.paths.project.view({
+                              project_slug: project?.slug,
+                            }) + "$"
+                          }
+                        >
+                          <Settings className="size-5" />
+                          <span>Project</span>
+                        </SidebarButton>
+                      </SidebarMenuItem>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      {open ? "Project roadmap" : "Calendar"}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </SidebarMenu>
+            </SidebarGroup>
+            <div className="flex-grow overflow-auto">
+              {/* <NotificationList /> */}
+              <TaskList />
+            </div>
+          </>
+        )}
 
         <SidebarFooter className="gap-0.5">
           {/* <Tooltip>
@@ -147,20 +228,23 @@ function AppSidebar() {
               Manage your billing details
             </TooltipContent>
           </Tooltip> */}
-          <Tooltip>
-            <TooltipTrigger>
-              <SidebarMenuItem
-                className="flex items-center gap-2.5 px-3 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 select-none text-sm"
-                onClick={handleSignOut}
-              >
-                <LogOut className="size-4" />
-                <span className="py-1">Sign out</span>
-              </SidebarMenuItem>
-            </TooltipTrigger>
-            <TooltipContent side="right">
-              Sign out of your account
-            </TooltipContent>
-          </Tooltip>
+
+          {profile && (
+            <Tooltip>
+              <TooltipTrigger>
+                <SidebarMenuItem
+                  className="flex items-center gap-2.5 px-3 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 select-none text-sm"
+                  onClick={handleSignOut}
+                >
+                  <LogOut className="size-4" />
+                  <span className="py-1">Sign out</span>
+                </SidebarMenuItem>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                Sign out of your account
+              </TooltipContent>
+            </Tooltip>
+          )}
           <Tooltip>
             <TooltipTrigger>
               <div className="w-full">

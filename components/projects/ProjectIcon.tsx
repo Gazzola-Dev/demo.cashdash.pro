@@ -1,21 +1,20 @@
 import { cn } from "@/lib/utils";
+import { useAppData } from "@/stores/app.store";
 import * as LucideIcons from "lucide-react";
 import { type LucideProps } from "lucide-react";
-import React from "react";
 
-interface ProjectIconProps extends LucideProps {
-  iconName?: string | null;
-  iconColorFg?: string | null;
-  iconColorBg?: string | null;
-}
-
-const ProjectIcon: React.FC<ProjectIconProps> = ({
-  iconName = null,
-  iconColorFg = null,
-  iconColorBg = null,
-  ...props
-}) => {
-  const cleanIconName = iconName?.replace("lucide:", "") || "code-2";
+const ProjectIcon = ({ ...props }: LucideProps & { className?: string }) => {
+  const { project, profile } = useAppData();
+  let iconName = project?.icon_name;
+  let cleanIconName = iconName?.replace("lucide:", "") || "code-2";
+  let iconColorFg = project?.icon_color_fg;
+  let iconColorBg = project?.icon_color_fg;
+  if (!profile) {
+    iconName = "log-in";
+    cleanIconName = iconName?.replace("lucide:", "") || "code-2";
+    iconColorBg = "#dddddd";
+    iconColorFg = "black";
+  }
   const pascalCaseName = cleanIconName
     .split("-")
     .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())

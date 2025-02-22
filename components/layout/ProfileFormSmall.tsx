@@ -62,7 +62,7 @@ const ProfileFormSmall = () => {
     <div className="flex items-center gap-2 p-2 pt-2 rounded-md">
       <Avatar
         className="size-8 rounded-lg cursor-pointer"
-        onClick={() => setIsDialogOpen(true)}
+        onClick={() => profile && setIsDialogOpen(true)}
       >
         <AvatarImage
           src={profile?.avatar_url ?? ""}
@@ -89,12 +89,12 @@ const ProfileFormSmall = () => {
           />
         ) : (
           <button
-            onClick={() => setIsEditing(true)}
+            onClick={() => profile && setIsEditing(true)}
             className="text-sm font-medium truncate w-full text-left cursor-text"
           >
             {profile?.display_name ||
               profile?.email?.split("@")[0] ||
-              "Unnamed User"}
+              "Sign in to get started"}
           </button>
         )}
       </div>
