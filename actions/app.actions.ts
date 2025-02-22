@@ -5,6 +5,8 @@ import getActionResponse from "@/lib/action.util";
 import { conditionalLog } from "@/lib/log.utils";
 import { ActionResponse } from "@/types/action.types";
 import { AppState, TaskComplete } from "@/types/app.types";
+import { Tables } from "@/types/database.types";
+type Profile = Tables<"profiles">;
 
 type AppStateWithoutTask = Omit<AppState, "task">;
 
@@ -54,6 +56,36 @@ export const getTaskAction = async (
 
     if (error) throw error;
     return getActionResponse({ data: data as any as TaskComplete });
+  } catch (error) {
+    conditionalLog(actionName, { error }, true);
+    return getActionResponse({ error });
+  }
+};
+
+export const updateProfileAction = async (
+  userId: string,
+  updates: Partial<Profile>,
+): Promise<ActionResponse<Profile>> => {
+  const actionName = "updateProfileAction";
+  const supabase = await getSupabaseServerActionClient();
+
+  try {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+    if (userError || !user) throw new Error("Not authenticated");
+
+    // Call the update_profile_data function
+    const { data, error } = await supabase.rpc("update_profile_data", {
+      p_user_id: userId,
+      p_updates: updates,
+    });
+
+    conditionalLog(actionName, { data, error }, true);
+
+    if (error) throw error;
+    return getActionResponse({ data: data as Profile });
   } catch (error) {
     conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });

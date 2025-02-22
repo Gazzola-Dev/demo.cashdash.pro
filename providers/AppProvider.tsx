@@ -1,4 +1,4 @@
-import { useGetAppData, useGetTask } from "@/hooks/app.hooks";
+import { useGetTask, useUpdateProfile } from "@/hooks/app.hooks";
 import { useAppStore } from "@/stores/app.store";
 import { usePathname } from "next/navigation";
 import { ReactNode, useEffect } from "react";
@@ -14,8 +14,8 @@ export const AppProvider = ({ children }: AppProviderProps) => {
   const secondSegment = pathSegments[1];
 
   const { projects, profile, tasks, task, setTask, setProject } = useAppStore();
-  const { refetch: refetchAppData } = useGetAppData();
   const { refetch: refetchTask } = useGetTask(secondSegment);
+  const { updateProfile } = useUpdateProfile();
 
   // Handle project switch and current project update
   useEffect(() => {
@@ -28,9 +28,9 @@ export const AppProvider = ({ children }: AppProviderProps) => {
         project_members: [],
         project_invitations: [],
       });
-      refetchAppData();
+      updateProfile({ current_project_id: matchingProject.id });
     }
-  }, [firstSegment, projects, refetchAppData, setProject, profile]);
+  }, [firstSegment, projects, setProject, profile, updateProfile]);
 
   // Handle task loading based on URL segments
   useEffect(() => {
