@@ -170,7 +170,7 @@ const TaskListCard = () => {
                             <div className="flex justify-center">
                               <Link
                                 href={taskPath}
-                                className="hover:underline border border-gray-700 dark:border-gray-400 px-1.5 rounded py-0.5"
+                                className="border-b  border-gray-700 dark:border-gray-400 px-1.5 rounded-bl py-0.5"
                               >
                                 {task.ordinal_id}
                               </Link>

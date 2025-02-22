@@ -261,7 +261,7 @@ const TaskList = () => {
 
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="border border-gray-700 dark:border-gray-400 px-1.5  rounded">
+                    <span className="border-b border-gray-700 dark:border-gray-400 px-1.5 pt-0 rounded-bl">
                       {task.ordinal_id}
                     </span>
                   </TooltipTrigger>
