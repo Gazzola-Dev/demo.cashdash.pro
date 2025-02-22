@@ -97,7 +97,7 @@ const NotificationList = () => {
   if (!activeNotifications.length) return null;
 
   return (
-    <div className="px-3 space-y-2 pt-1 pb-2.5">
+    <div className="px-3 space-y-2 pt-1 pb-3">
       <div className="flex items-center justify-between">
         <h3
           className={cn("text-sm text-gray-800 dark:text-gray-200 font-medium")}
