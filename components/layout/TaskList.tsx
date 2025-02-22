@@ -12,7 +12,7 @@ import useDemoData from "@/hooks/useDemoData";
 import { capitalizeFirstLetter } from "@/lib/string.util";
 import { cn } from "@/lib/utils";
 import { Tables } from "@/types/database.types";
-import { CalendarDays, CircleAlert, ListFilter } from "lucide-react";
+import { Award, CalendarDays, ListFilter } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -115,7 +115,7 @@ const TaskList = () => {
                       "dark:bg-gray-800 bg-gray-100 border dark:border-gray-700 border-gray-300",
                   )}
                 >
-                  <CircleAlert className="size-4" />
+                  <Award className="size-4" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
@@ -220,9 +220,20 @@ const TaskList = () => {
               >
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="text-xs text-gray-900 dark:text-gray-100 w-2.5 rounded">
-                      {task.ordinal_priority}
-                    </span>
+                    <div className="w-5 flex items-end gap-0.5">
+                      <span className="text-sm text-black font-medium dark:text-gray-100 rounded">
+                        {task.ordinal_priority}
+                      </span>
+                      <span className="text-xs text-gray-600 dark:text-gray-300 lowercase mb-px">
+                        {task.ordinal_priority === 1
+                          ? "st"
+                          : task.ordinal_priority === 2
+                            ? "nd"
+                            : task.ordinal_priority === 3
+                              ? "rd"
+                              : "th"}
+                      </span>
+                    </div>
                   </TooltipTrigger>
                   <TooltipContent>
                     {task.ordinal_priority}
