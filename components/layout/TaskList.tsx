@@ -19,12 +19,12 @@ import { useState } from "react";
 type TaskStatus = Tables<"tasks">["status"];
 
 const statusOrder: TaskStatus[] = [
-  "backlog",
+  // "backlog",
   "todo",
   "in_progress",
   "in_review",
-  "completed",
-  "draft",
+  // "completed",
+  // "draft",
 ];
 
 const TaskList = () => {
@@ -102,7 +102,7 @@ const TaskList = () => {
         <h3 className="text-sm text-gray-800 dark:text-gray-200 font-medium">
           Tasks ({sortedTasks.length})
         </h3>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -110,8 +110,9 @@ const TaskList = () => {
                   variant="ghost"
                   onClick={handlePrioritySort}
                   className={cn(
-                    "w-8 h-8",
-                    sortByPriority && "dark:bg-gray-800 bg-gray-100",
+                    "w-8 h-7 border border-transparent",
+                    sortByPriority &&
+                      "dark:bg-gray-800 bg-gray-100 border dark:border-gray-700 border-gray-300",
                   )}
                 >
                   <CircleAlert className="size-4" />
@@ -128,8 +129,9 @@ const TaskList = () => {
                   variant="ghost"
                   onClick={handleStatusCycle}
                   className={cn(
-                    "w-8 h-8",
-                    selectedStatus && "dark:bg-gray-800 bg-gray-100",
+                    "w-8 h-7 border border-transparent",
+                    selectedStatus &&
+                      "dark:bg-gray-800 bg-gray-100 border dark:border-gray-700 border-gray-300",
                   )}
                 >
                   {selectedStatus ? (
@@ -141,8 +143,8 @@ const TaskList = () => {
               </TooltipTrigger>
               <TooltipContent>
                 {selectedStatus
-                  ? `Filter by ${selectedStatus.replace("_", " ")} status (active)`
-                  : "Filter by status"}
+                  ? `Showing "${capitalizeFirstLetter(selectedStatus.replace("_", " "))}" tasks`
+                  : "No filter applied"}
               </TooltipContent>
             </Tooltip>
 
@@ -152,8 +154,9 @@ const TaskList = () => {
                   variant="ghost"
                   onClick={handleIdSort}
                   className={cn(
-                    "w-8 h-8",
-                    sortById && "dark:bg-gray-800 bg-gray-100",
+                    "w-8 h-7 border border-transparent",
+                    sortById &&
+                      "dark:bg-gray-800 bg-gray-100 border dark:border-gray-700 border-gray-300",
                   )}
                 >
                   <CalendarDays className="size-4" />
@@ -177,7 +180,7 @@ const TaskList = () => {
                         className={cn(
                           selectedMemberId
                             ? "text-sm mb-px"
-                            : "mb-[3px] text-lg font-light text-gray-200",
+                            : "mb-[3px] text-lg font-light dark:text-gray-200 text-gray-600",
                         )}
                       >
                         {getSelectedMemberName()}
@@ -247,7 +250,7 @@ const TaskList = () => {
 
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="border border-gray-500 px-1.5  rounded">
+                    <span className="border border-gray-700 dark:border-gray-400 px-1.5  rounded">
                       {task.ordinal_id}
                     </span>
                   </TooltipTrigger>
