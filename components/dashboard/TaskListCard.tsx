@@ -1,7 +1,13 @@
 import { StatusIconSimple } from "@/components/tasks/SimpleTaskSelectComponents";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -18,9 +24,10 @@ import {
 import configuration from "@/configuration";
 import useDemoData from "@/hooks/useDemoData";
 import { capitalizeFirstLetter } from "@/lib/string.util";
+import { cn } from "@/lib/utils";
 import { TaskResult } from "@/types/task.types";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
-import { Menu, Search } from "lucide-react";
+import { Check, ChevronDown, Menu, Search } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -29,8 +36,12 @@ const TaskListCard = () => {
   const [tasks, setTasks] = useState<TaskResult[]>(project?.tasks || []);
   const [searchQuery, setSearchQuery] = useState("");
   const [ordinalSearch, setOrdinalSearch] = useState("");
+  const [selectedAssignees, setSelectedAssignees] = useState<string[]>([]);
+  const [isAssigneePopoverOpen, setIsAssigneePopoverOpen] = useState(false);
 
-  // Filter tasks based on search queries
+  const members = project?.project_members || [];
+
+  // Filter tasks based on search queries and selected assignees
   const filteredTasks = tasks.filter(taskResult => {
     const titleMatch = taskResult.task.title
       .toLowerCase()
@@ -38,7 +49,11 @@ const TaskListCard = () => {
     const ordinalMatch = ordinalSearch
       ? taskResult.task.ordinal_id.toString().includes(ordinalSearch)
       : true;
-    return titleMatch && ordinalMatch;
+    const assigneeMatch =
+      selectedAssignees.length === 0
+        ? true
+        : selectedAssignees.includes(taskResult.task.assignee || "");
+    return titleMatch && ordinalMatch && assigneeMatch;
   });
 
   // Sort tasks by ordinal priority
@@ -88,6 +103,23 @@ const TaskListCard = () => {
     );
   };
 
+  const toggleAssignee = (userId: string) => {
+    setSelectedAssignees(prev =>
+      prev.includes(userId)
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId],
+    );
+  };
+
+  const getSelectedAssigneesDisplayText = () => {
+    if (selectedAssignees.length === 0) return "Assignee";
+    if (selectedAssignees.length === 1) {
+      const member = members.find(m => m.user_id === selectedAssignees[0]);
+      return member?.profile?.display_name || "Unknown";
+    }
+    return `${selectedAssignees.length} assignees`;
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -108,6 +140,37 @@ const TaskListCard = () => {
             onChange={e => setOrdinalSearch(e.target.value)}
             className="w-32"
           />
+          <Popover
+            open={isAssigneePopoverOpen}
+            onOpenChange={setIsAssigneePopoverOpen}
+          >
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-[180px] justify-between">
+                <span className="truncate">
+                  {getSelectedAssigneesDisplayText()}
+                </span>
+                <ChevronDown className="h-4 w-4 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[180px] p-0" align="end">
+              {members.map(member => (
+                <div
+                  key={member.user_id}
+                  role="button"
+                  onClick={() => toggleAssignee(member.user_id)}
+                  className={cn(
+                    "flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent",
+                    selectedAssignees.includes(member.user_id) && "bg-accent",
+                  )}
+                >
+                  <span className="flex-1">{member.profile?.display_name}</span>
+                  {selectedAssignees.includes(member.user_id) && (
+                    <Check className="h-4 w-4" />
+                  )}
+                </div>
+              ))}
+            </PopoverContent>
+          </Popover>
         </div>
       </CardHeader>
       <CardContent>
