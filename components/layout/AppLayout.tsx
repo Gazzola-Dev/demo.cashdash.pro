@@ -79,7 +79,31 @@ type FormValues = z.infer<typeof formSchema>;
 function AppSidebar() {
   const [billingDialogOpen, setBillingDialogOpen] = useState(false);
   const { open } = useSidebar();
-  const { project, profile } = useAppData();
+  const {
+    project,
+    profile,
+    user,
+    projects,
+    tasks,
+    task,
+    invitations,
+    subscription,
+    appRole,
+    projectMemberRole,
+  } = useAppData();
+
+  console.log({
+    project,
+    profile,
+    user,
+    projects,
+    tasks,
+    task,
+    invitations,
+    subscription,
+    appRole,
+    projectMemberRole,
+  });
 
   const router = useRouter();
   const { dialog } = useDialogQueue();

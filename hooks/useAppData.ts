@@ -41,6 +41,10 @@ export const useAppData = () => {
     project: store.project,
     tasks: store.tasks,
     task: store.task,
+    invitations: store.invitations,
+    subscription: store.subscription,
+    appRole: store.appRole,
+    projectMemberRole: store.projectMemberRole,
 
     // Actions
     setUser: store.setUser,
@@ -50,6 +54,10 @@ export const useAppData = () => {
     setTasks: store.setTasks,
     setTask: store.setTask,
     reset: store.reset,
+    setInvitations: store.setInvitations,
+    setSubscription: store.setSubscription,
+    setAppRole: store.setAppRole,
+    setProjectMemberRole: store.setProjectMemberRole,
 
     // Derived data
     currentProjectMembers,

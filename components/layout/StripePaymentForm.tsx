@@ -114,13 +114,16 @@ interface StripePaymentFormProps {
 }
 
 export const StripePaymentForm = ({ tier, onBack }: StripePaymentFormProps) => {
-  const createPaymentIntent = useCreatePaymentIntent();
+  const { mutateAsync, isPending } = useCreatePaymentIntent();
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [isFetched, setIsFetched] = useState(false);
 
   useEffect(() => {
+    if (isFetched) return;
+    setIsFetched(true);
     const fetchPaymentIntent = async () => {
       try {
-        const response = await createPaymentIntent.mutateAsync(tier);
+        const response = await mutateAsync(tier);
         if (response?.clientSecret) {
           setClientSecret(response.clientSecret);
         }
@@ -130,9 +133,9 @@ export const StripePaymentForm = ({ tier, onBack }: StripePaymentFormProps) => {
     };
 
     fetchPaymentIntent();
-  }, [createPaymentIntent, tier]);
+  }, [mutateAsync, tier, isFetched]);
 
-  if (createPaymentIntent.isPending || !clientSecret) {
+  if (isPending || !clientSecret) {
     return (
       <div className="flex flex-col space-y-4">
         <div className="flex justify-between items-center">

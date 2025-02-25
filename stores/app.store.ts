@@ -1,3 +1,4 @@
+// stores/app.store.ts
 import { AppState } from "@/types/app.types";
 import { create } from "zustand";
 
@@ -9,6 +10,9 @@ const initialState = {
   tasks: [],
   task: null,
   invitations: [],
+  subscription: null,
+  appRole: null,
+  projectMemberRole: null,
 };
 
 export const useAppStore = create<AppState>(set => ({
@@ -21,6 +25,9 @@ export const useAppStore = create<AppState>(set => ({
   setTasks: tasks => set({ tasks }),
   setTask: task => set({ task }),
   setInvitations: invitations => set({ invitations }),
+  setSubscription: subscription => set({ subscription }),
+  setAppRole: appRole => set({ appRole }),
+  setProjectMemberRole: projectMemberRole => set({ projectMemberRole }),
   reset: () => set(initialState),
 }));
 
@@ -37,6 +44,9 @@ export const useAppData = () => {
     tasks: store.tasks,
     task: store.task,
     invitations: store.invitations,
+    subscription: store.subscription,
+    appRole: store.appRole,
+    projectMemberRole: store.projectMemberRole,
 
     // Actions
     setUser: store.setUser,
@@ -46,6 +56,9 @@ export const useAppData = () => {
     setTasks: store.setTasks,
     setTask: store.setTask,
     setInvitations: store.setInvitations,
+    setSubscription: store.setSubscription,
+    setAppRole: store.setAppRole,
+    setProjectMemberRole: store.setProjectMemberRole,
     reset: store.reset,
   };
 };

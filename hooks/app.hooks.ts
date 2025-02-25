@@ -30,6 +30,9 @@ export const useGetAppData = (
     setProject,
     setTasks,
     setInvitations,
+    setSubscription,
+    setAppRole,
+    setProjectMemberRole,
   } = useAppStore();
 
   return useQuery({
@@ -46,6 +49,11 @@ export const useGetAppData = (
         setProject(data.project);
         setTasks(data.tasks);
         setInvitations(data.invitations);
+
+        // Update new data
+        setSubscription(data.subscription);
+        setAppRole(data.appRole);
+        setProjectMemberRole(data.projectMemberRole);
       }
 
       return data;

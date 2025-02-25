@@ -26,11 +26,71 @@ export const getAppDataAction = async (): Promise<
     if (userError || !user) throw new Error("Not authenticated");
 
     // Call the get_app_data function with auth context
-    const { data, error } = await supabase.rpc("get_app_data");
+    const { data: untypedData, error } = await supabase.rpc("get_app_data");
+    const data = untypedData as any as AppStateWithoutTask | null;
     conditionalLog(actionName, { data, error }, true);
 
     if (error) throw error;
-    return getActionResponse({ data: data as any as AppStateWithoutTask });
+
+    // Fetch user roles (app_role)
+    const { data: userRolesData, error: userRolesError } = await supabase
+      .from("user_roles")
+      .select("*")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    conditionalLog(actionName, { userRolesData, userRolesError }, true);
+
+    if (userRolesError) throw userRolesError;
+
+    const appRole = userRolesData?.role || null;
+
+    // Fetch project member role if there's a current project
+    let projectMemberRole = null;
+    if (data?.project?.id) {
+      const { data: memberData, error: memberError } = await supabase
+        .from("project_members")
+        .select("role")
+        .eq("project_id", data.project.id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      conditionalLog(actionName, { memberData, memberError }, true);
+
+      if (!memberError && memberData) {
+        projectMemberRole = memberData.role;
+      }
+    }
+
+    // Fetch project subscription if there's a current project
+    let subscription = null;
+    if (data?.project?.id) {
+      const { data: subscriptionData, error: subscriptionError } =
+        await supabase
+          .from("project_subscriptions")
+          .select("*")
+          .eq("project_id", data.project.id)
+          .maybeSingle();
+
+      conditionalLog(actionName, { subscriptionData, subscriptionError }, true);
+
+      if (!subscriptionError && subscriptionData) {
+        subscription = subscriptionData;
+      }
+    }
+
+    // Add the new data to the response
+    const enrichedData = {
+      ...data,
+      appRole,
+      projectMemberRole,
+      subscription,
+      project: data?.project || data?.projects?.[0],
+    };
+
+    return getActionResponse({
+      data: enrichedData as any as AppStateWithoutTask,
+    });
   } catch (error) {
     conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });

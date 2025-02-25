@@ -1,3 +1,4 @@
+// types/app.types.ts
 import { Tables } from "@/types/database.types";
 import { User } from "@supabase/supabase-js";
 
@@ -26,6 +27,8 @@ type ProjectMember = Tables<"project_members">;
 type ProjectInvitation = Tables<"project_invitations">;
 type Task = Tables<"tasks">;
 type Subtask = Tables<"subtasks">;
+type ProjectSubscription = Tables<"project_subscriptions">;
+type UserRole = Tables<"user_roles">;
 
 // Define member with profile
 export interface ProjectMemberWithProfile extends ProjectMember {
@@ -69,6 +72,13 @@ export interface AppState {
   task: TaskComplete | null;
   invitations: ProjectInvitation[];
 
+  // Subscription data
+  subscription: ProjectSubscription | null;
+
+  // Role data
+  appRole: string | null;
+  projectMemberRole: string | null;
+
   // Actions
   setUser: (user: User | null) => void;
   setProfile: (profile: Profile | null) => void;
@@ -77,5 +87,8 @@ export interface AppState {
   setTasks: (tasks: TaskWithAssignee[]) => void;
   setTask: (task: TaskComplete | null) => void;
   setInvitations: (invitations: ProjectInvitation[]) => void;
+  setSubscription: (subscription: ProjectSubscription | null) => void;
+  setAppRole: (appRole: string | null) => void;
+  setProjectMemberRole: (projectMemberRole: string | null) => void;
   reset: () => void;
 }

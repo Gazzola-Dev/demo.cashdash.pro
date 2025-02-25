@@ -38,7 +38,7 @@
     --sidebar-ring: 222 47% 31%;
   }
   .dark {
-    --background: 222 47% 6%;
+    --background: 222 47% 6%; /* This is transparent, should be dark */
     --foreground: 210 40% 98%;
     --card: 222 47% 8%;
     --card-foreground: 210 40% 98%;

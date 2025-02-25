@@ -6,6 +6,7 @@ import {
 } from "@/actions/billing.actions";
 import { BillingTier } from "@/components/layout/BillingModal";
 import { useToast } from "@/hooks/use-toast";
+import { useAppData } from "@/stores/app.store";
 import { useMutation } from "@tanstack/react-query";
 
 export const useCreatePaymentIntent = () => {
@@ -29,18 +30,13 @@ export const useCreatePaymentIntent = () => {
 
 export const useConfirmPayment = () => {
   const { toast } = useToast();
+  const { project } = useAppData();
 
   return useMutation({
-    mutationFn: async ({
-      paymentIntentId,
-      projectId,
-    }: {
-      paymentIntentId: string;
-      projectId?: string;
-    }) => {
+    mutationFn: async ({ paymentIntentId }: { paymentIntentId: string }) => {
       const { data, error } = await confirmPaymentAction(
         paymentIntentId,
-        projectId,
+        project?.id,
       );
       if (error) throw new Error(error);
       return data;
