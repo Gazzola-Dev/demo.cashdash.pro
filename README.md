@@ -1,95 +1,164 @@
-# My AI, Quest.
+# Cash Dash Pro
 
-A chat bot web app that will proactively participate in your day, helping you to make the most of AI in your professional and personal life.
+Cash Dash Pro is a developer-focused task management platform that integrates GitHub activity with financial tracking, providing real-time insights into project progress, budget alignment, and development metrics through AI-powered analysis.
 
-## Development set up:
+## Features
 
-1. Copy `.env.local.example` to `.env.local` and complete the details.
-2. Run `npm i` and `npm run dev` in a terminal.
-3. Use the auth form to create a user with an email magic link.
-4. Run `makeAdmin [your@email.com]` and refresh the page.
-5. Run `supabase login`, then `supabase link` and then `supabase db push`
+- **Authentication** using Supabase with email magic links
+- **Project management** with GitHub repository integration
+- **Task management** system including creation, editing, deletion, and status updates
+- **Task organization** with priority levels and assignees
+- **Team collaboration** with role-based access control
+- **Financial tracking** with Upwork contract/milestone integration
+- **Progress visualization** with budget vs. progress metrics
+- **GitHub integration** for commit and PR status tracking
+- **AI-powered analysis** for progress estimation
 
-### Supabase Migrations
+## Technology Stack
 
-1. Create a New Migration with `supabase migration [name_of_new_migration]`
-2. Edit the migration file in SQL (use "add or replace" logic where possible).
-3. Run the migrations with `supabase db push`.
-4. Generate types from the db schema with `node generateTypes.ts`
-5. If you have multiple migrations on your working branch, then combine (squash) them into a single migration before merging. Run `supabase db push` before and after squashing, you'll see an error the second time - use the revert commands shown in the error output. Then comment out the SQL in the squashed migration so you can run `supabase db push`. (Make sure to un-comment the SQL)
-6. Before merging to `main`, run `node dateMigrations.js [name_of_first_new_migration]` - this will update the migration names to include the present time to avoid conflicts.
+- **Frontend**: Next.js 14, React, TypeScript, Tailwind CSS, shadcn/ui
+- **Backend**: Supabase (PostgreSQL, Auth, Storage)
+- **State Management**: Zustand, React Query (TanStack Query)
+- **Authentication**: Supabase Auth with magic links
+- **Styling**: Tailwind CSS with shadcn/ui components
+- **API**: Server Actions
 
-## Directory Structure
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18.17 or later
+- npm or yarn
+- Supabase account
+
+### Installation
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/yourusername/cash-dash-pro.git
+   cd cash-dash-pro
+   ```
+
+2. Install dependencies:
+
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
+
+3. Set up environment variables:
+   Create a `.env.local` file in the root directory with the following variables (see `.env.local.example` for reference):
+
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+   NEXT_PUBLIC_SITE_URL=http://localhost:3000
+   NEXT_PUBLIC_SESSION_ID_KEY=your_session_id_key
+   SMTP_API_KEY=your_smtp_api_key
+   NEXT_PUBLIC_CLIENT_DEBUG=true/false
+   SERVER_DEBUG=true/false
+   NEXT_PUBLIC_VERBOSE_LOGS=true/false
+   ```
+
+4. Run the development server:
+
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   ```
+
+5. Open [http://localhost:3000](http://localhost:3000) with your browser to see the application.
+
+## Project Structure
 
 ```
-📁 app
-├── 📄 layout.tsx               # Root layout - minimal setup, no data fetching
-├── 📄 page.tsx                # Landing - static content only
-│
-├── 📁 (auth)
-│   └── 📄 page.tsx            # Auth forms - Client component using auth hooks
-│
-└── 📁 (protected)
-    ├── 📄 layout.tsx          # Protected layout - Server component
-    │                          # - Fetch initial layout data (useLayoutData)
-    │                          # - Provide data through Zustand store (useLayoutStore)
-    │                          # - Child components use store selectors
-    │
-    ├── 📁 [project_slug]
-    │   ├── 📄 page.tsx        # Project overview - Server component
-    │   │                      # - Fetch project details (getProjectAction)
-    │   │                      # - Client components use useQuery for live updates
-    │   │
-    │   ├── 📄 [...]/page.tsx  # Task view - Server component
-    │   │                      # - Fetch task details (getTaskAction)
-    │   │                      # - Client components use useQuery + mutations
-    │   │
-    │   ├── 📁 kanban
-    │   │   └── 📄 page.tsx    # Kanban board - Client component
-    │   │                      # - useQuery for task list with filters
-    │   │                      # - useMutation for drag-n-drop updates
-    │   │
-    │   ├── 📁 tasks
-    │   │   ├── 📄 page.tsx    # Task list - Server component
-    │   │   │                  # - Initial task list fetch
-    │   │   │                  # - Client components use useQuery + filters
-    │   │   │
-    │   │   └── 📄 new/page   # New task - Client component
-    │   │                      # - Form with useMutation for creation
-    │   │
-    │   └── 📁 timeline
-    │       └── 📄 page.tsx    # Timeline - Client component
-    │                          # - useQuery for tasks with date filters
-    │
-    ├── 📁 settings/*          # Settings pages - Client components
-    │   └── 📄 */page.tsx      # - useQuery + useMutation for preferences
-    │
-    └── 📁 projects
-        ├── 📄 page.tsx        # Project list - Server component
-        │                      # - Initial project list fetch
-        │                      # - Client components use useQuery + filters
-        │
-        └── 📄 new/page.tsx    # New project - Client component
-                               # - Form with useMutation for creation
-📁 hooks/
-├── 📄 layout.hooks.ts
-├── 📄 project.hooks.ts
-├── 📄 task.hooks.ts
-├── 📄 user.hooks.ts
-└── 📄 useRealtime.ts
-
-📁 actions/
-├── 📄 layout.actions.ts
-├── 📄 project.actions.ts
-├── 📄 task.actions.ts
-└── 📄 user.actions.ts
-
-📁 stores/
-└── 📄 layout.store.ts
-
-📁 types/
-├── 📄 layout.types.ts
-├── 📄 project.types.ts
-├── 📄 task.types.ts
-└── 📄 user.types.ts
+cash-dash-pro/
+├── app/                    # Next.js app directory
+│   ├── [project_slug]/     # Dynamic project routes
+│   ├── settings/           # User settings pages
+│   ├── auth/               # Authentication pages
+│   ├── layout.tsx          # Root layout component
+│   └── page.tsx            # Home page
+├── components/             # React components
+│   ├── ai/                 # AI-related components
+│   ├── dashboard/          # Dashboard components
+│   ├── home/               # Home page components
+│   ├── layout/             # Layout components
+│   ├── projects/           # Project-related components
+│   ├── shared/             # Shared components
+│   ├── SVG/                # SVG components
+│   ├── tasks/              # Task-related components
+│   └── ui/                 # UI components (shadcn)
+├── actions/                # Server actions
+├── hooks/                  # Custom React hooks
+├── lib/                    # Utility functions
+├── providers/              # React context providers
+├── stores/                 # Zustand stores
+├── styles/                 # CSS styles
+├── types/                  # TypeScript type definitions
+├── public/                 # Static files
+└── supabase/               # Supabase migrations
 ```
+
+## Database Schema
+
+The application uses Supabase (PostgreSQL) with the following main tables:
+
+- **profiles**: User profiles linked to Supabase auth
+- **projects**: Project management
+- **tasks**: Task management
+- **subtasks**: Subtask management for tasks
+- **project_members**: Project team members
+- **project_invitations**: Project invitations
+- **comments**: Task comments
+- **contracts**: Upwork contracts
+- **contract_milestones**: Milestones for contracts
+
+## Development Patterns
+
+### File Naming Conventions
+
+- React components: `PascalCase.tsx`
+- Hooks, actions, and types: `[type]/[table].[type].(ts|tsx)`
+
+### Data Management
+
+- Database interactions are performed in server actions
+- `react-query` (TanStack Query) is used for data fetching
+- `useQuery` for read operations, `useMutation` for write operations
+- Zustand for client-side state management
+
+## Testing
+
+Run tests using Cypress:
+
+```bash
+npx cypress open
+```
+
+## Deployment
+
+The application can be deployed to Vercel or any hosting provider that supports Next.js applications.
+
+1. Set up environment variables on your hosting provider.
+2. Deploy the application using the hosting provider's deployment process.
+
+## License
+
+[MIT License](LICENSE)
+
+## Contributors
+
+- Aaron Gazzola - Creator and Lead Developer
+
+## Acknowledgments
+
+- [Next.js](https://nextjs.org/)
+- [Supabase](https://supabase.io/)
+- [TanStack Query](https://tanstack.com/query)
+- [shadcn/ui](https://ui.shadcn.com/)
+- [Tailwind CSS](https://tailwindcss.com/)

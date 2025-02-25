@@ -1,7 +1,7 @@
 import getSupabaseClientKeys from "@/clients/client-keys";
 import { Database } from "@/types/database.types";
-import { type CookieOptions, createServerClient } from "@supabase/ssr";
-import { type NextRequest, NextResponse } from "next/server";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
 
 export default function createMiddlewareClient(
   request: NextRequest,

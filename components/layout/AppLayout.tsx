@@ -44,13 +44,23 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import configuration from "@/configuration";
+import { useToast } from "@/hooks/use-toast";
 import useAppData from "@/hooks/useAppData";
 import { useDialogQueue } from "@/hooks/useDialogQueue";
+import useSupabase from "@/hooks/useSupabase";
+import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Dot, Gauge, LogOut, MailOpen, Settings } from "lucide-react";
+import {
+  Dot,
+  Gauge,
+  LoaderCircle,
+  LogOut,
+  MailOpen,
+  Settings,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
@@ -67,8 +77,13 @@ type FormValues = z.infer<typeof formSchema>;
 function AppSidebar() {
   const { open } = useSidebar();
   const { project, profile } = useAppData();
+
   const router = useRouter();
   const { dialog } = useDialogQueue();
+  const supabase = useSupabase();
+
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -82,7 +97,30 @@ function AppSidebar() {
   const { isValid } = form.formState;
   const emailIsValid = emailValue && isValid;
 
-  const handleSubmit = (data: FormValues) => {};
+  const handleSubmit = async (data: FormValues) => {
+    setIsLoading(true);
+    try {
+      const res = await supabase?.auth.signInWithOtp({
+        email: data.email,
+        options: {
+          emailRedirectTo: process.env.NEXT_PUBLIC_SITE_URL,
+        },
+      });
+
+      if (res?.error) throw res.error;
+      toast({
+        title: "Success!",
+        description: "Check your email for a magic link to sign in",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to sign in. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSignOut = () => {
     dialog({
@@ -96,6 +134,14 @@ function AppSidebar() {
     });
   };
 
+  useEffect(() => {
+    const func = async () => {
+      const res = await supabase?.auth.getUser();
+      console.log(res);
+    };
+    func();
+  }, [supabase]);
+
   return (
     <Sidebar collapsible="icon">
       <SidebarContent className="border-r dark:border-blue-900">
@@ -105,8 +151,8 @@ function AppSidebar() {
         {!profile ? (
           <div className="flex-grow flex flex-col items-center justify-center gap-7 pb-16 pt-4">
             <div className="p-5 flex flex-col items-center justify-center gap-6">
-              <Logo className="size-20 fill-blue-800/70 dark:fill-blue-400/70 mr-4" />
-              <LogoText className="w-48 fill-blue-800/70 dark:fill-blue-400/70" />
+              <Logo className="size-[4.5rem] fill-blue-800/70 dark:fill-blue-400/70 mr-4" />
+              <LogoText className="w-[11.5rem] fill-blue-800/70 dark:fill-blue-400/70" />
             </div>
             <Form {...form}>
               <form
@@ -135,10 +181,23 @@ function AppSidebar() {
                 <Button
                   type="submit"
                   className="w-full"
-                  disabled={!emailIsValid}
+                  disabled={!emailIsValid || isLoading}
                 >
-                  Send Magic Link
-                  <MailOpen className="ml-2 h-4 w-4" />
+                  <div
+                    className={cn(
+                      "flex items-center justify-center gap-2",
+                      isLoading && "animate-pulse",
+                    )}
+                  >
+                    Send Magic Link
+                    <div className="ml-2">
+                      {isLoading ? (
+                        <LoaderCircle className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <MailOpen className="h-4 w-4" />
+                      )}
+                    </div>
+                  </div>
                 </Button>
               </form>
             </Form>

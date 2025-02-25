@@ -132,7 +132,7 @@ const TaskListCard = () => {
     <div className="relative">
       <div className="absolute inset-0 flex items-center justify-center z-10">
         <Card className="w-56 bg-white/70 dark:bg-black/70">
-          <CardHeader className="flex items-center justify-between text-gray-700 gap-2 pb-5">
+          <CardHeader className="flex items-center justify-between text-gray-700 dark:text-gray-300 gap-2 pb-5">
             <CardTitle className="text-lg">Admin Required</CardTitle>
             <ShieldEllipsis className="size-8" />
           </CardHeader>

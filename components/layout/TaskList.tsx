@@ -96,7 +96,7 @@ const TaskList = () => {
     <div className="px-3 space-y-2 pt-2.5">
       <div className="flex items-center justify-between">
         <h3 className="text-sm text-gray-800 dark:text-gray-200 font-medium">
-          Tasks ({sortedTasks.length})
+          Tasks
         </h3>
         <div className="flex items-center gap-1">
           <TooltipProvider>

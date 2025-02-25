@@ -993,10 +993,17 @@ export type Database = {
         }
         Returns: string
       }
-      get_app_data: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      get_app_data:
+        | {
+            Args: Record<PropertyKey, never>
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_user_id: string
+            }
+            Returns: Json
+          }
       get_current_project_data:
         | {
             Args: Record<PropertyKey, never>

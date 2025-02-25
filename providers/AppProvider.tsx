@@ -1,7 +1,9 @@
-import { useGetTask, useUpdateProfile } from "@/hooks/app.hooks";
+import { useGetAppData, useGetTask, useUpdateProfile } from "@/hooks/app.hooks";
+import useSupabase from "@/hooks/useSupabase";
 import { useAppStore } from "@/stores/app.store";
+import { Session } from "@supabase/supabase-js";
 import { usePathname } from "next/navigation";
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useCallback, useEffect } from "react";
 
 interface AppProviderProps {
   children: ReactNode;
@@ -13,9 +15,53 @@ export const AppProvider = ({ children }: AppProviderProps) => {
   const firstSegment = pathSegments[0];
   const secondSegment = pathSegments[1];
 
-  const { projects, profile, tasks, task, setTask, setProject } = useAppStore();
+  const supabase = useSupabase();
+  const {
+    projects,
+    profile,
+    tasks,
+    task,
+    setTask,
+    setProject,
+    setUser,
+    reset,
+  } = useAppStore();
   const { refetch: refetchTask } = useGetTask(secondSegment);
+  const { refetch: refetchAppData } = useGetAppData();
   const { updateProfile } = useUpdateProfile();
+
+  const handleSignIn = useCallback(
+    (session: Session | null) => {
+      if (session?.user) {
+        setUser(session.user);
+        refetchAppData();
+      }
+    },
+    [setUser, refetchAppData],
+  );
+
+  const handleSignOut = useCallback(() => {
+    reset();
+  }, [reset]);
+
+  // Handle auth state changes
+  useEffect(() => {
+    if (!supabase) return;
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN") {
+        handleSignIn(session);
+      } else if (event === "SIGNED_OUT") {
+        handleSignOut();
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [handleSignIn, handleSignOut, supabase]);
 
   // Handle project switch and current project update
   useEffect(() => {
