@@ -92,19 +92,6 @@ function AppSidebar() {
     projectMemberRole,
   } = useAppData();
 
-  console.log({
-    project,
-    profile,
-    user,
-    projects,
-    tasks,
-    task,
-    invitations,
-    subscription,
-    appRole,
-    projectMemberRole,
-  });
-
   const router = useRouter();
   const { dialog } = useDialogQueue();
   const supabase = useSupabase();
