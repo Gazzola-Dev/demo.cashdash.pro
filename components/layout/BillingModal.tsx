@@ -1,3 +1,4 @@
+import StripePaymentForm from "@/components/layout/StripePaymentForm";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,7 +12,7 @@ import { Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 
 // Define the billing tier properties
-interface BillingTier {
+export interface BillingTier {
   name: string;
   stars: number;
   features: Record<string, boolean | string | number>;
@@ -68,7 +69,6 @@ const billingTiers: BillingTier[] = [
       weeklyReports: true,
     },
     price: 999,
-    disabled: true,
   },
 ];
 
@@ -84,17 +84,6 @@ const featuresList = [
     label: "Weekly reports",
   },
 ];
-
-// Mock Stripe payment form component
-const MockStripeForm = ({
-  tier,
-  onBack,
-}: {
-  tier: BillingTier;
-  onBack: () => void;
-}) => {
-  return <div className="space-y-4"></div>;
-};
 
 export function BillingModal({
   open,
@@ -128,7 +117,7 @@ export function BillingModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-3xl">
         {currentPage === 2 ? (
-          <MockStripeForm
+          <StripePaymentForm
             tier={billingTiers[selectedTierIndex]}
             onBack={handleBack}
           />
@@ -282,7 +271,10 @@ export function BillingModal({
                 billingTiers[selectedTierIndex]?.disabled || currentPage === 2
               }
             >
-              Next
+              {currentPage === 2 && selectedTier?.price
+                ? `Pay $${selectedTier?.price} / month`
+                : "Payment"}
+
               <ChevronRight className="h-4 w-4 ml-2" />
             </Button>
           </div>
