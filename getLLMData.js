@@ -14,7 +14,7 @@ const whitelistedDirs = [
   // "styles",
   "docs",
   "providers",
-  "data",
+  // "data",
   "stores",
 ];
 

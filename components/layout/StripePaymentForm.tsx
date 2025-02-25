@@ -1,6 +1,10 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import {
+  useConfirmPayment,
+  useCreatePaymentIntent,
+} from "@/hooks/billing.hooks";
 import { useToast } from "@/hooks/use-toast";
 import {
   Elements,
@@ -8,54 +12,42 @@ import {
   useElements,
   useStripe,
 } from "@stripe/react-stripe-js";
-import {
-  StripeElements,
-  StripePaymentElementOptions,
-  loadStripe,
-} from "@stripe/stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
 import { ChevronLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { BillingTier } from "./BillingModal";
 
-// Initialize Stripe with your publishable key
-// In a real implementation, this should be an environment variable
-const stripePromise = loadStripe("pk_test_your_publishable_key");
+// Initialize Stripe with publishable key
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "",
+);
 
 interface StripeComponentProps {
-  id?: string;
-  options?: StripePaymentElementOptions;
   tier: BillingTier;
+  clientSecret: string;
   onBack: () => void;
 }
 
-const StripeComponent = ({
-  id = "payment-element",
-  options,
-  tier,
-  onBack,
-}: StripeComponentProps) => {
+const StripeCheckoutForm = ({ tier, onBack }: StripeComponentProps) => {
   const { toast } = useToast();
   const elements = useElements();
   const stripe = useStripe();
   const [loading, setLoading] = useState(false);
+  const confirmPaymentMutation = useConfirmPayment();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!stripe || !elements) {
-      // Stripe.js has not yet loaded.
+      // Stripe.js has not yet loaded
       return;
     }
 
     setLoading(true);
 
     try {
-      // Confirm the payment
       const result = await stripe.confirmPayment({
-        elements: elements as StripeElements,
-        confirmParams: {
-          return_url: `${window.location.origin}/settings/billing/success`,
-        },
+        elements,
         redirect: "if_required",
       });
 
@@ -67,18 +59,22 @@ const StripeComponent = ({
             result.error.message || "An error occurred during payment",
           variant: "destructive",
         });
-      } else {
-        // Payment succeeded
-        toast({
-          title: "Payment successful",
-          description: `You are now subscribed to the ${tier.name} plan`,
+      } else if (
+        result.paymentIntent &&
+        result.paymentIntent.status === "succeeded"
+      ) {
+        // Payment succeeded, confirm on server
+        await confirmPaymentMutation.mutateAsync({
+          paymentIntentId: result.paymentIntent.id,
         });
+
+        // Close the modal after successful payment
+        onBack();
       }
-    } catch (error) {
-      console.error("Payment error:", error);
+    } catch (error: any) {
       toast({
         title: "Payment error",
-        description: "An unexpected error occurred",
+        description: error.message || "An unexpected error occurred",
         variant: "destructive",
       });
     } finally {
@@ -95,8 +91,18 @@ const StripeComponent = ({
         </p>
 
         <div className="rounded-md border p-4">
-          <PaymentElement id={id} options={options} />
+          <PaymentElement />
         </div>
+      </div>
+
+      <div className="flex justify-between">
+        <Button variant="outline" onClick={onBack} type="button">
+          <ChevronLeft className="h-4 w-4 mr-2" />
+          Back
+        </Button>
+        <Button type="submit" disabled={!stripe || loading}>
+          {loading ? "Processing..." : `Pay $${tier.price}`}
+        </Button>
       </div>
     </form>
   );
@@ -108,37 +114,25 @@ interface StripePaymentFormProps {
 }
 
 export const StripePaymentForm = ({ tier, onBack }: StripePaymentFormProps) => {
+  const createPaymentIntent = useCreatePaymentIntent();
   const [clientSecret, setClientSecret] = useState<string | null>(null);
 
   useEffect(() => {
-    // In a real implementation, you'd fetch the client secret from your backend
-    // This is just a placeholder for demonstration purposes
     const fetchPaymentIntent = async () => {
       try {
-        // Replace with actual API call
-        // const response = await fetch('/api/create-payment-intent', {
-        //   method: 'POST',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   body: JSON.stringify({ tier: tier.name, price: tier.price }),
-        // });
-        // const data = await response.json();
-        // setClientSecret(data.clientSecret);
-
-        // Simulating a successful response for demo purposes
-        setTimeout(() => {
-          setClientSecret(
-            "pi_mock_secret_" + Math.random().toString(36).substring(2, 15),
-          );
-        }, 1000);
+        const response = await createPaymentIntent.mutateAsync(tier);
+        if (response?.clientSecret) {
+          setClientSecret(response.clientSecret);
+        }
       } catch (error) {
         console.error("Error fetching payment intent:", error);
       }
     };
 
     fetchPaymentIntent();
-  }, [tier]);
+  }, [createPaymentIntent, tier]);
 
-  if (!clientSecret) {
+  if (createPaymentIntent.isPending || !clientSecret) {
     return (
       <div className="flex flex-col space-y-4">
         <div className="flex justify-between items-center">
@@ -164,11 +158,14 @@ export const StripePaymentForm = ({ tier, onBack }: StripePaymentFormProps) => {
         clientSecret,
         appearance: {
           theme: "stripe",
-          labels: "floating",
         },
       }}
     >
-      <StripeComponent tier={tier} onBack={onBack} />
+      <StripeCheckoutForm
+        tier={tier}
+        clientSecret={clientSecret}
+        onBack={onBack}
+      />
     </Elements>
   );
 };

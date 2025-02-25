@@ -570,6 +570,59 @@ export type Database = {
           },
         ]
       }
+      project_subscriptions: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          end_date: string
+          id: string
+          metadata: Json | null
+          payment_intent_id: string
+          project_id: string | null
+          start_date: string
+          status: Database["public"]["Enums"]["subscription_status"]
+          tier: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          end_date: string
+          id?: string
+          metadata?: Json | null
+          payment_intent_id: string
+          project_id?: string | null
+          start_date?: string
+          status?: Database["public"]["Enums"]["subscription_status"]
+          tier: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          end_date?: string
+          id?: string
+          metadata?: Json | null
+          payment_intent_id?: string
+          project_id?: string | null
+          start_date?: string
+          status?: Database["public"]["Enums"]["subscription_status"]
+          tier?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_subscriptions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           created_at: string
@@ -585,6 +638,9 @@ export type Database = {
           prefix: string
           slug: string
           status: Database["public"]["Enums"]["project_status"]
+          subscription_status:
+            | Database["public"]["Enums"]["subscription_status"]
+            | null
           updated_at: string
         }
         Insert: {
@@ -601,6 +657,9 @@ export type Database = {
           prefix: string
           slug: string
           status?: Database["public"]["Enums"]["project_status"]
+          subscription_status?:
+            | Database["public"]["Enums"]["subscription_status"]
+            | null
           updated_at?: string
         }
         Update: {
@@ -617,6 +676,9 @@ export type Database = {
           prefix?: string
           slug?: string
           status?: Database["public"]["Enums"]["project_status"]
+          subscription_status?:
+            | Database["public"]["Enums"]["subscription_status"]
+            | null
           updated_at?: string
         }
         Relationships: []
@@ -1259,6 +1321,12 @@ export type Database = {
         | "in_review"
         | "completed"
       project_status: "active" | "archived" | "completed"
+      subscription_status:
+        | "active"
+        | "canceled"
+        | "expired"
+        | "past_due"
+        | "trialing"
       task_priority: "low" | "medium" | "high" | "urgent"
       task_status:
         | "draft"

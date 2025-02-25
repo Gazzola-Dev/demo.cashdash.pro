@@ -62,7 +62,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
@@ -136,14 +136,6 @@ function AppSidebar() {
       },
     });
   };
-
-  useEffect(() => {
-    const func = async () => {
-      const res = await supabase?.auth.getUser();
-      console.log(res);
-    };
-    func();
-  }, [supabase]);
 
   return (
     <>
@@ -318,7 +310,7 @@ function AppSidebar() {
               </>
             )}
             <Tooltip>
-              <TooltipTrigger>
+              <TooltipTrigger asChild>
                 <div className="w-full">
                   <ThemeSwitcher />
                 </div>

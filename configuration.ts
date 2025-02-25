@@ -36,6 +36,8 @@ const configuration = {
     youtubeHandle: "",
   },
   paths: {
+    verifyPayment: "/verify-payment",
+    confirmPayment: "/confirm-payment",
     delete: "/delete",
     appHome: "/",
     project: {

@@ -1,4 +1,3 @@
-import StripePaymentForm from "@/components/layout/StripePaymentForm";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -8,8 +7,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { Check, ChevronLeft, ChevronRight } from "lucide-react";
+import { Check, ChevronRight } from "lucide-react";
 import { useState } from "react";
+import { StripePaymentForm } from "./StripePaymentForm";
 
 // Define the billing tier properties
 export interface BillingTier {
@@ -33,8 +33,9 @@ const billingTiers: BillingTier[] = [
       taskComments: true,
       dashboard: false,
       taskLimit: 500,
-      aiReports: false,
       weeklyReports: false,
+      workspace: false,
+      expert: false,
     },
     price: 9,
   },
@@ -49,8 +50,9 @@ const billingTiers: BillingTier[] = [
       taskComments: true,
       dashboard: true,
       taskLimit: 1000,
-      aiReports: true,
-      weeklyReports: false,
+      weeklyReports: true,
+      workspace: false,
+      expert: false,
     },
     price: 99,
   },
@@ -65,8 +67,9 @@ const billingTiers: BillingTier[] = [
       taskComments: true,
       dashboard: true,
       taskLimit: "∞",
-      aiReports: true,
       weeklyReports: true,
+      workspace: true,
+      expert: true,
     },
     price: 999,
   },
@@ -78,11 +81,12 @@ const featuresList = [
   { key: "projectMemberLimit", label: "Members" },
   { key: "taskLimit", label: "Tasks" },
   { key: "dashboard", label: "Dashboard" },
-  { key: "aiReports", label: "Monthly AI reports" },
   {
     key: "weeklyReports",
     label: "Weekly reports",
   },
+  { key: "workspace", label: "AI Workflow" },
+  { key: "expert", label: "Expert support" },
 ];
 
 export function BillingModal({
@@ -117,10 +121,7 @@ export function BillingModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-3xl">
         {currentPage === 2 ? (
-          <StripePaymentForm
-            tier={billingTiers[selectedTierIndex]}
-            onBack={handleBack}
-          />
+          <StripePaymentForm tier={selectedTier!} onBack={handleBack} />
         ) : (
           <>
             <DialogHeader>
@@ -258,26 +259,15 @@ export function BillingModal({
           >
             Cancel
           </Button>
-          <div className="flex gap-2">
-            {currentPage !== 1 && (
-              <Button variant="outline" onClick={handleBack}>
-                <ChevronLeft className="h-4 w-4 mr-2" />
-                Back
-              </Button>
-            )}
+          {currentPage === 1 && (
             <Button
               onClick={handleProceedToPayment}
-              disabled={
-                billingTiers[selectedTierIndex]?.disabled || currentPage === 2
-              }
+              disabled={billingTiers[selectedTierIndex]?.disabled}
             >
-              {currentPage === 2 && selectedTier?.price
-                ? `Pay $${selectedTier?.price} / month`
-                : "Payment"}
-
+              Payment
               <ChevronRight className="h-4 w-4 ml-2" />
             </Button>
-          </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

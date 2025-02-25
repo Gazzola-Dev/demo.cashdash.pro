@@ -244,7 +244,7 @@ const TaskList = () => {
 
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span>
+                    <span className="px-1">
                       <StatusIconSimple status={task.status} />
                     </span>
                   </TooltipTrigger>
@@ -263,7 +263,7 @@ const TaskList = () => {
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="flex-1 truncate">{task.title}</span>
+                    <span className="flex-1 truncate pl-1">{task.title}</span>
                   </TooltipTrigger>
                   <TooltipContent side="right">{task.title}</TooltipContent>
                 </Tooltip>

@@ -27,12 +27,12 @@ export const getAppDataAction = async (): Promise<
 
     // Call the get_app_data function with auth context
     const { data, error } = await supabase.rpc("get_app_data");
-    conditionalLog(actionName, { data, error }, true, null);
+    conditionalLog(actionName, { data, error }, true);
 
     if (error) throw error;
     return getActionResponse({ data: data as any as AppStateWithoutTask });
   } catch (error) {
-    conditionalLog(actionName, { error }, true, null);
+    conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });
   }
 };
@@ -49,12 +49,12 @@ export const getTaskAction = async (
     const { data, error } = await supabase.rpc("get_task", {
       task_identifier: taskIdentifier,
     });
-    conditionalLog(actionName, { data, error }, true, null);
+    conditionalLog(actionName, { data, error }, true);
 
     if (error) throw error;
     return getActionResponse({ data: data as any as TaskComplete });
   } catch (error) {
-    conditionalLog(actionName, { error }, true, null);
+    conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });
   }
 };
@@ -78,7 +78,7 @@ export const updateProfileAction = async (
     if (error) throw error;
     return getActionResponse({ data: data as Profile });
   } catch (error) {
-    conditionalLog(actionName, { error }, true, null);
+    conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });
   }
 };
