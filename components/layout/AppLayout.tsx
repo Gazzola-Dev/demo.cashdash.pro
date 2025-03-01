@@ -1,7 +1,6 @@
 "use client";
 import Logo from "@/components/SVG/Logo";
 import LogoText from "@/components/SVG/LogoText";
-import BillingModal from "@/components/layout/BillingModal";
 import ProfileFormSmall from "@/components/layout/ProfileFormSmall";
 import { ProjectSwitcher } from "@/components/layout/ProjectSwitcher";
 import RouteBreadcrumb from "@/components/layout/RouteBreadCrumb";
@@ -52,7 +51,6 @@ import useSupabase from "@/hooks/useSupabase";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  CreditCard,
   Dot,
   Gauge,
   LoaderCircle,
@@ -77,7 +75,7 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 function AppSidebar() {
-  const [billingDialogOpen, setBillingDialogOpen] = useState(false);
+  // const [billingDialogOpen, setBillingDialogOpen] = useState(false);
   const { open } = useSidebar();
   const {
     project,
@@ -150,10 +148,10 @@ function AppSidebar() {
 
   return (
     <>
-      <BillingModal
+      {/* <BillingModal
         open={billingDialogOpen}
         onOpenChange={setBillingDialogOpen}
-      />
+      /> */}
       <Sidebar collapsible="icon">
         <SidebarContent className="border-r dark:border-blue-900">
           <SidebarHeader>
@@ -289,7 +287,7 @@ function AppSidebar() {
           <SidebarFooter className="gap-0.5">
             {profile && (
               <>
-                <Tooltip>
+                {/* <Tooltip>
                   <TooltipTrigger>
                     <SidebarMenuItem
                       onClick={() => setBillingDialogOpen(true)}
@@ -302,7 +300,7 @@ function AppSidebar() {
                   <TooltipContent side="right">
                     Manage your billing details
                   </TooltipContent>
-                </Tooltip>
+                </Tooltip> */}
 
                 <Tooltip>
                   <TooltipTrigger>
