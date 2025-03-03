@@ -28,7 +28,7 @@ const statusOrder: TaskStatus[] = [
 ];
 
 const TaskList = () => {
-  const { tasks, project } = useAppData();
+  const { tasks, project, task: appTask } = useAppData();
   const [sortByPriority, setSortByPriority] = useState(true);
   const [sortById, setSortById] = useState(false);
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
@@ -94,7 +94,10 @@ const TaskList = () => {
 
   return (
     <>
-      <div className="flex items-center justify-between px-3 pr-6">
+      <div className="w-full pl-[5rem] pr-6">
+        <hr className="w-full dark:border-blue-900" />
+      </div>
+      <div className="flex items-center justify-between px-3 pr-[1.15rem]">
         <h3 className="text-sm text-gray-800 dark:text-gray-200 font-medium">
           Tasks
         </h3>
@@ -194,9 +197,10 @@ const TaskList = () => {
           </TooltipProvider>
         </div>
       </div>
-      <div className="px-3 space-y-2 pt-2.5 flex-grow overflow-auto">
+      <div className="w-full pl-2.5 pb-2 pr-6">
         <hr className="w-full dark:border-blue-900" />
-
+      </div>
+      <div className="space-y-2 flex-grow overflow-auto">
         <div className="flex-1 overflow-y-auto">
           <TooltipProvider>
             {sortedTasks.map(task => {
@@ -210,7 +214,11 @@ const TaskList = () => {
                 <Link
                   key={task.id}
                   href={taskPath}
-                  className="flex items-center gap-2 px-1 py-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 select-none text-sm"
+                  className={cn(
+                    "flex items-center gap-2 py-1.5 rounded-r-full rounded-l-lg hover:bg-gray-100 dark:hover:bg-gray-800 select-none text-sm bg-white dark:bg-gray-900 pl-4 pr-3 bl-none",
+                    appTask?.id === task.id &&
+                      "border-r-2 border-b border-blue-500 dark:border-blue-400 p-1.5 bg-blue-50 dark:bg-blue-950/50 my-2 pl-3",
+                  )}
                 >
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -270,7 +278,11 @@ const TaskList = () => {
 
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Avatar className="h-6 w-6">
+                      <Avatar
+                        className={cn(
+                          appTask?.id === task.id ? "size-10" : "h-6 w-6",
+                        )}
+                      >
                         <AvatarImage
                           src={assigneeProfile?.avatar_url || undefined}
                         />

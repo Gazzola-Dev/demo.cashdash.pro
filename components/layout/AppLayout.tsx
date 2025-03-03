@@ -53,10 +53,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Dot,
   Gauge,
+  ListTodo,
   LoaderCircle,
   LogOut,
   MailOpen,
-  Settings,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -148,17 +148,13 @@ function AppSidebar() {
 
   return (
     <>
-      {/* <BillingModal
-        open={billingDialogOpen}
-        onOpenChange={setBillingDialogOpen}
-      /> */}
       <Sidebar collapsible="icon">
         <SidebarContent className="border-r dark:border-blue-900">
           <SidebarHeader>
             <ProjectSwitcher />
           </SidebarHeader>
-          {!profile ? (
-            <div className="flex-grow flex flex-col items-center justify-center gap-7 pb-16 pt-4">
+          {!user ? (
+            <div className="flex-grow flex flex-col items-center justify-center gap-7 pb-16 pt-0">
               <div className="p-5 flex flex-col items-center justify-center gap-6">
                 <Logo className="size-[4.5rem] fill-blue-800/70 dark:fill-blue-400/70 mr-4" />
                 <LogoText className="w-[11.5rem] fill-blue-800/70 dark:fill-blue-400/70" />
@@ -213,7 +209,7 @@ function AppSidebar() {
             </div>
           ) : (
             <>
-              <SidebarGroup>
+              <SidebarGroup className="mt-0 pt-0">
                 <SidebarMenu>
                   <TooltipProvider>
                     <Tooltip>
@@ -252,7 +248,7 @@ function AppSidebar() {
                   {open ? "Project roadmap" : "Calendar"}
                 </TooltipContent>
               </Tooltip> */}
-                    <Tooltip>
+                    {/* <Tooltip>
                       <TooltipTrigger>
                         <SidebarMenuItem>
                           <SidebarButton
@@ -273,7 +269,64 @@ function AppSidebar() {
                       <TooltipContent side="right">
                         {open ? "Project roadmap" : "Calendar"}
                       </TooltipContent>
-                    </Tooltip>
+                    </Tooltip> */}
+                    {!!task && (
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <SidebarMenuItem>
+                            <SidebarButton
+                              href={configuration.paths.tasks.view({
+                                project_slug: project?.slug,
+                                ordinal_id: task?.ordinal_id,
+                              })}
+                              matchPattern={
+                                configuration.paths.tasks.view({
+                                  project_slug: project?.slug,
+                                  ordinal_id: task?.ordinal_id,
+                                }) + "$"
+                              }
+                            >
+                              <div className="flex w-full items-center justify-between gap-2">
+                                <div className="flex items-center gap-2">
+                                  <ListTodo className="size-5" />
+                                  <span>Task</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <div className="text-xs text-gray-700 dark:text-gray-300 p-1 rounded-lg pb-[0.45rem]">
+                                    <span className="text-sm text-gray-900 dark:text-gray-100">
+                                      {task.ordinal_priority}
+                                    </span>
+                                    <span className="text-xs text-gray-500 dark:text-gray-300">
+                                      {task.ordinal_priority === 1
+                                        ? "st"
+                                        : task.ordinal_priority === 2
+                                          ? "nd"
+                                          : task.ordinal_priority === 3
+                                            ? "rd"
+                                            : "th"}
+                                    </span>
+                                  </div>
+                                  <div className="text-sm text-gray-900 dark:text-gray-100 pr-1 pl-2 rounded-bl-lg border-b border-gray-600 dark:border-gray-400">
+                                    {task?.ordinal_id}
+                                  </div>
+                                </div>
+                              </div>
+                            </SidebarButton>
+                          </SidebarMenuItem>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">
+                          {task.ordinal_priority}{" "}
+                          {task.ordinal_priority === 1
+                            ? "st"
+                            : task.ordinal_priority === 2
+                              ? "nd"
+                              : task.ordinal_priority === 3
+                                ? "rd"
+                                : "th"}{" "}
+                          : {task.ordinal_id} : {task.title}
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
                   </TooltipProvider>
                 </SidebarMenu>
               </SidebarGroup>
@@ -383,7 +436,7 @@ function DeleteAccountDialog({
 }
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
-  const { profile } = useAppData();
+  const { profile, user } = useAppData();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   return (
