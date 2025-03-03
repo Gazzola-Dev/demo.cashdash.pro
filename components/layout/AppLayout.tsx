@@ -315,7 +315,9 @@ function AppSidebar() {
                           </SidebarMenuItem>
                         </TooltipTrigger>
                         <TooltipContent side="right">
-                          {task.ordinal_priority}{" "}
+                          The focused task is called &quot;{task.title}&quot;,
+                          it is task number {task.ordinal_id}, and is currently
+                          the {task.ordinal_priority}
                           {task.ordinal_priority === 1
                             ? "st"
                             : task.ordinal_priority === 2
@@ -323,7 +325,7 @@ function AppSidebar() {
                               : task.ordinal_priority === 3
                                 ? "rd"
                                 : "th"}{" "}
-                          : {task.ordinal_id} : {task.title}
+                          most important task.
                         </TooltipContent>
                       </Tooltip>
                     )}
