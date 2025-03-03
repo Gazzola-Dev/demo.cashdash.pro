@@ -54,9 +54,9 @@ export function ProjectSwitcher() {
                 className={cn(open ? "" : "w-full")}
               >
                 {open ? (
-                  <Book className="size-5" />
-                ) : (
                   <BookOpenText className="size-5" />
+                ) : (
+                  <Book className="size-5" />
                 )}
               </Button>
             </TooltipTrigger>

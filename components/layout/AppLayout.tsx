@@ -157,7 +157,7 @@ function AppSidebar() {
   return (
     <>
       <Sidebar collapsible="icon">
-        <SidebarContent className="border-r dark:border-blue-900">
+        <SidebarContent className="border-r dark:border-blue-900 overflow-x-hidden">
           <SidebarHeader className="flex">
             <ProjectSwitcher />
           </SidebarHeader>
@@ -365,11 +365,16 @@ function AppSidebar() {
                 <Tooltip>
                   <TooltipTrigger>
                     <SidebarMenuItem
-                      className="flex items-center gap-2.5 px-3 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 select-none text-sm"
+                      className={cn(
+                        "flex items-center gap-2.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 select-none text-sm",
+                        open ? "px-3 mb-1" : "mb-2 justify-center",
+                      )}
                       onClick={handleSignOut}
                     >
-                      <LogOut className="size-4" />
-                      <span className="py-1">Sign out</span>
+                      <div className="flex items-center gap-2.5">
+                        <LogOut className="size-4" />
+                        {open && <span className="py-1">Sign out</span>}
+                      </div>
                     </SidebarMenuItem>
                   </TooltipTrigger>
                   <TooltipContent side="right">

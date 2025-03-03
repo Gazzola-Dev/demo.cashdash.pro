@@ -6,9 +6,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { useSidebar } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
 import useAppData from "@/hooks/useAppData";
 import { capitalizeFirstLetter } from "@/lib/string.util";
+import { cn } from "@/lib/utils";
 import { Upload } from "lucide-react";
 import { useState } from "react";
 
@@ -18,6 +20,7 @@ const ProfileFormSmall = () => {
   const [editedName, setEditedName] = useState(profile?.display_name || "");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
+  const { open } = useSidebar();
 
   const handleSave = () => {
     if (editedName.trim() !== profile?.display_name) {
@@ -59,7 +62,12 @@ const ProfileFormSmall = () => {
   };
 
   return (
-    <div className="flex items-center gap-2 p-2 pt-2 rounded-md">
+    <div
+      className={cn(
+        "flex items-center gap-2 rounded-md",
+        open ? "p-2 pt-2" : "",
+      )}
+    >
       <Avatar
         className="size-8 rounded-lg cursor-pointer"
         onClick={() => profile && setIsDialogOpen(true)}
