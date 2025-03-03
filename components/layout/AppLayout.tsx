@@ -146,6 +146,14 @@ function AppSidebar() {
     });
   };
 
+  // Check if current path matches the task view path
+  const isTaskViewPath =
+    task &&
+    configuration.paths.tasks.view({
+      project_slug: project?.slug,
+      ordinal_id: task?.ordinal_id,
+    }) + "$";
+
   return (
     <>
       <Sidebar collapsible="icon">
@@ -291,12 +299,12 @@ function AppSidebar() {
                                   <ListTodo className="size-5" />
                                   <span>Task</span>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                  <div className="text-xs text-gray-700 dark:text-gray-300 p-1 rounded-lg pb-[0.45rem]">
-                                    <span className="text-sm text-gray-900 dark:text-gray-100">
+                                <div className="flex items-center gap-2 font-medium">
+                                  <div className="space-x-0.5 text-xs text-blue-700 dark:text-blue-300 p-1 rounded-lg pb-[0.45rem]">
+                                    <span className="text-sm text-blue-900 dark:text-blue-100">
                                       {task.ordinal_priority}
                                     </span>
-                                    <span className="text-xs text-gray-500 dark:text-gray-300">
+                                    <span className="text-xs text-blue-500 dark:text-blue-300">
                                       {task.ordinal_priority === 1
                                         ? "st"
                                         : task.ordinal_priority === 2
@@ -306,7 +314,7 @@ function AppSidebar() {
                                             : "th"}
                                     </span>
                                   </div>
-                                  <div className="text-sm text-gray-900 dark:text-gray-100 pr-1 pl-2 rounded-bl-lg border-b border-gray-600 dark:border-gray-400">
+                                  <div className="text-sm text-blue-900 dark:text-blue-100 pr-1 pl-2 rounded-bl-lg border-b border-blue-600 dark:border-blue-400">
                                     {task?.ordinal_id}
                                   </div>
                                 </div>
