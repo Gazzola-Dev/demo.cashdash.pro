@@ -1,3 +1,5 @@
+"use client";
+
 import { default as ProjectIcon } from "@/components/projects/ProjectIcon";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,18 +24,47 @@ import {
 import configuration from "@/configuration";
 import useAppData from "@/hooks/useAppData";
 import { cn } from "@/lib/utils";
-import { MailPlus, Plus } from "lucide-react";
+import { Book, BookOpenText, Plus } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
 export function ProjectSwitcher() {
-  const { isMobile, open } = useSidebar();
+  const { isMobile, open, setOpen } = useSidebar();
   const { projects, project, profile } = useAppData();
   const [isOpen, setIsOpen] = useState(false);
 
+  const toggleSidebar = () => {
+    setOpen(!open);
+  };
+
   return (
     <SidebarMenu>
-      <SidebarMenuItem>
+      <SidebarMenuItem
+        className={cn(
+          "flex items-center",
+          open ? "justify-between" : "flex-col gap-2",
+        )}
+      >
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                onClick={toggleSidebar}
+                className={cn(open ? "" : "w-full")}
+              >
+                {open ? (
+                  <Book className="size-5" />
+                ) : (
+                  <BookOpenText className="size-5" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              {open ? "Collapse sidebar" : "Expand sidebar"}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         <DropdownMenu
           onOpenChange={open => setIsOpen(!!profile && open)}
           open={isOpen}
@@ -42,24 +73,25 @@ export function ProjectSwitcher() {
             <Button
               variant="ghost"
               className={cn(
-                "px-2 h-auto flex items-center justify-between w-full space-x-1 hover:bg-gray-100 dark:hover:bg-gray-800 relative",
+                "flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-800 relative",
+                open
+                  ? "px-2 h-auto w-full space-x-1"
+                  : "p-2 h-auto w-10 aspect-square",
               )}
             >
               <div
                 className={cn(
-                  "flex aspect-square size-8 items-center justify-center rounded-lg",
+                  "flex aspect-square items-center justify-center rounded-lg",
+                  open ? "size-8" : "size-6",
                 )}
               >
                 <ProjectIcon />
               </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold dark:text-gray-100">
-                  {project ? project?.name : "Sign in to get started"}
-                </span>
-              </div>
-              {!open && (
-                <div className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary">
-                  <MailPlus className="h-3 w-3 text-primary-foreground" />
+              {open && (
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-semibold dark:text-gray-100">
+                    {project ? project?.name : "Sign in to get started"}
+                  </span>
                 </div>
               )}
             </Button>

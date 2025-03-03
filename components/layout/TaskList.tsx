@@ -217,7 +217,7 @@ const TaskList = () => {
                   className={cn(
                     "flex items-center gap-2 py-1.5 rounded-r-full rounded-l-lg hover:bg-gray-100 dark:hover:bg-gray-800 select-none text-sm bg-white dark:bg-gray-900 pl-4 pr-3 bl-none",
                     appTask?.id === task.id &&
-                      "border-r-2 border-b border-blue-500 dark:border-blue-400 p-1.5 bg-blue-50 dark:bg-blue-950/50 my-2 pl-3",
+                      "border-r-2 border-b border-blue-500 dark:border-blue-400 p-1.5 bg-blue-50 dark:bg-blue-950/50 my-2 pl-4",
                   )}
                 >
                   <Tooltip>

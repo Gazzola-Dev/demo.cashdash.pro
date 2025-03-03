@@ -158,7 +158,7 @@ function AppSidebar() {
     <>
       <Sidebar collapsible="icon">
         <SidebarContent className="border-r dark:border-blue-900">
-          <SidebarHeader>
+          <SidebarHeader className="flex">
             <ProjectSwitcher />
           </SidebarHeader>
           {!user ? (
@@ -296,7 +296,7 @@ function AppSidebar() {
                             >
                               <div className="flex w-full items-center justify-between gap-2">
                                 <div className="flex items-center gap-2">
-                                  <ListTodo className="size-5" />
+                                  <ListTodo className="size-4" />
                                   <span>Task</span>
                                 </div>
                                 <div className="flex items-center gap-2 font-medium">
