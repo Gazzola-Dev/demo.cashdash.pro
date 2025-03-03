@@ -277,10 +277,7 @@ function AppSidebar() {
                   </TooltipProvider>
                 </SidebarMenu>
               </SidebarGroup>
-              <div className="flex-grow overflow-auto">
-                {/* <NotificationList /> */}
-                <TaskList />
-              </div>
+              <TaskList />
             </>
           )}
 

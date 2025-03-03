@@ -93,8 +93,8 @@ const TaskList = () => {
   };
 
   return (
-    <div className="px-3 space-y-2 pt-2.5">
-      <div className="flex items-center justify-between">
+    <>
+      <div className="flex items-center justify-between px-3 pr-6">
         <h3 className="text-sm text-gray-800 dark:text-gray-200 font-medium">
           Tasks
         </h3>
@@ -194,105 +194,108 @@ const TaskList = () => {
           </TooltipProvider>
         </div>
       </div>
+      <div className="px-3 space-y-2 pt-2.5 flex-grow overflow-auto">
+        <hr className="w-full dark:border-blue-900" />
 
-      <hr className="w-full dark:border-blue-900" />
+        <div className="flex-1 overflow-y-auto">
+          <TooltipProvider>
+            {sortedTasks.map(task => {
+              const assigneeProfile = task.assignee_profile;
+              const taskPath = configuration.paths.tasks.view({
+                project_slug: project?.slug,
+                ordinal_id: task.ordinal_id,
+              });
 
-      <div className="flex-1 overflow-y-auto">
-        <TooltipProvider>
-          {sortedTasks.map(task => {
-            const assigneeProfile = task.assignee_profile;
-            const taskPath = configuration.paths.tasks.view({
-              project_slug: project?.slug,
-              ordinal_id: task.ordinal_id,
-            });
+              return (
+                <Link
+                  key={task.id}
+                  href={taskPath}
+                  className="flex items-center gap-2 px-1 py-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 select-none text-sm"
+                >
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="w-6 flex items-end gap-0.5">
+                        <span className="text-sm text-black font-medium dark:text-gray-100 rounded">
+                          {task.ordinal_priority}
+                        </span>
+                        <span className="text-xs text-gray-600 dark:text-gray-300 lowercase mb-px">
+                          {task.ordinal_priority === 1
+                            ? "st"
+                            : task.ordinal_priority === 2
+                              ? "nd"
+                              : task.ordinal_priority === 3
+                                ? "rd"
+                                : "th"}
+                        </span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {task.ordinal_priority}
+                      {task.ordinal_priority === 1
+                        ? "st"
+                        : task.ordinal_priority === 2
+                          ? "nd"
+                          : task.ordinal_priority === 3
+                            ? "rd"
+                            : "th"}
+                      priority
+                    </TooltipContent>
+                  </Tooltip>
 
-            return (
-              <Link
-                key={task.id}
-                href={taskPath}
-                className="flex items-center gap-2 px-1 py-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 select-none text-sm"
-              >
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="w-5 flex items-end gap-0.5">
-                      <span className="text-sm text-black font-medium dark:text-gray-100 rounded">
-                        {task.ordinal_priority}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="px-1">
+                        <StatusIconSimple status={task.status} />
                       </span>
-                      <span className="text-xs text-gray-600 dark:text-gray-300 lowercase mb-px">
-                        {task.ordinal_priority === 1
-                          ? "st"
-                          : task.ordinal_priority === 2
-                            ? "nd"
-                            : task.ordinal_priority === 3
-                              ? "rd"
-                              : "th"}
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {capitalizeFirstLetter(task.status.replace("_", " "))}
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="border-b border-gray-700 dark:border-gray-400 px-1.5 pt-0 rounded-bl">
+                        {task.ordinal_id}
                       </span>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {task.ordinal_priority}
-                    {task.ordinal_priority === 1
-                      ? "st"
-                      : task.ordinal_priority === 2
-                        ? "nd"
-                        : task.ordinal_priority === 3
-                          ? "rd"
-                          : "th"}{" "}
-                    priority
-                  </TooltipContent>
-                </Tooltip>
+                    </TooltipTrigger>
+                    <TooltipContent>{task.slug.toUpperCase()}</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="flex-1 truncate pl-1">{task.title}</span>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">{task.title}</TooltipContent>
+                  </Tooltip>
 
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="px-1">
-                      <StatusIconSimple status={task.status} />
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {capitalizeFirstLetter(task.status.replace("_", " "))}
-                  </TooltipContent>
-                </Tooltip>
-
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="border-b border-gray-700 dark:border-gray-400 px-1.5 pt-0 rounded-bl">
-                      {task.ordinal_id}
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>{task.slug.toUpperCase()}</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="flex-1 truncate pl-1">{task.title}</span>
-                  </TooltipTrigger>
-                  <TooltipContent side="right">{task.title}</TooltipContent>
-                </Tooltip>
-
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Avatar className="h-6 w-6">
-                      <AvatarImage
-                        src={assigneeProfile?.avatar_url || undefined}
-                      />
-                      <AvatarFallback className="text-xs bg-gray-200 dark:bg-gray-700 dark:text-gray-100 text-black">
-                        {assigneeProfile
-                          ? capitalizeFirstLetter(
-                              assigneeProfile.display_name?.slice(0, 2) || "??",
-                            )
-                          : "NA"}
-                      </AvatarFallback>
-                    </Avatar>
-                  </TooltipTrigger>
-                  <TooltipContent side="right">
-                    Assigned to: {assigneeProfile?.display_name || "Unassigned"}
-                  </TooltipContent>
-                </Tooltip>
-              </Link>
-            );
-          })}
-        </TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Avatar className="h-6 w-6">
+                        <AvatarImage
+                          src={assigneeProfile?.avatar_url || undefined}
+                        />
+                        <AvatarFallback className="text-xs bg-gray-200 dark:bg-gray-700 dark:text-gray-100 text-black">
+                          {assigneeProfile
+                            ? capitalizeFirstLetter(
+                                assigneeProfile.display_name?.slice(0, 2) ||
+                                  "??",
+                              )
+                            : "NA"}
+                        </AvatarFallback>
+                      </Avatar>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      Assigned to:{" "}
+                      {assigneeProfile?.display_name || "Unassigned"}
+                    </TooltipContent>
+                  </Tooltip>
+                </Link>
+              );
+            })}
+          </TooltipProvider>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
