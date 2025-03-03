@@ -49,6 +49,12 @@ export default function RouteBreadcrumb() {
               {project?.name}
             </BreadcrumbPage>
           </BreadcrumbItem>
+          <BreadcrumbSeparator className="h-full flex items-center" />
+          <BreadcrumbItem className="h-full">
+            <BreadcrumbPage className="h-full flex items-center px-2">
+              Dashboard
+            </BreadcrumbPage>
+          </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
     );
@@ -220,9 +226,7 @@ export default function RouteBreadcrumb() {
           <BreadcrumbSeparator className="h-full flex items-center" />
           <BreadcrumbItem className="h-full">
             <BreadcrumbPage className="h-full flex items-center px-2">
-              {segments.length === 1
-                ? "Project details"
-                : capitalize(segments[1])}
+              {segments.length === 1 ? "Dashboard" : capitalize(segments[1])}
             </BreadcrumbPage>
           </BreadcrumbItem>
           {segments.length > 2 && (

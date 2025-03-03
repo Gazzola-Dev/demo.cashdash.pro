@@ -1,5 +1,5 @@
-import ProjectPage from "@/components/projects/ProjectPage";
+import DashboardPage from "@/components/dashboard/DashboardPage";
 
 export default function ProjectOverviewPage() {
-  return <ProjectPage />;
+  return <DashboardPage />;
 }

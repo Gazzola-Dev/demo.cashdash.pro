@@ -225,7 +225,7 @@ function AppSidebar() {
                         <SidebarMenuItem>
                           <SidebarButton
                             href={configuration.paths.appHome}
-                            matchPattern={configuration.paths.appHome + "$"}
+                            matchPattern={`(^${configuration.paths.appHome}$)|(^${configuration.paths.project.view({ project_slug: "[^/]+" })}$)`}
                           >
                             <Gauge className="size-5" />
                             <span>Dashboard</span>
