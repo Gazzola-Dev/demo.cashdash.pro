@@ -44,6 +44,7 @@ export const useAppData = () => {
     invitations: store.invitations,
     subscription: store.subscription,
     appRole: store.appRole,
+    isAdmin: store.appRole === "admin",
     projectMemberRole: store.projectMemberRole,
 
     // Actions

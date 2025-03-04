@@ -39,7 +39,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 const TaskListCard = () => {
-  const { project, tasks, setTasks } = useAppData();
+  const { project, tasks, setTasks, isAdmin } = useAppData();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [ordinalSearch, setOrdinalSearch] = useState("");
@@ -130,28 +130,35 @@ const TaskListCard = () => {
 
   return (
     <div className="relative">
-      <div className="absolute inset-0 flex items-center justify-center z-10">
-        <Card className="w-56 bg-white/70 dark:bg-black/70">
-          <CardHeader className="flex items-center justify-between text-gray-700 dark:text-gray-300 gap-2 pb-5">
-            <CardTitle className="text-lg">Admin Required</CardTitle>
-            <ShieldEllipsis className="size-8" />
-          </CardHeader>
-          <CardContent className="flex justify-center ">
-            <Link
-              rel="noopener noreferrer"
-              target="_blank"
-              href="https://demo.cashdash.pro"
-            >
-              <Button variant="outline">
-                View demo
-                <ExternalLink className="size-4" />
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-      <Card className="blur">
-        <CardHeader className="flex flex-row items-center justify-between">
+      {!isAdmin && (
+        <div className="absolute inset-0 flex items-center justify-center z-10">
+          <Card className="w-56 bg-white/70 dark:bg-black/70">
+            <CardHeader className="flex items-center justify-between text-gray-700 dark:text-gray-300 gap-2 pb-5">
+              <CardTitle className="text-lg">Admin Required</CardTitle>
+              <ShieldEllipsis className="size-8" />
+            </CardHeader>
+            <CardContent className="flex justify-center ">
+              <Link
+                rel="noopener noreferrer"
+                target="_blank"
+                href="https://demo.cashdash.pro"
+              >
+                <Button variant="outline">
+                  View demo
+                  <ExternalLink className="size-4" />
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+      <Card
+        className={cn(
+          !isAdmin && "blur",
+          "max-h-[calc(100vh-100px)] overflow-hidden",
+        )}
+      >
+        <CardHeader className="flex flex-row items-center justify-between max-h-full">
           <CardTitle>Tasks ({sortedTasks.length})</CardTitle>
           <div className="flex gap-2">
             <div className="flex-1 relative">
@@ -182,7 +189,7 @@ const TaskListCard = () => {
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[180px] p-0" align="end">
-                {members.map(member => (
+                {members.slice(0, 10).map(member => (
                   <div
                     key={member.user_id}
                     role="button"
@@ -205,7 +212,7 @@ const TaskListCard = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border select-none">
+          <div className="rounded-md border select-none h-full overflow-auto">
             <DragDropContext onDragEnd={handleDragEnd}>
               <Droppable droppableId="tasks">
                 {provided => (

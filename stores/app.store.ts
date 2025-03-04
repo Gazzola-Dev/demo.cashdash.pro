@@ -13,6 +13,7 @@ const initialState = {
   subscription: null,
   appRole: null,
   projectMemberRole: null,
+  isAdmin: false,
 };
 
 export const useAppStore = create<AppState>(set => ({
@@ -47,6 +48,7 @@ export const useAppData = () => {
     subscription: store.subscription,
     appRole: store.appRole,
     projectMemberRole: store.projectMemberRole,
+    isAdmin: store.appRole === "admin",
 
     // Actions
     setUser: store.setUser,

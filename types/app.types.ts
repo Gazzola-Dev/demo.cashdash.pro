@@ -77,6 +77,7 @@ export interface AppState {
 
   // Role data
   appRole: string | null;
+  isAdmin: boolean;
   projectMemberRole: string | null;
 
   // Actions

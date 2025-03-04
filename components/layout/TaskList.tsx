@@ -244,7 +244,7 @@ const TaskList = () => {
         </>
       )}
       <div className="space-y-2 flex-grow overflow-auto">
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto pr-2">
           {isLoading ? (
             // Loading skeleton items
             <div className="space-y-2">
