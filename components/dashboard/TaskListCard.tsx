@@ -189,7 +189,7 @@ const TaskListCard = () => {
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[180px] p-0" align="end">
-                {members.slice(0, 10).map(member => (
+                {members.map(member => (
                   <div
                     key={member.user_id}
                     role="button"

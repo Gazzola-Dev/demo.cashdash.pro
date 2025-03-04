@@ -293,6 +293,85 @@ export type Database = {
           },
         ]
       }
+      milestone_approvals: {
+        Row: {
+          approval_type: Database["public"]["Enums"]["approval_type"]
+          approved: boolean
+          id: string
+          milestone_id: string
+          timestamp: string
+          user_id: string
+        }
+        Insert: {
+          approval_type: Database["public"]["Enums"]["approval_type"]
+          approved?: boolean
+          id?: string
+          milestone_id: string
+          timestamp?: string
+          user_id: string
+        }
+        Update: {
+          approval_type?: Database["public"]["Enums"]["approval_type"]
+          approved?: boolean
+          id?: string
+          milestone_id?: string
+          timestamp?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "milestone_approvals_milestone_id_fkey"
+            columns: ["milestone_id"]
+            isOneToOne: false
+            referencedRelation: "milestones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      milestone_disputes: {
+        Row: {
+          created_at: string
+          id: string
+          milestone_id: string
+          opener_id: string
+          reason: string
+          resolution: string | null
+          resolved_at: string | null
+          status: Database["public"]["Enums"]["dispute_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          milestone_id: string
+          opener_id: string
+          reason: string
+          resolution?: string | null
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["dispute_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          milestone_id?: string
+          opener_id?: string
+          reason?: string
+          resolution?: string | null
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["dispute_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "milestone_disputes_milestone_id_fkey"
+            columns: ["milestone_id"]
+            isOneToOne: false
+            referencedRelation: "milestones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       milestone_tasks: {
         Row: {
           created_at: string
@@ -332,6 +411,8 @@ export type Database = {
           description: string | null
           due_date: string | null
           id: string
+          payment_cents: number
+          payment_status: Database["public"]["Enums"]["payment_status"]
           project_id: string
           start_date: string | null
           status: Database["public"]["Enums"]["milestone_status"]
@@ -343,6 +424,8 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          payment_cents?: number
+          payment_status?: Database["public"]["Enums"]["payment_status"]
           project_id: string
           start_date?: string | null
           status?: Database["public"]["Enums"]["milestone_status"]
@@ -354,6 +437,8 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          payment_cents?: number
+          payment_status?: Database["public"]["Enums"]["payment_status"]
           project_id?: string
           start_date?: string | null
           status?: Database["public"]["Enums"]["milestone_status"]
@@ -1309,9 +1394,11 @@ export type Database = {
         | "users.manage"
         | "site.settings"
       app_role: "admin"
+      approval_type: "payment" | "completion" | "cancellation"
       content_type: "project" | "task" | "milestone" | "subtask" | "comment"
       contract_milestone_status: "pending" | "funded" | "released"
       contract_status: "active" | "completed" | "cancelled"
+      dispute_status: "open" | "resolved"
       invitation_status: "pending" | "accepted" | "declined" | "expired"
       milestone_status:
         | "draft"
@@ -1320,6 +1407,13 @@ export type Database = {
         | "in_progress"
         | "in_review"
         | "completed"
+      payment_status:
+        | "pending"
+        | "confirmed"
+        | "active"
+        | "completed"
+        | "cancelled"
+        | "disputed"
       project_status: "active" | "archived" | "completed"
       subscription_status:
         | "active"
