@@ -76,7 +76,7 @@ const ProfileFormSmall = () => {
       )}
     >
       <Avatar
-        className="size-8 rounded-lg cursor-pointer"
+        className="size-8 rounded-lg cursor-default select-none"
         onClick={() => profile && setIsDialogOpen(true)}
       >
         <AvatarImage
@@ -115,7 +115,7 @@ const ProfileFormSmall = () => {
         )}
       </div>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={false} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Update profile picture</DialogTitle>
