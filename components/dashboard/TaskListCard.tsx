@@ -141,7 +141,7 @@ const TaskListCard = () => {
   };
 
   return (
-    <div className={cn("relative", isMobile ? "h-full" : "")}>
+    <div className="relative h-full">
       {!isAdmin && (
         <div className="absolute inset-0 flex items-center justify-center z-10">
           <Card className="w-56 bg-white/70 dark:bg-black/70">
@@ -168,7 +168,7 @@ const TaskListCard = () => {
         className={cn(
           !isAdmin && "blur",
           "flex flex-col",
-          isMobile ? "h-full" : "max-h-[calc(100vh-200px)]",
+          "h-full max-h-[calc(100vh-100px)]",
         )}
       >
         <CardHeader className="pb-3">
@@ -193,21 +193,21 @@ const TaskListCard = () => {
               placeholder="Filter by ID..."
               value={ordinalSearch}
               onChange={e => setOrdinalSearch(e.target.value)}
-              className="w-32"
+              className="w-24"
             />
             <Popover
               open={isAssigneePopoverOpen}
               onOpenChange={setIsAssigneePopoverOpen}
             >
               <PopoverTrigger asChild>
-                <Button variant="outline" className="w-[180px] justify-between">
+                <Button variant="outline" className="w-[150px] justify-between">
                   <span className="truncate">
                     {getSelectedAssigneesDisplayText()}
                   </span>
                   <ChevronDown className="h-4 w-4 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[180px] p-0" align="end">
+              <PopoverContent className="w-[150px] p-0" align="end">
                 {members.map(member => (
                   <div
                     key={member.user_id}
@@ -230,9 +230,10 @@ const TaskListCard = () => {
             </Popover>
           </div>
         </CardHeader>
-        <CardContent className="flex-1 overflow-hidden pb-3">
-          <div className="border rounded-md h-full flex flex-col select-none">
-            <div className="grid grid-cols-[40px_80px_80px_140px_1fr_200px] bg-muted px-4 py-2 text-sm font-medium">
+        <CardContent className="flex-1 pb-3 flex flex-col overflow-hidden">
+          <div className="border rounded-md h-full flex flex-col">
+            {/* Fixed header row that doesn't scroll */}
+            <div className="grid grid-cols-[30px_60px_50px_120px_1fr_120px] bg-muted px-2 py-2 text-xs font-medium sticky top-0 z-10">
               <div></div>
               <div className="text-center">Priority</div>
               <div className="text-center">ID</div>
@@ -240,14 +241,16 @@ const TaskListCard = () => {
               <div>Title</div>
               <div>Assignee</div>
             </div>
-            <div className="flex-1 overflow-y-auto">
+
+            {/* Scrollable content */}
+            <div className="flex-1 overflow-y-auto overflow-x-hidden">
               <DragDropContext onDragEnd={handleDragEnd}>
                 <Droppable droppableId="tasks">
                   {provided => (
                     <div
                       {...provided.droppableProps}
                       ref={provided.innerRef}
-                      className="divide-y h-full"
+                      className="divide-y"
                     >
                       {sortedTasks.map((task, index) => {
                         const assigneeProfile = task.assignee_profile;
@@ -266,7 +269,7 @@ const TaskListCard = () => {
                               <div
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
-                                className="grid grid-cols-[40px_80px_80px_140px_1fr_200px] items-center px-4 py-2"
+                                className="grid grid-cols-[30px_60px_50px_120px_1fr_120px] items-center px-2 py-2"
                               >
                                 <div {...provided.dragHandleProps}>
                                   <Menu className="size-4 text-gray-500 hover:text-black dark:hover:text-white cursor-grab" />
@@ -290,7 +293,7 @@ const TaskListCard = () => {
                                 <div className="flex justify-center">
                                   <Link
                                     href={taskPath}
-                                    className="border-b border-gray-700 dark:border-gray-400 px-1.5 rounded-bl py-0.5"
+                                    className="border-b border-gray-700 dark:border-gray-400 px-1 rounded-bl py-0.5"
                                   >
                                     {task.ordinal_id}
                                   </Link>
@@ -302,13 +305,13 @@ const TaskListCard = () => {
                                       handleStatusChange(task.id, value)
                                     }
                                   >
-                                    <SelectTrigger className="w-[130px]">
+                                    <SelectTrigger className="w-[110px]">
                                       <SelectValue>
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-1">
                                           <StatusIconSimple
                                             status={task.status}
                                           />
-                                          <span className="capitalize">
+                                          <span className="capitalize text-xs">
                                             {task.status.replace("_", " ")}
                                           </span>
                                         </div>
@@ -361,10 +364,10 @@ const TaskListCard = () => {
                                       )
                                     }
                                   >
-                                    <SelectTrigger className="w-[180px]">
+                                    <SelectTrigger className="w-[110px]">
                                       <SelectValue>
-                                        <div className="flex items-center gap-2">
-                                          <Avatar className="h-6 w-6">
+                                        <div className="flex items-center gap-1">
+                                          <Avatar className="h-5 w-5">
                                             <AvatarImage
                                               src={
                                                 assigneeProfile?.avatar_url ||
@@ -382,7 +385,7 @@ const TaskListCard = () => {
                                                 : "NA"}
                                             </AvatarFallback>
                                           </Avatar>
-                                          <span className="text-sm">
+                                          <span className="text-xs truncate">
                                             {assigneeProfile?.display_name ||
                                               "Unassigned"}
                                           </span>

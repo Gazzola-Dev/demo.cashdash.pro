@@ -3,34 +3,26 @@ import MilestoneCard from "@/components/dashboard/MilestoneCard";
 import ProjectDetailsCard from "@/components/dashboard/ProjectDetailsCard";
 import TaskListCard from "@/components/dashboard/TaskListCard";
 
-import { useIsMobile } from "@/hooks/use-mobile";
-
 const DashboardPage = () => {
-  const isMobile = useIsMobile();
-
   return (
     <div className="container mx-auto p-4 space-y-6">
-      {isMobile ? (
-        // Mobile layout (vertical column)
-        <div className="flex flex-col space-y-6">
+      {/* Responsive grid layout that adapts to different screen sizes */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+        {/* MilestoneCard takes full width on mobile, 4 columns on desktop */}
+        <div className="md:col-span-4 order-1">
           <MilestoneCard />
-          <div className="h-[calc(100vh-300px)]">
-            <TaskListCard />
-          </div>
+        </div>
+
+        {/* TaskListCard takes full width on mobile, 8 columns on desktop */}
+        <div className="md:col-span-8 order-3 md:order-2">
+          <TaskListCard />
+        </div>
+
+        {/* ProjectDetailsCard takes full width on mobile, 4 columns on desktop */}
+        <div className="md:col-span-4 order-2 md:order-3">
           <ProjectDetailsCard />
         </div>
-      ) : (
-        // Desktop layout (split grid)
-        <div className="grid grid-cols-12 gap-6">
-          <div className="col-span-9 space-y-6">
-            <TaskListCard />
-          </div>
-          <div className="col-span-3 space-y-6">
-            <ProjectDetailsCard />
-            <MilestoneCard />
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 };
