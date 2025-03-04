@@ -141,7 +141,7 @@ const TaskListCard = () => {
   };
 
   return (
-    <div className="relative h-full">
+    <div className="relative h-full flex-shrink-0">
       {!isAdmin && (
         <div className="absolute inset-0 flex items-center justify-center z-10">
           <Card className="w-56 bg-white/70 dark:bg-black/70">
@@ -168,7 +168,7 @@ const TaskListCard = () => {
         className={cn(
           !isAdmin && "blur",
           "flex flex-col",
-          "h-full max-h-[calc(100vh-100px)]",
+          "h-full max-h-[calc(100vh-100px)] md:max-h-[40rem]",
         )}
       >
         <CardHeader className="pb-3">
@@ -231,9 +231,9 @@ const TaskListCard = () => {
           </div>
         </CardHeader>
         <CardContent className="flex-1 pb-3 flex flex-col overflow-hidden">
-          <div className="border rounded-md h-full flex flex-col">
+          <div className="border rounded-md flex flex-col overflow-hidden h-full">
             {/* Fixed header row that doesn't scroll */}
-            <div className="grid grid-cols-[30px_60px_50px_120px_1fr_120px] bg-muted px-2 py-2 text-xs font-medium sticky top-0 z-10">
+            <div className="grid grid-cols-[30px_60px_50px_120px_1fr_120px] bg-muted px-2 py-2 text-xs font-medium">
               <div></div>
               <div className="text-center">Priority</div>
               <div className="text-center">ID</div>
@@ -243,7 +243,10 @@ const TaskListCard = () => {
             </div>
 
             {/* Scrollable content */}
-            <div className="flex-1 overflow-y-auto overflow-x-hidden">
+            <div
+              className="overflow-y-auto"
+              style={{ maxHeight: "calc(100% - 32px)" }}
+            >
               <DragDropContext onDragEnd={handleDragEnd}>
                 <Droppable droppableId="tasks">
                   {provided => (
