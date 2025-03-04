@@ -459,7 +459,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <SidebarProvider>
         <div className="flex min-h-screen w-full">
           <AppSidebar />
-          <SidebarInset>
+          <SidebarInset className="pl-[3rem] md:pl-0">
             <header className="flex h-12 shrink-0 items-center justify-between gap-2">
               <RouteBreadcrumb />
               <Link

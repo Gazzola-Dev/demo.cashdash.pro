@@ -22,6 +22,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import configuration from "@/configuration";
+import { useIsMobile } from "@/hooks/use-mobile";
 import useAppData from "@/hooks/useAppData";
 import { capitalizeFirstLetter } from "@/lib/string.util";
 import { cn } from "@/lib/utils";
@@ -32,6 +33,7 @@ import {
   ChevronDown,
   ExternalLink,
   Menu,
+  Plus,
   Search,
   ShieldEllipsis,
 } from "lucide-react";
@@ -40,6 +42,7 @@ import { useState } from "react";
 
 const TaskListCard = () => {
   const { project, tasks, setTasks, isAdmin } = useAppData();
+  const isMobile = useIsMobile();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [ordinalSearch, setOrdinalSearch] = useState("");
@@ -128,8 +131,17 @@ const TaskListCard = () => {
     return `${selectedAssignees.length} assignees`;
   };
 
+  const createNewTask = () => {
+    // In a real implementation, this would navigate to task creation page
+    if (project) {
+      window.location.href = configuration.paths.tasks.new({
+        project_slug: project.slug,
+      });
+    }
+  };
+
   return (
-    <div className="relative">
+    <div className={cn("relative", isMobile ? "h-full" : "")}>
       {!isAdmin && (
         <div className="absolute inset-0 flex items-center justify-center z-10">
           <Card className="w-56 bg-white/70 dark:bg-black/70">
@@ -145,7 +157,7 @@ const TaskListCard = () => {
               >
                 <Button variant="outline">
                   View demo
-                  <ExternalLink className="size-4" />
+                  <ExternalLink className="size-4 ml-2" />
                 </Button>
               </Link>
             </CardContent>
@@ -155,19 +167,26 @@ const TaskListCard = () => {
       <Card
         className={cn(
           !isAdmin && "blur",
-          "max-h-[calc(100vh-100px)] overflow-hidden",
+          "flex flex-col",
+          isMobile ? "h-full" : "max-h-[calc(100vh-200px)]",
         )}
       >
-        <CardHeader className="flex flex-row items-center justify-between max-h-full">
-          <CardTitle>Tasks ({sortedTasks.length})</CardTitle>
-          <div className="flex gap-2">
+        <CardHeader className="pb-3">
+          <div className="flex flex-row items-center justify-between">
+            <CardTitle>Tasks ({sortedTasks.length})</CardTitle>
+            <Button size="sm" onClick={createNewTask}>
+              <Plus className="h-4 w-4 mr-2" />
+              New Task
+            </Button>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
             <div className="flex-1 relative">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search tasks..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="w-64 pl-8"
+                className="pl-8 min-w-[150px]"
               />
             </div>
             <Input
@@ -211,213 +230,215 @@ const TaskListCard = () => {
             </Popover>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="rounded-md border select-none h-full overflow-auto">
-            <DragDropContext onDragEnd={handleDragEnd}>
-              <Droppable droppableId="tasks">
-                {provided => (
-                  <div
-                    {...provided.droppableProps}
-                    ref={provided.innerRef}
-                    className="divide-y"
-                  >
-                    <div className="grid grid-cols-[40px_80px_80px_140px_1fr_200px] bg-muted px-4 py-2 text-sm font-medium">
-                      <div></div>
-                      <div className="text-center">Priority</div>
-                      <div className="text-center">ID</div>
-                      <div>Status</div>
-                      <div>Title</div>
-                      <div>Assignee</div>
-                    </div>
-                    {sortedTasks.map((task, index) => {
-                      const assigneeProfile = task.assignee_profile;
-                      const taskPath = configuration.paths.tasks.view({
-                        project_slug: project?.slug,
-                        ordinal_id: task.ordinal_id,
-                      });
+        <CardContent className="flex-1 overflow-hidden pb-3">
+          <div className="border rounded-md h-full flex flex-col select-none">
+            <div className="grid grid-cols-[40px_80px_80px_140px_1fr_200px] bg-muted px-4 py-2 text-sm font-medium">
+              <div></div>
+              <div className="text-center">Priority</div>
+              <div className="text-center">ID</div>
+              <div>Status</div>
+              <div>Title</div>
+              <div>Assignee</div>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              <DragDropContext onDragEnd={handleDragEnd}>
+                <Droppable droppableId="tasks">
+                  {provided => (
+                    <div
+                      {...provided.droppableProps}
+                      ref={provided.innerRef}
+                      className="divide-y h-full"
+                    >
+                      {sortedTasks.map((task, index) => {
+                        const assigneeProfile = task.assignee_profile;
+                        const taskPath = configuration.paths.tasks.view({
+                          project_slug: project?.slug,
+                          ordinal_id: task.ordinal_id,
+                        });
 
-                      return (
-                        <Draggable
-                          key={task.id}
-                          draggableId={task.id}
-                          index={index}
-                        >
-                          {provided => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              className="grid grid-cols-[40px_80px_80px_140px_1fr_200px] items-center px-4 py-2"
-                            >
-                              <div {...provided.dragHandleProps}>
-                                <Menu className="size-4 text-gray-500 hover:text-black dark:hover:text-white cursor-grab" />
-                              </div>
-                              <div className="text-center">
-                                <span className="capitalize text-sm">
-                                  <span className="text-base">
-                                    {task.ordinal_priority}{" "}
+                        return (
+                          <Draggable
+                            key={task.id}
+                            draggableId={task.id}
+                            index={index}
+                          >
+                            {provided => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                className="grid grid-cols-[40px_80px_80px_140px_1fr_200px] items-center px-4 py-2"
+                              >
+                                <div {...provided.dragHandleProps}>
+                                  <Menu className="size-4 text-gray-500 hover:text-black dark:hover:text-white cursor-grab" />
+                                </div>
+                                <div className="text-center">
+                                  <span className="capitalize text-sm">
+                                    <span className="text-base">
+                                      {task.ordinal_priority}{" "}
+                                    </span>
+                                    <span className="text-xs text-gray-600 dark:text-gray-300 lowercase">
+                                      {task.ordinal_priority === 1
+                                        ? "st"
+                                        : task.ordinal_priority === 2
+                                          ? "nd"
+                                          : task.ordinal_priority === 3
+                                            ? "rd"
+                                            : "th"}
+                                    </span>
                                   </span>
-                                  <span className="text-xs text-gray-600 dark:text-gray-300 lowercase">
-                                    {task.ordinal_priority === 1
-                                      ? "st"
-                                      : task.ordinal_priority === 2
-                                        ? "nd"
-                                        : task.ordinal_priority === 3
-                                          ? "rd"
-                                          : "th"}
-                                  </span>
-                                </span>
-                              </div>
-                              <div className="flex justify-center">
-                                <Link
-                                  href={taskPath}
-                                  className="border-b  border-gray-700 dark:border-gray-400 px-1.5 rounded-bl py-0.5"
-                                >
-                                  {task.ordinal_id}
-                                </Link>
-                              </div>
-                              <div>
-                                <Select
-                                  value={task.status}
-                                  onValueChange={value =>
-                                    handleStatusChange(task.id, value)
-                                  }
-                                >
-                                  <SelectTrigger className="w-[130px]">
-                                    <SelectValue>
-                                      <div className="flex items-center gap-2">
-                                        <StatusIconSimple
-                                          status={task.status}
-                                        />
-                                        <span className="capitalize">
-                                          {task.status.replace("_", " ")}
-                                        </span>
-                                      </div>
-                                    </SelectValue>
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {[
-                                      "backlog",
-                                      "todo",
-                                      "in_progress",
-                                      "in_review",
-                                      "completed",
-                                    ].map(status => (
-                                      <SelectItem key={status} value={status}>
+                                </div>
+                                <div className="flex justify-center">
+                                  <Link
+                                    href={taskPath}
+                                    className="border-b border-gray-700 dark:border-gray-400 px-1.5 rounded-bl py-0.5"
+                                  >
+                                    {task.ordinal_id}
+                                  </Link>
+                                </div>
+                                <div>
+                                  <Select
+                                    value={task.status}
+                                    onValueChange={value =>
+                                      handleStatusChange(task.id, value)
+                                    }
+                                  >
+                                    <SelectTrigger className="w-[130px]">
+                                      <SelectValue>
                                         <div className="flex items-center gap-2">
-                                          <StatusIconSimple status={status} />
+                                          <StatusIconSimple
+                                            status={task.status}
+                                          />
                                           <span className="capitalize">
-                                            {status.replace("_", " ")}
+                                            {task.status.replace("_", " ")}
                                           </span>
                                         </div>
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <div className="overflow-hidden">
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Link
-                                        href={taskPath}
-                                        className="hover:underline block truncate"
-                                      >
+                                      </SelectValue>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {[
+                                        "backlog",
+                                        "todo",
+                                        "in_progress",
+                                        "in_review",
+                                        "completed",
+                                      ].map(status => (
+                                        <SelectItem key={status} value={status}>
+                                          <div className="flex items-center gap-2">
+                                            <StatusIconSimple status={status} />
+                                            <span className="capitalize">
+                                              {status.replace("_", " ")}
+                                            </span>
+                                          </div>
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div className="overflow-hidden">
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Link
+                                          href={taskPath}
+                                          className="hover:underline block truncate"
+                                        >
+                                          {task.title}
+                                        </Link>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
                                         {task.title}
-                                      </Link>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      {task.title}
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              </div>
-                              <div>
-                                <Select
-                                  value={task.assignee || "unassigned"}
-                                  onValueChange={value =>
-                                    handleAssigneeChange(
-                                      task.id,
-                                      value === "unassigned" ? null : value,
-                                    )
-                                  }
-                                >
-                                  <SelectTrigger className="w-[180px]">
-                                    <SelectValue>
-                                      <div className="flex items-center gap-2">
-                                        <Avatar className="h-6 w-6">
-                                          <AvatarImage
-                                            src={
-                                              assigneeProfile?.avatar_url ||
-                                              undefined
-                                            }
-                                          />
-                                          <AvatarFallback className="text-xs bg-gray-200 dark:bg-gray-700 dark:text-gray-100">
-                                            {assigneeProfile
-                                              ? capitalizeFirstLetter(
-                                                  assigneeProfile.display_name?.slice(
-                                                    0,
-                                                    2,
-                                                  ) || "??",
-                                                )
-                                              : "NA"}
-                                          </AvatarFallback>
-                                        </Avatar>
-                                        <span className="text-sm">
-                                          {assigneeProfile?.display_name ||
-                                            "Unassigned"}
-                                        </span>
-                                      </div>
-                                    </SelectValue>
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="unassigned">
-                                      <div className="flex items-center gap-2">
-                                        <Avatar className="h-6 w-6">
-                                          <AvatarFallback>UA</AvatarFallback>
-                                        </Avatar>
-                                        <span>Unassigned</span>
-                                      </div>
-                                    </SelectItem>
-                                    {project?.project_members?.map(member => (
-                                      <SelectItem
-                                        key={member.user_id}
-                                        value={member.user_id}
-                                      >
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                </div>
+                                <div>
+                                  <Select
+                                    value={task.assignee || "unassigned"}
+                                    onValueChange={value =>
+                                      handleAssigneeChange(
+                                        task.id,
+                                        value === "unassigned" ? null : value,
+                                      )
+                                    }
+                                  >
+                                    <SelectTrigger className="w-[180px]">
+                                      <SelectValue>
                                         <div className="flex items-center gap-2">
                                           <Avatar className="h-6 w-6">
                                             <AvatarImage
                                               src={
-                                                member.profile?.avatar_url ||
+                                                assigneeProfile?.avatar_url ||
                                                 undefined
                                               }
                                             />
-                                            <AvatarFallback>
-                                              {member.profile?.display_name?.slice(
-                                                0,
-                                                2,
-                                              ) || "??"}
+                                            <AvatarFallback className="text-xs bg-gray-200 dark:bg-gray-700 dark:text-gray-100">
+                                              {assigneeProfile
+                                                ? capitalizeFirstLetter(
+                                                    assigneeProfile.display_name?.slice(
+                                                      0,
+                                                      2,
+                                                    ) || "??",
+                                                  )
+                                                : "NA"}
                                             </AvatarFallback>
                                           </Avatar>
-                                          <span>
-                                            {member.profile?.display_name ||
-                                              "Unknown User"}
+                                          <span className="text-sm">
+                                            {assigneeProfile?.display_name ||
+                                              "Unassigned"}
                                           </span>
                                         </div>
+                                      </SelectValue>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="unassigned">
+                                        <div className="flex items-center gap-2">
+                                          <Avatar className="h-6 w-6">
+                                            <AvatarFallback>UA</AvatarFallback>
+                                          </Avatar>
+                                          <span>Unassigned</span>
+                                        </div>
                                       </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
+                                      {project?.project_members?.map(member => (
+                                        <SelectItem
+                                          key={member.user_id}
+                                          value={member.user_id}
+                                        >
+                                          <div className="flex items-center gap-2">
+                                            <Avatar className="h-6 w-6">
+                                              <AvatarImage
+                                                src={
+                                                  member.profile?.avatar_url ||
+                                                  undefined
+                                                }
+                                              />
+                                              <AvatarFallback>
+                                                {member.profile?.display_name?.slice(
+                                                  0,
+                                                  2,
+                                                ) || "??"}
+                                              </AvatarFallback>
+                                            </Avatar>
+                                            <span>
+                                              {member.profile?.display_name ||
+                                                "Unknown User"}
+                                            </span>
+                                          </div>
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
                               </div>
-                            </div>
-                          )}
-                        </Draggable>
-                      );
-                    })}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </DragDropContext>
+                            )}
+                          </Draggable>
+                        );
+                      })}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              </DragDropContext>
+            </div>
           </div>
         </CardContent>
       </Card>
