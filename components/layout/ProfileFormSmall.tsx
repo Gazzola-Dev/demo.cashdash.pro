@@ -7,12 +7,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useSidebar } from "@/components/ui/sidebar";
+import { useUpdateProfile } from "@/hooks/app.hooks";
 import { useToast } from "@/hooks/use-toast";
 import useAppData from "@/hooks/useAppData";
 import { capitalizeFirstLetter } from "@/lib/string.util";
 import { cn } from "@/lib/utils";
 import { Upload } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const ProfileFormSmall = () => {
   const { profile } = useAppData();
@@ -21,10 +22,16 @@ const ProfileFormSmall = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
   const { open } = useSidebar();
+  const { updateProfile, isPending } = useUpdateProfile();
+
+  // Update editedName when profile changes
+  useEffect(() => {
+    setEditedName(profile?.display_name || "");
+  }, [profile?.display_name]);
 
   const handleSave = () => {
     if (editedName.trim() !== profile?.display_name) {
-      console.log("Updating name to:", editedName.trim());
+      updateProfile({ display_name: editedName.trim() });
     }
     setIsEditing(false);
   };
@@ -94,6 +101,7 @@ const ProfileFormSmall = () => {
             onKeyDown={handleKeyDown}
             className="h-8"
             autoFocus
+            disabled={isPending}
           />
         ) : (
           <button
