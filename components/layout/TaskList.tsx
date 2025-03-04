@@ -28,24 +28,60 @@ const statusOrder: TaskStatus[] = [
   // "draft",
 ];
 
+const TaskSkeleton = ({ open }: { open: boolean }) => {
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-2 py-1.5 select-none text-sm bg-white dark:bg-gray-900 animate-pulse",
+        open ? "pl-4 pr-3 rounded-l-lg rounded-r-full" : "rounded-br-lg",
+      )}
+    >
+      {/* Priority number */}
+      <div className="w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded"></div>
+
+      {open && (
+        <>
+          {/* Status icon */}
+          <div className="w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded"></div>
+
+          {/* Task ID */}
+          <div className="w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded"></div>
+
+          {/* Task title */}
+          <div className="flex-1 h-6 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+
+          {/* Avatar */}
+          <div className="w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+        </>
+      )}
+    </div>
+  );
+};
+
 const TaskList = () => {
   const { open } = useSidebar();
-  const { tasks, project, task: appTask } = useAppData();
+  const { tasks, project, task: appTask, user, profile } = useAppData();
   const [sortByPriority, setSortByPriority] = useState(true);
   const [sortById, setSortById] = useState(false);
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<TaskStatus | null>(null);
 
+  const isLoading = user && !profile;
+
   // Get all tasks from the project
   const members = project?.project_members || [];
 
   // Filter tasks by selected member and status
-  const filteredTasks = tasks.filter(task => {
-    if (["completed", "draft", "backlog"].includes(task.status)) return false;
-    if (selectedMemberId && task.assignee !== selectedMemberId) return false;
-    if (selectedStatus && task.status !== selectedStatus) return false;
-    return true;
-  });
+  const filteredTasks = isLoading
+    ? []
+    : tasks.filter(task => {
+        if (["completed", "draft", "backlog"].includes(task.status))
+          return false;
+        if (selectedMemberId && task.assignee !== selectedMemberId)
+          return false;
+        if (selectedStatus && task.status !== selectedStatus) return false;
+        return true;
+      });
 
   // Sort tasks based on active sorting button
   const sortedTasks = [...filteredTasks].sort((a, b) => {
@@ -208,129 +244,144 @@ const TaskList = () => {
       )}
       <div className="space-y-2 flex-grow overflow-auto">
         <div className="flex-1 overflow-y-auto">
-          <TooltipProvider>
-            {sortedTasks.map(task => {
-              const assigneeProfile = task.assignee_profile;
-              const taskPath = configuration.paths.tasks.view({
-                project_slug: project?.slug,
-                ordinal_id: task.ordinal_id,
-              });
+          {isLoading ? (
+            // Loading skeleton items
+            <div className="space-y-2">
+              {[...Array(5)].map((_, index) => (
+                <TaskSkeleton key={index} open={open} />
+              ))}
+            </div>
+          ) : (
+            <TooltipProvider>
+              {sortedTasks.map(task => {
+                const assigneeProfile = task.assignee_profile;
+                const taskPath = configuration.paths.tasks.view({
+                  project_slug: project?.slug,
+                  ordinal_id: task.ordinal_id,
+                });
 
-              return (
-                <Link
-                  key={task.id}
-                  href={taskPath}
-                  className={cn(
-                    "flex items-center gap-2 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 select-none text-sm bg-white dark:bg-gray-900 bl-none justify-center",
-                    open
-                      ? "pl-4 pr-3 rounded-l-lg rounded-r-full"
-                      : "rounded-br-lg",
-                    appTask?.id === task.id &&
-                      !open &&
-                      "border-b-2 border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-950/50 my-1",
-                    appTask?.id === task.id &&
-                      open &&
-                      "border-r-2 border-b border-blue-500 dark:border-blue-400 p-1.5 bg-blue-50 dark:bg-blue-950/50 my-2 pl-4 ",
-                  )}
-                >
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div
-                        className={cn(open ? "w-6 flex items-end gap-0.5" : "")}
-                      >
-                        <span className="text-sm text-black font-medium dark:text-gray-100 rounded">
-                          {task.ordinal_priority}
-                        </span>
-                        {open && (
-                          <span className="text-xs text-gray-600 dark:text-gray-300 lowercase mb-px">
-                            {task.ordinal_priority === 1
-                              ? "st"
-                              : task.ordinal_priority === 2
-                                ? "nd"
-                                : task.ordinal_priority === 3
-                                  ? "rd"
-                                  : "th"}
+                return (
+                  <Link
+                    key={task.id}
+                    href={taskPath}
+                    className={cn(
+                      "flex items-center gap-2 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 select-none text-sm bg-white dark:bg-gray-900 bl-none justify-center",
+                      open
+                        ? "pl-4 pr-3 rounded-l-lg rounded-r-full"
+                        : "rounded-br-lg",
+                      appTask?.id === task.id &&
+                        !open &&
+                        "border-b-2 border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-950/50 my-1",
+                      appTask?.id === task.id &&
+                        open &&
+                        "border-r-2 border-b border-blue-500 dark:border-blue-400 p-1.5 bg-blue-50 dark:bg-blue-950/50 my-2 pl-4 ",
+                    )}
+                  >
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div
+                          className={cn(
+                            open ? "w-6 flex items-end gap-0.5" : "",
+                          )}
+                        >
+                          <span className="text-sm text-black font-medium dark:text-gray-100 rounded">
+                            {task.ordinal_priority}
                           </span>
-                        )}
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {task.ordinal_priority}
-                      {task.ordinal_priority === 1
-                        ? "st"
-                        : task.ordinal_priority === 2
-                          ? "nd"
-                          : task.ordinal_priority === 3
-                            ? "rd"
-                            : "th"}
-                      priority
-                    </TooltipContent>
-                  </Tooltip>
-                  {open && (
-                    <>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span className="px-1">
-                            <StatusIconSimple status={task.status} />
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {capitalizeFirstLetter(task.status.replace("_", " "))}
-                        </TooltipContent>
-                      </Tooltip>
-
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span className="border-b border-gray-700 dark:border-gray-400 px-1.5 pt-0 rounded-bl">
-                            {task.ordinal_id}
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {task.slug.toUpperCase()}
-                        </TooltipContent>
-                      </Tooltip>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span className="flex-1 truncate pl-1">
-                            {task.title}
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent side="right">
-                          {task.title}
-                        </TooltipContent>
-                      </Tooltip>
-
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Avatar
-                            className={cn(
-                              appTask?.id === task.id ? "size-10" : "h-6 w-6",
+                          {open && (
+                            <span className="text-xs text-gray-600 dark:text-gray-300 lowercase mb-px">
+                              {task.ordinal_priority === 1
+                                ? "st"
+                                : task.ordinal_priority === 2
+                                  ? "nd"
+                                  : task.ordinal_priority === 3
+                                    ? "rd"
+                                    : "th"}
+                            </span>
+                          )}
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {task.ordinal_priority}
+                        {task.ordinal_priority === 1
+                          ? "st"
+                          : task.ordinal_priority === 2
+                            ? "nd"
+                            : task.ordinal_priority === 3
+                              ? "rd"
+                              : "th"}
+                        priority
+                      </TooltipContent>
+                    </Tooltip>
+                    {open && (
+                      <>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="px-1">
+                              <StatusIconSimple status={task.status} />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {capitalizeFirstLetter(
+                              task.status.replace("_", " "),
                             )}
-                          >
-                            <AvatarImage
-                              src={assigneeProfile?.avatar_url || undefined}
-                            />
-                            <AvatarFallback className="text-xs bg-gray-200 dark:bg-gray-700 dark:text-gray-100 text-black">
-                              {assigneeProfile
-                                ? capitalizeFirstLetter(
-                                    assigneeProfile.display_name?.slice(0, 2) ||
-                                      "??",
-                                  )
-                                : "NA"}
-                            </AvatarFallback>
-                          </Avatar>
-                        </TooltipTrigger>
-                        <TooltipContent side="right">
-                          Assigned to:{" "}
-                          {assigneeProfile?.display_name || "Unassigned"}
-                        </TooltipContent>
-                      </Tooltip>
-                    </>
-                  )}
-                </Link>
-              );
-            })}
-          </TooltipProvider>
+                          </TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="border-b border-gray-700 dark:border-gray-400 px-1.5 pt-0 rounded-bl">
+                              {task.ordinal_id}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {task.slug.toUpperCase()}
+                          </TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="flex-1 truncate pl-1">
+                              {task.title}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent side="right">
+                            {task.title}
+                          </TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Avatar
+                              className={cn(
+                                appTask?.id === task.id ? "size-10" : "h-6 w-6",
+                              )}
+                            >
+                              <AvatarImage
+                                src={assigneeProfile?.avatar_url || undefined}
+                              />
+                              <AvatarFallback className="text-xs bg-gray-200 dark:bg-gray-700 dark:text-gray-100 text-black">
+                                {assigneeProfile
+                                  ? capitalizeFirstLetter(
+                                      assigneeProfile.display_name?.slice(
+                                        0,
+                                        2,
+                                      ) || "??",
+                                    )
+                                  : "NA"}
+                              </AvatarFallback>
+                            </Avatar>
+                          </TooltipTrigger>
+                          <TooltipContent side="right">
+                            Assigned to:{" "}
+                            {assigneeProfile?.display_name || "Unassigned"}
+                          </TooltipContent>
+                        </Tooltip>
+                      </>
+                    )}
+                  </Link>
+                );
+              })}
+            </TooltipProvider>
+          )}
         </div>
       </div>
     </>

@@ -75,8 +75,9 @@ export const AppProvider = ({ children }: AppProviderProps) => {
         project_invitations: [],
       });
       updateProfile({ current_project_id: matchingProject.id });
+      setTask(null);
     }
-  }, [firstSegment, projects, setProject, profile, updateProfile]);
+  }, [firstSegment, projects, setProject, profile, updateProfile, setTask]);
 
   // Handle task loading based on URL segments
   useEffect(() => {
