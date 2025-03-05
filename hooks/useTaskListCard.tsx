@@ -79,19 +79,40 @@ export function useTaskListCard() {
     }
   };
 
+  // Define statuses array for cycling
+  const allStatuses: TaskStatus[] = [
+    "todo",
+    "in_progress",
+    "in_review",
+    "completed",
+    "backlog",
+  ];
+
+  // Define visible statuses (exclude "completed" and "backlog" by default)
+  const defaultStatuses: TaskStatus[] = ["todo", "in_progress", "in_review"];
+
   // Filter tasks based on search queries, selected assignees, and status
   const filteredTasks = tasks.filter(task => {
+    // Match title and ordinal ID
     const titleMatch = task.title
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
     const ordinalMatch = ordinalSearch
       ? task.ordinal_id.toString().includes(ordinalSearch)
       : true;
+
+    // Match assignee
     const assigneeMatch =
       selectedAssignees.length === 0
         ? true
         : selectedAssignees.includes(task.assignee || "");
-    const statusMatch = selectedStatus ? task.status === selectedStatus : true;
+
+    // Match status - if no status is selected, only show default statuses
+    // Otherwise, only show the selected status
+    const statusMatch = selectedStatus
+      ? task.status === selectedStatus
+      : defaultStatuses.includes(task.status);
+
     return titleMatch && ordinalMatch && assigneeMatch && statusMatch;
   });
 
@@ -171,19 +192,23 @@ export function useTaskListCard() {
     setIdLimitCycle((idLimitCycle + 1) % 4);
   };
 
+  // Updated status header click handler with improved cycling
   const handleStatusHeaderClick = (): void => {
-    const statuses: TaskStatus[] = [
-      "todo",
-      "in_progress",
-      "in_review",
-      "completed",
-      "backlog",
-    ];
-    const currentIndex = selectedStatus ? statuses.indexOf(selectedStatus) : -1;
-    const nextIndex = (currentIndex + 1) % (statuses.length + 1);
-    setSelectedStatus(
-      nextIndex === statuses.length ? null : statuses[nextIndex],
-    );
+    if (selectedStatus === null) {
+      // If no status is selected, select the first one from all statuses
+      setSelectedStatus(allStatuses[0]);
+    } else {
+      // Find the current status index in all statuses
+      const currentIndex = allStatuses.indexOf(selectedStatus);
+
+      // Determine the next index, cycling back to null after the last status
+      const nextIndex = (currentIndex + 1) % (allStatuses.length + 1);
+
+      // Set the next status, or null if we've cycled through all
+      setSelectedStatus(
+        nextIndex === allStatuses.length ? null : allStatuses[nextIndex],
+      );
+    }
   };
 
   // Get display text for ID header
