@@ -47,7 +47,7 @@ interface Project {
 }
 
 export function useTaskListCard() {
-  const { project, tasks, isAdmin } = useAppData();
+  const { project, tasks, isAdmin, setTasks } = useAppData();
   const isMobile = useIsMobile();
   const { updateTask } = useUpdateTask();
   const { updateTasksOrder } = useUpdateTasksOrder();
@@ -155,6 +155,31 @@ export function useTaskListCard() {
     taskId: string,
     newAssigneeId: string | null,
   ): void => {
+    // First update the local state optimistically
+    const updatedTasks = tasks.map(task => {
+      if (task.id === taskId) {
+        // Find the new assignee profile if there is one
+        let newAssigneeProfile = null;
+        if (newAssigneeId) {
+          const member = members.find(m => m.user_id === newAssigneeId);
+          if (member?.profile) {
+            newAssigneeProfile = member.profile;
+          }
+        }
+
+        return {
+          ...task,
+          assignee: newAssigneeId,
+          assignee_profile: newAssigneeProfile,
+        };
+      }
+      return task;
+    });
+
+    // Update the tasks in the app store
+    setTasks(updatedTasks);
+
+    // Then call the API to persist the change
     updateTask(taskId, { assignee: newAssigneeId });
   };
 
@@ -243,5 +268,6 @@ export function useTaskListCard() {
     handleIdHeaderClick,
     handleStatusHeaderClick,
     getIdHeaderText,
+    setTasks,
   };
 }
