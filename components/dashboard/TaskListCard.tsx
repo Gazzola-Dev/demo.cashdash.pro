@@ -22,16 +22,21 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import configuration from "@/configuration";
-import { useUpdateTask, useUpdateTasksOrder } from "@/hooks/task.hooks";
-import { useIsMobile } from "@/hooks/use-mobile";
-import useAppData from "@/hooks/useAppData";
+import { useTaskListCard } from "@/hooks/useTaskListCard";
 import { capitalizeFirstLetter } from "@/lib/string.util";
 import { cn } from "@/lib/utils";
 import { Database } from "@/types/database.types";
-import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
+import {
+  DragDropContext,
+  Draggable,
+  DraggableProvided,
+  Droppable,
+  DroppableProvided,
+} from "@hello-pangea/dnd";
 import {
   Check,
   ChevronDown,
+  ChevronUp,
   ExternalLink,
   Menu,
   Plus,
@@ -39,9 +44,14 @@ import {
   ShieldEllipsis,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
 
-const TaskSkeleton = ({ open }: { open: boolean }) => {
+type TaskStatus = Database["public"]["Enums"]["task_status"];
+
+interface TaskSkeletonProps {
+  open: boolean;
+}
+
+const TaskSkeleton = ({ open }: TaskSkeletonProps) => {
   return (
     <div
       className={cn(
@@ -71,96 +81,32 @@ const TaskSkeleton = ({ open }: { open: boolean }) => {
   );
 };
 
-type TaskStatus = Database["public"]["Enums"]["task_status"];
-
-const TaskListCard = () => {
-  const { project, tasks, isAdmin } = useAppData();
-  const isMobile = useIsMobile();
-  const { updateTask } = useUpdateTask();
-  const { updateTasksOrder } = useUpdateTasksOrder();
-
-  const [searchQuery, setSearchQuery] = useState("");
-  const [ordinalSearch, setOrdinalSearch] = useState("");
-  const [selectedAssignees, setSelectedAssignees] = useState<string[]>([]);
-  const [isAssigneePopoverOpen, setIsAssigneePopoverOpen] = useState(false);
-
-  const members = project?.project_members || [];
-
-  // Filter tasks based on search queries and selected assignees
-  const filteredTasks = tasks.filter(task => {
-    const titleMatch = task.title
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    const ordinalMatch = ordinalSearch
-      ? task.ordinal_id.toString().includes(ordinalSearch)
-      : true;
-    const assigneeMatch =
-      selectedAssignees.length === 0
-        ? true
-        : selectedAssignees.includes(task.assignee || "");
-    return titleMatch && ordinalMatch && assigneeMatch;
-  });
-
-  // Sort tasks by ordinal priority
-  const sortedTasks = [...filteredTasks].sort(
-    (a, b) => a.ordinal_priority - b.ordinal_priority,
-  );
-
-  const handleDragEnd = (result: any) => {
-    if (!result.destination) return;
-
-    const items = Array.from(tasks);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
-
-    // Update ordinal priorities based on new positions
-    const updatedItems = items.map((item, index) => ({
-      ...item,
-      ordinal_priority: index + 1,
-    }));
-
-    // Call the hook to update the task order
-    updateTasksOrder(updatedItems);
-  };
-
-  const handleStatusChange = (taskId: string, newStatus: string) => {
-    // Use the updateTask hook to update the task status
-    updateTask(taskId, { status: newStatus as TaskStatus });
-  };
-
-  const handleAssigneeChange = (
-    taskId: string,
-    newAssigneeId: string | null,
-  ) => {
-    // Use the updateTask hook to update the task assignee
-    updateTask(taskId, { assignee: newAssigneeId });
-  };
-
-  const toggleAssignee = (userId: string) => {
-    setSelectedAssignees(prev =>
-      prev.includes(userId)
-        ? prev.filter(id => id !== userId)
-        : [...prev, userId],
-    );
-  };
-
-  const getSelectedAssigneesDisplayText = () => {
-    if (selectedAssignees.length === 0) return "Assignee";
-    if (selectedAssignees.length === 1) {
-      const member = members.find(m => m.user_id === selectedAssignees[0]);
-      return member?.profile?.display_name || "Unknown";
-    }
-    return `${selectedAssignees.length} assignees`;
-  };
-
-  const createNewTask = () => {
-    // In a real implementation, this would navigate to task creation page
-    if (project) {
-      window.location.href = configuration.paths.tasks.new({
-        project_slug: project.slug,
-      });
-    }
-  };
+const TaskListCard: React.FC = () => {
+  const {
+    project,
+    isAdmin,
+    searchQuery,
+    setSearchQuery,
+    ordinalSearch,
+    setOrdinalSearch,
+    selectedAssignees,
+    isAssigneePopoverOpen,
+    setIsAssigneePopoverOpen,
+    prioritySortAscending,
+    members,
+    limitedTasks,
+    selectedStatus,
+    handleDragEnd,
+    handleStatusChange,
+    handleAssigneeChange,
+    toggleAssignee,
+    getSelectedAssigneesDisplayText,
+    createNewTask,
+    handlePriorityHeaderClick,
+    handleIdHeaderClick,
+    handleStatusHeaderClick,
+    getIdHeaderText,
+  } = useTaskListCard();
 
   return (
     <div className="relative h-full flex-shrink-0">
@@ -195,7 +141,7 @@ const TaskListCard = () => {
       >
         <CardHeader className="pb-3">
           <div className="flex flex-row items-center justify-between">
-            <CardTitle>Tasks ({sortedTasks.length})</CardTitle>
+            <CardTitle>Tasks ({limitedTasks.length})</CardTitle>
             <Button size="sm" onClick={createNewTask}>
               <Plus className="h-4 w-4 mr-2" />
               New Task
@@ -257,9 +203,31 @@ const TaskListCard = () => {
             {/* Fixed header row that doesn't scroll */}
             <div className="grid grid-cols-[30px_60px_50px_120px_1fr_120px] bg-muted px-2 py-2 text-xs font-medium">
               <div></div>
-              <div className="text-center">Priority</div>
-              <div className="text-center">ID</div>
-              <div>Status</div>
+              <button
+                onClick={handlePriorityHeaderClick}
+                className="text-center hover:underline cursor-pointer flex items-center justify-center"
+              >
+                Priority
+                {prioritySortAscending ? (
+                  <ChevronUp className="h-3 w-3 ml-1" />
+                ) : (
+                  <ChevronDown className="h-3 w-3 ml-1" />
+                )}
+              </button>
+              <button
+                onClick={handleIdHeaderClick}
+                className="text-center hover:underline cursor-pointer"
+              >
+                {getIdHeaderText()}
+              </button>
+              <button
+                onClick={handleStatusHeaderClick}
+                className="hover:underline cursor-pointer flex items-center"
+              >
+                {selectedStatus
+                  ? capitalizeFirstLetter(selectedStatus.replace("_", " "))
+                  : "Status"}
+              </button>
               <div>Title</div>
               <div>Assignee</div>
             </div>
@@ -271,13 +239,13 @@ const TaskListCard = () => {
             >
               <DragDropContext onDragEnd={handleDragEnd}>
                 <Droppable droppableId="tasks">
-                  {provided => (
+                  {(provided: DroppableProvided) => (
                     <div
                       {...provided.droppableProps}
                       ref={provided.innerRef}
                       className="divide-y"
                     >
-                      {sortedTasks.map((task, index) => {
+                      {limitedTasks.map((task, index) => {
                         const assigneeProfile = task.assignee_profile;
                         const taskPath = configuration.paths.tasks.view({
                           project_slug: project?.slug,
@@ -290,7 +258,7 @@ const TaskListCard = () => {
                             draggableId={task.id}
                             index={index}
                           >
-                            {provided => (
+                            {(provided: DraggableProvided) => (
                               <div
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
