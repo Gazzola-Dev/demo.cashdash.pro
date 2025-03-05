@@ -4,13 +4,20 @@ import {
   createMilestoneAction,
   getProjectMilestonesAction,
   setProjectCurrentMilestoneAction,
+  updateMilestoneAction,
 } from "@/actions/milestone.actions";
 import { useToast } from "@/hooks/use-toast";
 import useAppData from "@/hooks/useAppData";
 import { conditionalLog } from "@/lib/log.utils";
 import { MilestoneWithTasks } from "@/types/app.types";
-import { UseQueryOptions, useMutation, useQuery } from "@tanstack/react-query";
-import { useCallback } from "react";
+import { Tables } from "@/types/database.types";
+import {
+  UseQueryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { useCallback, useState } from "react";
 
 interface QueryConfig<TData>
   extends Omit<UseQueryOptions<TData, Error>, "queryKey" | "queryFn"> {}
@@ -138,6 +145,133 @@ export const useCreateMilestone = () => {
 
   return {
     createMilestone: () => mutate(),
+    isPending,
+  };
+};
+
+type Milestone = Tables<"milestones">;
+
+export const useUpdateMilestone = () => {
+  const hookName = "useUpdateMilestone";
+  const { toast } = useToast();
+  const { currentMilestone, refetch, setCurrentMilestone } = useAppData();
+  const [prevState, setPrevState] = useState<MilestoneWithTasks | null>(null);
+  const queryClient = useQueryClient();
+
+  // Get the project slug for milestone refetching
+  const projectSlug = useAppData().project?.slug;
+
+  const { data: milestones, refetch: refetchMilestones } =
+    useGetProjectMilestones(projectSlug);
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: async ({
+      milestoneId,
+      updates,
+    }: {
+      milestoneId: string;
+      updates: Partial<Milestone>;
+    }) => {
+      conditionalLog(hookName, { milestoneId, updates }, false);
+
+      // Make the API call
+      const { data, error } = await updateMilestoneAction(milestoneId, updates);
+      conditionalLog(hookName, { data, error }, false);
+
+      if (error) throw new Error(error);
+      return data;
+    },
+    onMutate: async ({ milestoneId, updates }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({
+        queryKey: ["projectMilestones", projectSlug],
+      });
+
+      // Save the previous milestone state
+      const previousMilestones = queryClient.getQueryData([
+        "projectMilestones",
+        projectSlug,
+      ]);
+
+      // Optimistically update the milestone in the milestones list
+      if (milestones) {
+        const optimisticMilestones = milestones.map(m =>
+          m.id === milestoneId ? { ...m, ...updates } : m,
+        );
+
+        queryClient.setQueryData(
+          ["projectMilestones", projectSlug],
+          optimisticMilestones,
+        );
+      }
+
+      // Optimistically update the current milestone
+      if (currentMilestone && currentMilestone.id === milestoneId) {
+        const updatedMilestone = {
+          ...currentMilestone,
+          ...updates,
+        };
+        setCurrentMilestone(updatedMilestone);
+      }
+
+      return { previousMilestones };
+    },
+    onSuccess: (data, { milestoneId }) => {
+      // Apply update to the current milestone in state
+      if (currentMilestone && currentMilestone.id === milestoneId) {
+        const updatedMilestone = {
+          ...currentMilestone,
+          ...data,
+        };
+        setCurrentMilestone(updatedMilestone);
+      }
+
+      toast({
+        title: "Milestone updated",
+        description: "Milestone has been successfully updated.",
+      });
+
+      // Refresh data to ensure consistency
+      refetchMilestones();
+      refetch();
+    },
+    onError: (error, _, context) => {
+      // Restore previous state if needed
+      if (context?.previousMilestones) {
+        queryClient.setQueryData(
+          ["projectMilestones", projectSlug],
+          context.previousMilestones,
+        );
+      }
+
+      toast({
+        title: "Failed to update milestone",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+    onSettled: () => {
+      // Always refetch to ensure server-client consistency
+      queryClient.invalidateQueries({
+        queryKey: ["projectMilestones", projectSlug],
+      });
+    },
+  });
+
+  const updateMilestone = useCallback(
+    (milestoneId: string, updates: Partial<Milestone>) => {
+      // Store current state for potential rollback
+      if (currentMilestone && currentMilestone.id === milestoneId) {
+        setPrevState(currentMilestone);
+      }
+
+      mutate({ milestoneId, updates });
+    },
+    [mutate, currentMilestone],
+  );
+
+  return {
+    updateMilestone,
     isPending,
   };
 };

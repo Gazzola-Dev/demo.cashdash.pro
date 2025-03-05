@@ -126,3 +126,30 @@ export const createMilestoneAction = async (
     return getActionResponse({ error });
   }
 };
+
+// New action for updating milestone
+export const updateMilestoneAction = async (
+  milestoneId: string,
+  updates: Partial<Milestone>,
+): Promise<ActionResponse<Milestone>> => {
+  const actionName = "updateMilestoneAction";
+
+  try {
+    const supabase = await getSupabaseServerActionClient();
+
+    const { data, error } = await supabase
+      .from("milestones")
+      .update(updates)
+      .eq("id", milestoneId)
+      .select()
+      .single();
+
+    conditionalLog(actionName, { data, error }, true);
+
+    if (error) throw error;
+    return getActionResponse({ data: data as Milestone });
+  } catch (error) {
+    conditionalLog(actionName, { error }, true);
+    return getActionResponse({ error });
+  }
+};

@@ -37,6 +37,7 @@ import {
   useCreateMilestone,
   useGetProjectMilestones,
   useSetCurrentMilestone,
+  useUpdateMilestone,
 } from "@/hooks/milestone.hooks";
 import useAppData from "@/hooks/useAppData";
 import { format, formatDistanceToNow, isValid } from "date-fns";
@@ -47,9 +48,9 @@ import {
   Clock,
   Plus,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { KeyboardEvent, useEffect, useState } from "react";
 
-const MilestoneCard = () => {
+function MilestoneCard() {
   const { project, currentMilestone, isAdmin, refetch } = useAppData();
   const [isOpen, setIsOpen] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);
@@ -57,6 +58,7 @@ const MilestoneCard = () => {
     useGetProjectMilestones(project?.slug);
   const { setProjectCurrentMilestone, isPending } = useSetCurrentMilestone();
   const { createMilestone, isPending: isCreating } = useCreateMilestone();
+  const { updateMilestone, isPending: isUpdating } = useUpdateMilestone();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -71,8 +73,8 @@ const MilestoneCard = () => {
   useEffect(() => {
     if (currentMilestone) {
       setFormData({
-        title: currentMilestone.title || "No milestone selected",
-        description: currentMilestone.description || "No description available",
+        title: currentMilestone.title || "",
+        description: currentMilestone.description || "",
         dueDate: currentMilestone.due_date
           ? new Date(currentMilestone.due_date).toISOString().split("T")[0]
           : "",
@@ -90,18 +92,89 @@ const MilestoneCard = () => {
     }));
   };
 
-  const handleBlur = () => {
-    // In a real implementation, this would call an API to update the milestone
+  const handleSaveField = (fieldName: string) => {
+    if (!currentMilestone) return;
+
+    // Only update if the field has changed
+    let updates: Record<string, any> = {};
+    let hasChanged = false;
+
+    if (fieldName === "title" && formData.title !== currentMilestone.title) {
+      updates.title = formData.title;
+      hasChanged = true;
+    } else if (
+      fieldName === "description" &&
+      formData.description !== currentMilestone.description
+    ) {
+      updates.description = formData.description;
+      hasChanged = true;
+    } else if (fieldName === "dueDate" && formData.dueDate) {
+      const currentDate = currentMilestone.due_date
+        ? new Date(currentMilestone.due_date).toISOString().split("T")[0]
+        : "";
+
+      if (formData.dueDate !== currentDate) {
+        updates.due_date = new Date(formData.dueDate).toISOString();
+        hasChanged = true;
+      }
+    }
+
+    if (hasChanged) {
+      // Optimistically update the UI immediately
+      const optimisticUpdate = { ...currentMilestone };
+      if (updates.title !== undefined) optimisticUpdate.title = updates.title;
+      if (updates.description !== undefined)
+        optimisticUpdate.description = updates.description;
+      if (updates.due_date !== undefined)
+        optimisticUpdate.due_date = updates.due_date;
+
+      // Call the API
+      updateMilestone(currentMilestone.id, updates);
+    }
+
     setEditingField(null);
+  };
+
+  const handleKeyDown = (
+    e: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
+    fieldName: string,
+  ) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSaveField(fieldName);
+    } else if (e.key === "Escape") {
+      setEditingField(null);
+      // Reset form data to current milestone values
+      if (currentMilestone) {
+        if (fieldName === "title") {
+          setFormData(prev => ({
+            ...prev,
+            title: currentMilestone.title || "",
+          }));
+        } else if (fieldName === "description") {
+          setFormData(prev => ({
+            ...prev,
+            description: currentMilestone.description || "",
+          }));
+        } else if (fieldName === "dueDate") {
+          setFormData(prev => ({
+            ...prev,
+            dueDate: currentMilestone.due_date
+              ? new Date(currentMilestone.due_date).toISOString().split("T")[0]
+              : "",
+          }));
+        }
+      }
+    }
+  };
+
+  const handleBlur = (fieldName: string) => {
+    handleSaveField(fieldName);
   };
 
   const handleMilestoneChange = (milestoneId: string) => {
     setProjectCurrentMilestone(milestoneId === "none" ? null : milestoneId);
     // Refetch data after a short delay to ensure the UI updates
-    setTimeout(() => {
-      refetch();
-      refetchMilestones();
-    }, 500);
   };
 
   const handleCreateMilestone = () => {
@@ -235,12 +308,16 @@ const MilestoneCard = () => {
                         name="title"
                         value={formData.title}
                         onChange={handleChange}
-                        onBlur={handleBlur}
+                        onBlur={() => handleBlur("title")}
+                        onKeyDown={e => handleKeyDown(e, "title")}
                         autoFocus
                         className="max-w-[200px]"
+                        placeholder="Enter milestone title"
                       />
                     ) : (
-                      currentMilestone.title
+                      currentMilestone.title ||
+                      formData.title ||
+                      "Untitled Milestone"
                     )}
                   </div>
                   {daysRemaining !== null && (
@@ -288,17 +365,22 @@ const MilestoneCard = () => {
                       name="description"
                       value={formData.description}
                       onChange={handleChange}
-                      onBlur={handleBlur}
+                      onBlur={() => handleBlur("description")}
+                      onKeyDown={e => handleKeyDown(e, "description")}
                       autoFocus
                       rows={3}
+                      placeholder="Enter milestone description"
                     />
                   ) : (
                     <p
                       className="text-sm cursor-text"
                       onClick={() => isAdmin && setEditingField("description")}
                     >
-                      {currentMilestone.description ||
-                        "No description provided"}
+                      {currentMilestone.description || formData.description || (
+                        <span className="text-muted-foreground italic">
+                          No description provided
+                        </span>
+                      )}
                     </p>
                   )}
                 </div>
@@ -313,7 +395,8 @@ const MilestoneCard = () => {
                       type="date"
                       value={formData.dueDate}
                       onChange={handleChange}
-                      onBlur={handleBlur}
+                      onBlur={() => handleBlur("dueDate")}
+                      onKeyDown={e => handleKeyDown(e, "dueDate")}
                       autoFocus
                     />
                   ) : (
@@ -321,12 +404,19 @@ const MilestoneCard = () => {
                       className="text-sm font-medium cursor-text"
                       onClick={() => isAdmin && setEditingField("dueDate")}
                     >
-                      {currentMilestone.due_date
-                        ? format(
-                            new Date(currentMilestone.due_date),
-                            "MMMM d, yyyy",
-                          )
-                        : "No due date set"}
+                      {formData.dueDate !== null &&
+                      currentMilestone.due_date !== null ? (
+                        format(
+                          new Date(
+                            formData.dueDate || currentMilestone.due_date,
+                          ),
+                          "MMMM d, yyyy",
+                        )
+                      ) : (
+                        <span className="text-muted-foreground italic">
+                          No due date set
+                        </span>
+                      )}
                     </p>
                   )}
                 </div>
@@ -409,6 +499,6 @@ const MilestoneCard = () => {
       </Dialog>
     </>
   );
-};
+}
 
 export default MilestoneCard;
