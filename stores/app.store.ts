@@ -17,7 +17,7 @@ const initialState = {
   isAdmin: false,
 };
 
-export const useAppStore = create<AppState>(set => ({
+export const useAppStore = create<AppState>((set, get) => ({
   ...initialState,
 
   setUser: user => set({ user }),

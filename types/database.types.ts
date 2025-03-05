@@ -1326,6 +1326,12 @@ export type Database = {
         }
         Returns: Json
       }
+      log_debug: {
+        Args: {
+          log_message: string
+        }
+        Returns: undefined
+      }
       mark_all_notifications_seen: {
         Args: {
           p_user_id: string

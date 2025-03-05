@@ -25,8 +25,8 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     setProject,
     setUser,
     reset,
-    currentMilestone,
     setCurrentMilestone,
+    project,
   } = useAppStore();
   const { refetch: refetchTask } = useGetTask(secondSegment);
   const { refetch: refetchAppData } = useGetAppData();
@@ -78,8 +78,23 @@ export const AppProvider = ({ children }: AppProviderProps) => {
       });
       updateProfile({ current_project_id: matchingProject.id });
       setTask(null);
+
+      // Reset current milestone when changing project
+      setCurrentMilestone(null);
+
+      // Refetch app data to get the correct milestone for the new project
+      refetchAppData();
     }
-  }, [firstSegment, projects, setProject, profile, updateProfile, setTask]);
+  }, [
+    firstSegment,
+    projects,
+    setProject,
+    profile,
+    updateProfile,
+    setTask,
+    setCurrentMilestone,
+    refetchAppData,
+  ]);
 
   // Handle task loading based on URL segments
   useEffect(() => {

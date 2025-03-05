@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  createMilestoneAction,
   getProjectMilestonesAction,
   setProjectCurrentMilestoneAction,
 } from "@/actions/milestone.actions";
@@ -39,8 +40,8 @@ export const useGetProjectMilestones = (
 
 export const useSetCurrentMilestone = () => {
   const { toast } = useToast();
-  const { project, refetch } = useAppData();
-  const { setCurrentMilestone } = useAppData();
+  const { project, refetch, setCurrentMilestone } = useAppData();
+  const { refetch: refetchMilestones } = useGetProjectMilestones(project?.slug);
 
   const { mutate, isPending } = useMutation({
     mutationFn: async ({
@@ -58,14 +59,20 @@ export const useSetCurrentMilestone = () => {
       if (error) throw new Error(error);
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       toast({
         title: "Success",
         description: "Current milestone updated successfully",
       });
 
-      // Refresh app data to get updated milestone
-      refetch();
+      // Immediately update the local state for a better user experience
+      if (variables.milestoneId === null) {
+        setCurrentMilestone(null);
+      } else {
+        // Refetch data to get updated milestone information
+        refetch();
+        refetchMilestones();
+      }
     },
     onError: error => {
       toast({
@@ -97,3 +104,42 @@ export const useSetCurrentMilestone = () => {
     isPending,
   };
 };
+
+export const useCreateMilestone = () => {
+  const { toast } = useToast();
+  const { project, refetch } = useAppData();
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: async () => {
+      if (!project?.id) {
+        throw new Error("No project selected");
+      }
+
+      const { data, error } = await createMilestoneAction(project.id);
+      if (error) throw new Error(error);
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "New milestone created and set as current",
+      });
+      // Refresh app data to get updated milestone
+      refetch();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create milestone",
+        variant: "destructive",
+      });
+    },
+  });
+
+  return {
+    createMilestone: () => mutate(),
+    isPending,
+  };
+};
+
+export default useCreateMilestone;

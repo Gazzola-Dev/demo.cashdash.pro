@@ -55,7 +55,18 @@ export const useGetAppData = (
         setSubscription(data.subscription);
         setAppRole(data.appRole);
         setProjectMemberRole(data.projectMemberRole);
-        setCurrentMilestone(data.currentMilestone);
+
+        // Update current milestone
+        if (data.currentMilestone) {
+          conditionalLog(
+            hookName,
+            { currentMilestone: data.currentMilestone },
+            false,
+          );
+          setCurrentMilestone(data.currentMilestone);
+        } else {
+          setCurrentMilestone(null);
+        }
       }
 
       return data;
