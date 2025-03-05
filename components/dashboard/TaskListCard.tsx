@@ -22,6 +22,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import configuration from "@/configuration";
+import { useUpdateTask, useUpdateTasksOrder } from "@/hooks/task.hooks";
 import { useIsMobile } from "@/hooks/use-mobile";
 import useAppData from "@/hooks/useAppData";
 import { capitalizeFirstLetter } from "@/lib/string.util";
@@ -40,9 +41,43 @@ import {
 import Link from "next/link";
 import { useState } from "react";
 
+const TaskSkeleton = ({ open }: { open: boolean }) => {
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-2 py-1.5 select-none text-sm bg-white dark:bg-gray-900 animate-pulse",
+        open ? "pl-4 pr-3 rounded-l-lg rounded-r-full" : "rounded-br-lg",
+      )}
+    >
+      {/* Priority number */}
+      <div className="w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded"></div>
+
+      {open && (
+        <>
+          {/* Status icon */}
+          <div className="w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded"></div>
+
+          {/* Task ID */}
+          <div className="w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded"></div>
+
+          {/* Task title */}
+          <div className="flex-1 h-6 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+
+          {/* Avatar */}
+          <div className="w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+        </>
+      )}
+    </div>
+  );
+};
+
+type TaskStatus = Database["public"]["Enums"]["task_status"];
+
 const TaskListCard = () => {
-  const { project, tasks, setTasks, isAdmin } = useAppData();
+  const { project, tasks, isAdmin } = useAppData();
   const isMobile = useIsMobile();
+  const { updateTask } = useUpdateTask();
+  const { updateTasksOrder } = useUpdateTasksOrder();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [ordinalSearch, setOrdinalSearch] = useState("");
@@ -81,37 +116,24 @@ const TaskListCard = () => {
     // Update ordinal priorities based on new positions
     const updatedItems = items.map((item, index) => ({
       ...item,
-      task: {
-        ...item,
-        ordinal_priority: index + 1,
-      },
+      ordinal_priority: index + 1,
     }));
 
-    setTasks(updatedItems);
+    // Call the hook to update the task order
+    updateTasksOrder(updatedItems);
   };
 
   const handleStatusChange = (taskId: string, newStatus: string) => {
-    setTasks(
-      tasks.map(task => ({
-        ...task,
-        status:
-          task.id === taskId
-            ? (newStatus as Database["public"]["Enums"]["task_status"])
-            : task.status,
-      })),
-    );
+    // Use the updateTask hook to update the task status
+    updateTask(taskId, { status: newStatus as TaskStatus });
   };
 
   const handleAssigneeChange = (
     taskId: string,
     newAssigneeId: string | null,
   ) => {
-    setTasks(
-      tasks.map(task => ({
-        ...task,
-        assignee: task.id === taskId ? newAssigneeId : task.assignee,
-      })),
-    );
+    // Use the updateTask hook to update the task assignee
+    updateTask(taskId, { assignee: newAssigneeId });
   };
 
   const toggleAssignee = (userId: string) => {

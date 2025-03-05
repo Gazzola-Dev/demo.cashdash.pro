@@ -1,0 +1,85 @@
+"use server";
+
+import getSupabaseServerActionClient from "@/clients/action-client";
+import getActionResponse from "@/lib/action.util";
+import { conditionalLog } from "@/lib/log.utils";
+import { ActionResponse } from "@/types/action.types";
+import { Tables } from "@/types/database.types";
+
+type Task = Tables<"tasks">;
+
+export const updateTaskAction = async (
+  taskId: string,
+  updates: Partial<Task>,
+): Promise<ActionResponse<Task>> => {
+  const actionName = "updateTaskAction";
+
+  try {
+    const supabase = await getSupabaseServerActionClient();
+
+    // Find the current task to get its slug
+    const { data: task, error: taskError } = await supabase
+      .from("tasks")
+      .select("slug")
+      .eq("id", taskId)
+      .single();
+
+    if (taskError) throw taskError;
+
+    const taskSlug = task.slug;
+
+    // Use the existing RPC function to update the task
+    const { data, error } = await supabase.rpc("update_task_data", {
+      task_slug: taskSlug,
+      task_updates: updates,
+    });
+
+    conditionalLog(actionName, { data, error }, true);
+
+    if (error) throw error;
+    return getActionResponse({ data: data as Task });
+  } catch (error) {
+    conditionalLog(actionName, { error }, true);
+    return getActionResponse({ error });
+  }
+};
+
+export const updateTasksOrderAction = async (
+  taskIds: string[],
+  priorities: number[],
+): Promise<ActionResponse<boolean>> => {
+  const actionName = "updateTasksOrderAction";
+
+  try {
+    const supabase = await getSupabaseServerActionClient();
+
+    // Create an array of updates to run in parallel
+    const updates = taskIds.map((taskId, index) => {
+      return supabase
+        .from("tasks")
+        .update({ ordinal_priority: priorities[index] })
+        .eq("id", taskId);
+    });
+
+    // Execute all updates in parallel
+    const results = await Promise.all(updates);
+
+    // Check if any update had an error
+    const hasError = results.some(result => result.error);
+
+    if (hasError) {
+      const errors = results
+        .filter(result => result.error)
+        .map(result => result.error);
+      throw new Error(
+        `Error updating task priorities: ${JSON.stringify(errors)}`,
+      );
+    }
+
+    conditionalLog(actionName, { success: true }, true);
+    return getActionResponse({ data: true });
+  } catch (error) {
+    conditionalLog(actionName, { error }, true);
+    return getActionResponse({ error });
+  }
+};
