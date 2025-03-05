@@ -1,4 +1,5 @@
 // hooks/useAppData.ts
+import { useGetAppData } from "@/hooks/app.hooks";
 import { useAppStore } from "@/stores/app.store";
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
@@ -6,6 +7,7 @@ import { useMemo } from "react";
 export const useAppData = () => {
   const store = useAppStore();
   const pathname = usePathname();
+  const { refetch } = useGetAppData();
 
   // Memoized selectors
   const currentProjectMembers = useMemo(() => {
@@ -46,6 +48,7 @@ export const useAppData = () => {
     appRole: store.appRole,
     isAdmin: store.appRole === "admin",
     projectMemberRole: store.projectMemberRole,
+    currentMilestone: store.currentMilestone,
 
     // Actions
     setUser: store.setUser,
@@ -59,6 +62,8 @@ export const useAppData = () => {
     setSubscription: store.setSubscription,
     setAppRole: store.setAppRole,
     setProjectMemberRole: store.setProjectMemberRole,
+    setCurrentMilestone: store.setCurrentMilestone,
+    refetch,
 
     // Derived data
     currentProjectMembers,

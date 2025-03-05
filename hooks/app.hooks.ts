@@ -33,6 +33,7 @@ export const useGetAppData = (
     setSubscription,
     setAppRole,
     setProjectMemberRole,
+    setCurrentMilestone,
   } = useAppStore();
 
   return useQuery({
@@ -54,6 +55,7 @@ export const useGetAppData = (
         setSubscription(data.subscription);
         setAppRole(data.appRole);
         setProjectMemberRole(data.projectMemberRole);
+        setCurrentMilestone(data.currentMilestone);
       }
 
       return data;

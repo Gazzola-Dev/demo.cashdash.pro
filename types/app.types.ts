@@ -2,9 +2,6 @@
 import { Tables } from "@/types/database.types";
 import { User } from "@supabase/supabase-js";
 
-// types/comment.types.ts
-import { ActionResponse } from "@/types/action.types";
-
 // Only include the profile fields needed for comments
 export interface CommentProfile {
   id: string;
@@ -17,8 +14,10 @@ export interface CommentWithProfile extends Tables<"comments"> {
   user: CommentProfile;
 }
 
-export interface CommentListResponse
-  extends ActionResponse<CommentWithProfile[]> {}
+export interface CommentListResponse {
+  data: CommentWithProfile[] | null;
+  error: string | null;
+}
 
 // Base Database Types
 type Profile = Tables<"profiles">;
@@ -29,6 +28,7 @@ type Task = Tables<"tasks">;
 type Subtask = Tables<"subtasks">;
 type ProjectSubscription = Tables<"project_subscriptions">;
 type UserRole = Tables<"user_roles">;
+type Milestone = Tables<"milestones">;
 
 // Define member with profile
 export interface ProjectMemberWithProfile extends ProjectMember {
@@ -57,6 +57,14 @@ export interface TaskComplete extends TaskWithAssignee {
   subtasks: Subtask[];
 }
 
+// Define milestone with tasks
+export interface MilestoneWithTasks extends Milestone {
+  tasks?: { id: string; title: string }[];
+  tasks_count?: number;
+  tasks_completed?: number;
+  is_current?: boolean;
+}
+
 // Define the main app state interface
 export interface AppState {
   // Core user data
@@ -71,6 +79,9 @@ export interface AppState {
   tasks: TaskWithAssignee[];
   task: TaskComplete | null;
   invitations: ProjectInvitation[];
+
+  // Milestone data
+  currentMilestone: MilestoneWithTasks | null;
 
   // Subscription data
   subscription: ProjectSubscription | null;
@@ -91,5 +102,6 @@ export interface AppState {
   setSubscription: (subscription: ProjectSubscription | null) => void;
   setAppRole: (appRole: string | null) => void;
   setProjectMemberRole: (projectMemberRole: string | null) => void;
+  setCurrentMilestone: (milestone: MilestoneWithTasks | null) => void;
   reset: () => void;
 }

@@ -25,6 +25,8 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     setProject,
     setUser,
     reset,
+    currentMilestone,
+    setCurrentMilestone,
   } = useAppStore();
   const { refetch: refetchTask } = useGetTask(secondSegment);
   const { refetch: refetchAppData } = useGetAppData();

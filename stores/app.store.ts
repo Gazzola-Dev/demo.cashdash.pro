@@ -13,6 +13,7 @@ const initialState = {
   subscription: null,
   appRole: null,
   projectMemberRole: null,
+  currentMilestone: null,
   isAdmin: false,
 };
 
@@ -29,6 +30,7 @@ export const useAppStore = create<AppState>(set => ({
   setSubscription: subscription => set({ subscription }),
   setAppRole: appRole => set({ appRole }),
   setProjectMemberRole: projectMemberRole => set({ projectMemberRole }),
+  setCurrentMilestone: currentMilestone => set({ currentMilestone }),
   reset: () => set(initialState),
 }));
 
@@ -48,6 +50,7 @@ export const useAppData = () => {
     subscription: store.subscription,
     appRole: store.appRole,
     projectMemberRole: store.projectMemberRole,
+    currentMilestone: store.currentMilestone,
     isAdmin: store.appRole === "admin",
 
     // Actions
@@ -61,6 +64,7 @@ export const useAppData = () => {
     setSubscription: store.setSubscription,
     setAppRole: store.setAppRole,
     setProjectMemberRole: store.setProjectMemberRole,
+    setCurrentMilestone: store.setCurrentMilestone,
     reset: store.reset,
   };
 };

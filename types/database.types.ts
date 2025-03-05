@@ -711,6 +711,7 @@ export type Database = {
       projects: {
         Row: {
           created_at: string
+          current_milestone_id: string | null
           description: string | null
           github_owner: string | null
           github_repo: string | null
@@ -730,6 +731,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          current_milestone_id?: string | null
           description?: string | null
           github_owner?: string | null
           github_repo?: string | null
@@ -749,6 +751,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          current_milestone_id?: string | null
           description?: string | null
           github_owner?: string | null
           github_repo?: string | null
@@ -766,7 +769,15 @@ export type Database = {
             | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "projects_current_milestone_id_fkey"
+            columns: ["current_milestone_id"]
+            isOneToOne: false
+            referencedRelation: "milestones"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       role_permissions: {
         Row: {
@@ -1282,6 +1293,12 @@ export type Database = {
         }
         Returns: Json[]
       }
+      list_project_milestones: {
+        Args: {
+          project_slug: string
+        }
+        Returns: Json[]
+      }
       list_project_tasks: {
         Args: {
           project_slug: string
@@ -1314,6 +1331,13 @@ export type Database = {
           p_user_id: string
         }
         Returns: undefined
+      }
+      set_project_current_milestone: {
+        Args: {
+          p_project_id: string
+          p_milestone_id: string
+        }
+        Returns: boolean
       }
       set_user_current_project: {
         Args: {
