@@ -7,7 +7,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import useAppData from "@/hooks/useAppData";
 import { conditionalLog } from "@/lib/log.utils";
-import { TaskWithAssignee } from "@/types/app.types";
+import { TaskComplete, TaskWithAssignee } from "@/types/app.types";
 import { Tables } from "@/types/database.types";
 import { useMutation } from "@tanstack/react-query";
 import { usePathname } from "next/navigation";
@@ -18,8 +18,11 @@ type Task = Tables<"tasks">;
 export const useUpdateTask = () => {
   const hookName = "useUpdateTask";
   const { toast } = useToast();
-  const { tasks, setTasks } = useAppData();
+  const { tasks, setTasks, task: currentTask, setTask, project } = useAppData();
   const [prevState, setPrevState] = useState<TaskWithAssignee[]>([]);
+  const [prevCurrentTask, setPrevCurrentTask] = useState<TaskComplete | null>(
+    null,
+  );
 
   const { mutate, isPending } = useMutation({
     mutationFn: async ({
@@ -31,12 +34,44 @@ export const useUpdateTask = () => {
     }) => {
       // Store current state for potential rollback
       setPrevState([...tasks]);
+      if (currentTask) {
+        setPrevCurrentTask({ ...currentTask });
+      }
 
-      // Optimistically update the UI
+      // Optimistically update the tasks array in the UI
       const updatedTasks = tasks.map(task =>
         task.id === taskId ? { ...task, ...updates } : task,
       );
       setTasks(updatedTasks);
+
+      // Optimistically update the current focused task if it's the one being updated
+      if (currentTask && currentTask.id === taskId) {
+        // For assignee updates, we need to handle the assignee_profile
+        if ("assignee" in updates) {
+          const assignee = updates.assignee;
+
+          // Find the assignee profile from the project members if available
+          let assigneeProfile = null;
+          if (project && assignee) {
+            const member = project.project_members?.find(
+              m => m.user_id === assignee,
+            );
+            assigneeProfile = member?.profile || null;
+          }
+
+          setTask({
+            ...currentTask,
+            ...updates,
+            assignee_profile: assignee ? assigneeProfile : null,
+          });
+        } else {
+          // For other updates, just merge the updates
+          setTask({
+            ...currentTask,
+            ...updates,
+          });
+        }
+      }
 
       // Make the actual API call
       const { data, error } = await updateTaskAction(taskId, updates);
@@ -55,6 +90,9 @@ export const useUpdateTask = () => {
       // Restore previous state on error
       if (prevState.length > 0) {
         setTasks(prevState);
+      }
+      if (prevCurrentTask) {
+        setTask(prevCurrentTask);
       }
       toast({
         title: "Failed to update task",

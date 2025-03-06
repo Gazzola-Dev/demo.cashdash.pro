@@ -8,11 +8,9 @@ import { useCallback } from "react";
 import slugify from "slugify";
 
 export const GitBranchCopy = ({
-  projectPrefix = "",
   taskOrdinalId = "",
   taskTitle = "",
 }: {
-  projectPrefix?: string | null;
   taskOrdinalId?: number | string | null;
   taskTitle?: string | null;
 }) => {
@@ -23,9 +21,7 @@ export const GitBranchCopy = ({
       if (e) {
         e.stopPropagation();
       }
-      const branchName = `${projectPrefix}${taskOrdinalId}-${slugify(
-        taskTitle ?? "",
-      )
+      const branchName = `${taskOrdinalId}-${slugify(taskTitle ?? "")
         .toLowerCase()
         .slice(0, 50)}`;
 
@@ -45,7 +41,7 @@ export const GitBranchCopy = ({
           });
         });
     },
-    [projectPrefix, taskOrdinalId, taskTitle, toast],
+    [taskOrdinalId, taskTitle, toast],
   );
 
   return (
