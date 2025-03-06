@@ -331,7 +331,7 @@ function MilestoneCard() {
                     />
                   ) : (
                     <p
-                      className="text-sm cursor-text bg-gray-50/70 rounded py-1 px-2"
+                      className="text-sm cursor-text bg-gray-50/70 dark:bg-gray-900 rounded py-1 px-2"
                       onClick={() => isAdmin && setEditingField("title")}
                     >
                       {currentMilestone.title || "Untitled Milestone"}
@@ -363,7 +363,7 @@ function MilestoneCard() {
                         />
                       ) : (
                         <p
-                          className="text-sm cursor-text bg-gray-50/70 rounded py-1 px-2"
+                          className="text-sm cursor-text bg-gray-50/70 dark:bg-gray-900 rounded py-1 px-2"
                           onClick={() =>
                             isAdmin && setEditingField("description")
                           }
@@ -398,7 +398,7 @@ function MilestoneCard() {
                         />
                       ) : (
                         <p
-                          className="text-sm cursor-text bg-gray-50/70 rounded py-1 px-2"
+                          className="text-sm cursor-text bg-gray-50/70 dark:bg-gray-900 rounded py-1 px-2"
                           onClick={() => isAdmin && setEditingField("dueDate")}
                         >
                           {currentMilestone.due_date !== null ? (
@@ -420,7 +420,7 @@ function MilestoneCard() {
                         <Label className="text-sm font-bold text-gray-600">
                           Start Date
                         </Label>
-                        <p className="text-sm bg-gray-50/70 rounded py-1 px-2">
+                        <p className="text-sm bg-gray-50/70 dark:bg-gray-900 rounded py-1 px-2">
                           {format(
                             new Date(currentMilestone.start_date),
                             "MMMM d, yyyy",
@@ -454,7 +454,7 @@ function MilestoneCard() {
                     <Label className="text-sm font-bold text-gray-600">
                       Time Remaining
                     </Label>
-                    <div className="flex items-center gap-1 text-sm bg-gray-50/70 rounded py-1 px-2">
+                    <div className="flex items-center gap-1 text-sm bg-gray-50/70 dark:bg-gray-900 rounded py-1 px-2">
                       <Clock className="h-4 w-4 text-muted-foreground" />
                       <span
                         className={

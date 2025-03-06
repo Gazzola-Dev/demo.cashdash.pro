@@ -189,7 +189,7 @@ const ProjectCard = () => {
               />
             ) : (
               <p
-                className="text-sm cursor-text bg-gray-50/70 rounded py-1 px-2"
+                className="text-sm cursor-text bg-gray-50/70 dark:bg-gray-900 rounded py-1 px-2"
                 onClick={() => isAdmin && setEditingField("name")}
               >
                 {project.name}
@@ -221,7 +221,7 @@ const ProjectCard = () => {
                   />
                 ) : (
                   <p
-                    className="text-sm cursor-text bg-gray-50/70 rounded py-1 px-2"
+                    className="text-sm cursor-text bg-gray-50/70 dark:bg-gray-900 rounded py-1 px-2"
                     onClick={() => isAdmin && setEditingField("description")}
                   >
                     {project.description || (
