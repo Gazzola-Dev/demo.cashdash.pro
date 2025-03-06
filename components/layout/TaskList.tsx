@@ -67,7 +67,8 @@ const TaskList = () => {
   const [selectedStatus, setSelectedStatus] = useState<TaskStatus | null>(null);
 
   const isLoading =
-    (user && !profile) || project?.id !== tasks?.[0]?.project_id;
+    (user && !profile) ||
+    (tasks.length && project?.id !== tasks?.[0]?.project_id);
 
   // Get all tasks from the project
   const members = project?.project_members || [];

@@ -2,17 +2,19 @@ import {
   getAppDataAction,
   getTaskAction,
   updateProfileAction,
+  updateProjectAction,
 } from "@/actions/app.actions";
 import { useToast } from "@/hooks/use-toast";
 import useAppData from "@/hooks/useAppData";
 import { conditionalLog } from "@/lib/log.utils";
 import { useAppStore } from "@/stores/app.store";
-import { AppState, TaskComplete } from "@/types/app.types";
+import { AppState, ProjectWithDetails, TaskComplete } from "@/types/app.types";
 import { Tables } from "@/types/database.types";
 import { UseQueryOptions, useMutation, useQuery } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 
 type Profile = Tables<"profiles">;
+type Project = Tables<"projects">;
 interface QueryConfig<TData>
   extends Omit<UseQueryOptions<TData, Error>, "queryKey" | "queryFn"> {}
 
@@ -154,6 +156,69 @@ export const useUpdateProfile = () => {
 
   return {
     updateProfile,
+    isPending,
+  };
+};
+
+export const useUpdateProject = () => {
+  const hookName = "useUpdateProject";
+  const { toast } = useToast();
+  const { project, setProject } = useAppData();
+  const [prevProject, setPrevProject] = useState<ProjectWithDetails | null>(
+    null,
+  );
+  const { refetch: refetchAppData } = useGetAppData();
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: async ({
+      projectId,
+      updates,
+    }: {
+      projectId: string;
+      updates: Partial<Project>;
+    }) => {
+      conditionalLog(hookName, { projectId, updates }, false);
+      setPrevProject(project);
+
+      // Optimistically update project
+      if (project) {
+        setProject({ ...project, ...updates });
+      }
+
+      const { data, error } = await updateProjectAction(projectId, updates);
+      if (error) throw new Error(error);
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Project updated",
+        description: "Project has been successfully updated.",
+      });
+      setPrevProject(null);
+      refetchAppData();
+    },
+    onError: error => {
+      // Restore previous project on error
+      if (prevProject) {
+        setProject(prevProject);
+      }
+      toast({
+        title: "Error updating project",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateProject = useCallback(
+    (projectId: string, updates: Partial<Project>) => {
+      mutate({ projectId, updates });
+    },
+    [mutate],
+  );
+
+  return {
+    updateProject,
     isPending,
   };
 };

@@ -8,6 +8,7 @@ import { AppState, MilestoneWithTasks, TaskComplete } from "@/types/app.types";
 import { Tables } from "@/types/database.types";
 
 type Profile = Tables<"profiles">;
+type Project = Tables<"projects">;
 type AppStateWithoutTask = Omit<AppState, "task">;
 
 export const getAppDataAction = async (): Promise<
@@ -184,10 +185,38 @@ export const updateProfileAction = async (
       p_updates: updates,
     });
 
-    conditionalLog(actionName, { data, error }, true), null;
+    conditionalLog(actionName, { data, error }, true);
 
     if (error) throw error;
     return getActionResponse({ data: data as Profile });
+  } catch (error) {
+    conditionalLog(actionName, { error }, true);
+    return getActionResponse({ error });
+  }
+};
+
+export const updateProjectAction = async (
+  projectId: string,
+  updates: Partial<Project>,
+): Promise<ActionResponse<Project>> => {
+  const actionName = "updateProjectAction";
+
+  try {
+    const supabase = await getSupabaseServerActionClient();
+
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError || !userData.user) throw new Error("Not authenticated");
+
+    const { data, error } = await supabase.rpc("update_project_data", {
+      p_project_id: projectId,
+      p_updates: updates,
+      p_user_id: userData.user.id,
+    });
+
+    conditionalLog(actionName, { data, error }, true);
+
+    if (error) throw error;
+    return getActionResponse({ data: data as Project });
   } catch (error) {
     conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });

@@ -12,12 +12,13 @@ import { Collapsible, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useUpdateProject } from "@/hooks/app.hooks";
 import useAppData from "@/hooks/useAppData";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { useState } from "react";
+import { KeyboardEvent, useEffect, useState } from "react";
 
-const ProjectDetailsCard = () => {
-  const { project, setProject, isAdmin } = useAppData();
+const ProjectCard = () => {
+  const { project, isAdmin } = useAppData();
   const [isOpen, setIsOpen] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -26,6 +27,20 @@ const ProjectDetailsCard = () => {
     prefix: project?.prefix || "",
     github_repo_url: project?.github_repo_url || "",
   });
+
+  const { updateProject, isPending } = useUpdateProject();
+
+  // Update formData when project changes
+  useEffect(() => {
+    if (project) {
+      setFormData({
+        name: project.name || "",
+        description: project.description || "",
+        prefix: project.prefix || "",
+        github_repo_url: project.github_repo_url || "",
+      });
+    }
+  }, [project]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -37,21 +52,78 @@ const ProjectDetailsCard = () => {
     }));
   };
 
-  const handleBlur = (fieldName: keyof typeof formData) => {
-    if (project) {
-      // Type assertion to ensure TypeScript knows this is a valid project field
-      const projectKey = fieldName as keyof typeof project;
+  const handleSaveField = (fieldName: string) => {
+    if (!project) return;
 
-      // Check if the value has changed before updating
-      if (formData[fieldName] !== project[projectKey]) {
-        // In a real implementation, this would be an API call
-        setProject({
-          ...project,
-          [fieldName]: formData[fieldName],
-        });
+    // Only update if the field has changed
+    let updates: Record<string, any> = {};
+    let hasChanged = false;
+
+    if (fieldName === "name" && formData.name !== project.name) {
+      updates.name = formData.name;
+      hasChanged = true;
+    } else if (
+      fieldName === "description" &&
+      formData.description !== project.description
+    ) {
+      updates.description = formData.description;
+      hasChanged = true;
+    } else if (fieldName === "prefix" && formData.prefix !== project.prefix) {
+      updates.prefix = formData.prefix;
+      hasChanged = true;
+    } else if (
+      fieldName === "github_repo_url" &&
+      formData.github_repo_url !== project.github_repo_url
+    ) {
+      updates.github_repo_url = formData.github_repo_url;
+      hasChanged = true;
+    }
+
+    if (hasChanged) {
+      updateProject(project.id, updates);
+    }
+
+    setEditingField(null);
+  };
+
+  const handleKeyDown = (
+    e: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
+    fieldName: string,
+  ) => {
+    if (e.key === "Enter" && fieldName !== "description") {
+      e.preventDefault();
+      handleSaveField(fieldName);
+    } else if (e.key === "Escape") {
+      setEditingField(null);
+      // Reset form data to current project values
+      if (project) {
+        if (fieldName === "name") {
+          setFormData(prev => ({
+            ...prev,
+            name: project.name || "",
+          }));
+        } else if (fieldName === "description") {
+          setFormData(prev => ({
+            ...prev,
+            description: project.description || "",
+          }));
+        } else if (fieldName === "prefix") {
+          setFormData(prev => ({
+            ...prev,
+            prefix: project.prefix || "",
+          }));
+        } else if (fieldName === "github_repo_url") {
+          setFormData(prev => ({
+            ...prev,
+            github_repo_url: project.github_repo_url || "",
+          }));
+        }
       }
     }
-    setEditingField(null);
+  };
+
+  const handleBlur = (fieldName: string) => {
+    handleSaveField(fieldName);
   };
 
   if (!project) {
@@ -76,7 +148,7 @@ const ProjectDetailsCard = () => {
           <div>
             <CardTitle>Project Details</CardTitle>
             <CardDescription>
-              {isOpen ? "Project information" : "Overview"}
+              {isOpen ? "Project information" : ""}
             </CardDescription>
           </div>
           <CollapsibleTrigger asChild>
@@ -100,7 +172,9 @@ const ProjectDetailsCard = () => {
 
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Project Name</Label>
+            <Label className="text-sm font-bold text-gray-600" htmlFor="name">
+              Project Name
+            </Label>
             {isAdmin && editingField === "name" ? (
               <Input
                 id="name"
@@ -108,11 +182,14 @@ const ProjectDetailsCard = () => {
                 value={formData.name}
                 onChange={handleChange}
                 onBlur={() => handleBlur("name")}
+                onKeyDown={e => handleKeyDown(e, "name")}
+                className="h-8"
                 autoFocus
+                disabled={isPending}
               />
             ) : (
               <p
-                className="text-sm font-medium cursor-text"
+                className="text-sm cursor-text bg-gray-50/70 rounded py-1 px-2"
                 onClick={() => isAdmin && setEditingField("name")}
               >
                 {project.name}
@@ -123,7 +200,12 @@ const ProjectDetailsCard = () => {
           {!isOpen ? null : (
             <>
               <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
+                <Label
+                  className="text-sm font-bold text-gray-600"
+                  htmlFor="description"
+                >
+                  Description
+                </Label>
                 {isAdmin && editingField === "description" ? (
                   <Textarea
                     id="description"
@@ -131,13 +213,15 @@ const ProjectDetailsCard = () => {
                     value={formData.description || ""}
                     onChange={handleChange}
                     onBlur={() => handleBlur("description")}
+                    onKeyDown={e => handleKeyDown(e, "description")}
                     placeholder="Project description"
                     rows={4}
                     autoFocus
+                    disabled={isPending}
                   />
                 ) : (
                   <p
-                    className="text-sm cursor-text"
+                    className="text-sm cursor-text bg-gray-50/70 rounded py-1 px-2"
                     onClick={() => isAdmin && setEditingField("description")}
                   >
                     {project.description || (
@@ -151,7 +235,7 @@ const ProjectDetailsCard = () => {
 
               {isAdmin && (
                 <>
-                  <div className="space-y-2">
+                  {/* <div className="space-y-2">
                     <Label htmlFor="prefix">Project Prefix</Label>
                     {editingField === "prefix" ? (
                       <Input
@@ -160,8 +244,10 @@ const ProjectDetailsCard = () => {
                         value={formData.prefix}
                         onChange={handleChange}
                         onBlur={() => handleBlur("prefix")}
+                        onKeyDown={e => handleKeyDown(e, "prefix")}
                         placeholder="E.g., PRJ"
                         autoFocus
+                        disabled={isPending}
                       />
                     ) : (
                       <p
@@ -171,9 +257,9 @@ const ProjectDetailsCard = () => {
                         {project.prefix}
                       </p>
                     )}
-                  </div>
+                  </div> */}
 
-                  <div className="space-y-2">
+                  {/* <div className="space-y-2">
                     <Label htmlFor="github_repo_url">GitHub Repository</Label>
                     {editingField === "github_repo_url" ? (
                       <Input
@@ -182,8 +268,10 @@ const ProjectDetailsCard = () => {
                         value={formData.github_repo_url || ""}
                         onChange={handleChange}
                         onBlur={() => handleBlur("github_repo_url")}
+                        onKeyDown={e => handleKeyDown(e, "github_repo_url")}
                         placeholder="https://github.com/username/repo"
                         autoFocus
+                        disabled={isPending}
                       />
                     ) : (
                       <p
@@ -207,7 +295,7 @@ const ProjectDetailsCard = () => {
                         )}
                       </p>
                     )}
-                  </div>
+                  </div> */}
                 </>
               )}
             </>
@@ -215,11 +303,16 @@ const ProjectDetailsCard = () => {
 
           <div className="pt-2 space-y-1">
             <p className="text-xs text-muted-foreground">
-              Created on: {new Date(project.created_at).toLocaleDateString()}
+              <span className="text-sm font-bold text-gray-600">
+                Created on:
+              </span>
+              {new Date(project.created_at).toLocaleDateString()}
             </p>
             {project.updated_at && (
               <p className="text-xs text-muted-foreground">
-                Last updated:{" "}
+                <span className="text-sm font-bold text-gray-600">
+                  Last updated:{" "}
+                </span>
                 {new Date(project.updated_at).toLocaleDateString()}
               </p>
             )}
@@ -230,4 +323,4 @@ const ProjectDetailsCard = () => {
   );
 };
 
-export default ProjectDetailsCard;
+export default ProjectCard;
