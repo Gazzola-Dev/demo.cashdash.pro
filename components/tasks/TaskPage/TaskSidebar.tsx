@@ -4,21 +4,44 @@
 import GitBranchCopy from "@/components/tasks/GitBranchCopy";
 import {
   AssigneeSelect,
-  PrioritySelect,
   StatusSelect,
 } from "@/components/tasks/TaskSelectComponents";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { useUpdateTask } from "@/hooks/task.hooks";
 import useAppData from "@/hooks/useAppData";
+import { Tables } from "@/types/database.types";
+
+type TaskStatus = Tables<"tasks">["status"];
 
 export function TaskSidebar() {
-  const { project: projectData, task } = useAppData();
-  const members = projectData?.project_members || [];
+  const { project, task, tasks } = useAppData();
+  const members = project?.project_members || [];
+  const { updateTask } = useUpdateTask();
 
-  const handleStatusChange = () => {};
+  // Find the highest ordinal_priority number in tasks array
+  const highestPriority = tasks.reduce(
+    (max, t) => Math.max(max, t.ordinal_priority),
+    0,
+  );
 
-  const handlePriorityChange = () => {};
+  const handleStatusChange = (value: TaskStatus) => {
+    if (task) {
+      updateTask(task.id, { status: value });
+    }
+  };
 
-  const handleAssigneeChange = (value: string | null) => {};
+  const handleAssigneeChange = (value: string | null) => {
+    if (task) {
+      updateTask(task.id, { assignee: value });
+    }
+  };
+
+  const handlePriorityChange = (value: number) => {
+    if (task) {
+      updateTask(task.id, { ordinal_priority: value });
+    }
+  };
 
   return (
     <Card>
@@ -34,7 +57,7 @@ export function TaskSidebar() {
                   members={members}
                 />
                 <GitBranchCopy
-                  projectPrefix={projectData?.prefix}
+                  projectPrefix={project?.prefix}
                   taskOrdinalId={task?.ordinal_id || 0}
                   taskTitle={task?.title || ""}
                 />
@@ -51,21 +74,18 @@ export function TaskSidebar() {
             />
           </div>
 
-          {/* Priority */}
+          {/* Priority - replaced select with number input */}
           <div>
             <label className="text-sm font-medium">Priority</label>
-            <PrioritySelect
-              value={task?.priority || "medium"}
-              onValueChange={handlePriorityChange}
+            <Input
+              type="number"
+              min={1}
+              max={highestPriority || 999}
+              value={task?.ordinal_priority || 1}
+              onChange={e => handlePriorityChange(parseInt(e.target.value, 10))}
+              className="w-32"
             />
           </div>
-
-          {/* Created */}
-          {/* <div className="pt-2">
-            <div className="text-sm text-muted-foreground">
-              Created {format(new Date(task?.created_at || ""), "MMM d, yyyy")}
-            </div>
-          </div> */}
         </div>
       </CardContent>
     </Card>

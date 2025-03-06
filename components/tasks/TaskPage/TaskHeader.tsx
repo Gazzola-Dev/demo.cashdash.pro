@@ -1,5 +1,9 @@
+// components/tasks/TaskPage/TaskHeader.tsx
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useUpdateTask } from "@/hooks/task.hooks";
 import useAppData from "@/hooks/useAppData";
 import { Edit2, Save } from "lucide-react";
 import { useState } from "react";
@@ -8,9 +12,12 @@ export function TaskHeader() {
   const { task } = useAppData();
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(task?.title || "");
+  const { updateTask } = useUpdateTask();
 
   const handleSave = () => {
-    // onSave(editedTitle);
+    if (task && editedTitle !== task.title) {
+      updateTask(task.id, { title: editedTitle });
+    }
     setIsEditing(false);
   };
 

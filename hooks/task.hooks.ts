@@ -10,7 +10,8 @@ import { conditionalLog } from "@/lib/log.utils";
 import { TaskWithAssignee } from "@/types/app.types";
 import { Tables } from "@/types/database.types";
 import { useMutation } from "@tanstack/react-query";
-import { useCallback, useState } from "react";
+import { usePathname } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 
 type Task = Tables<"tasks">;
 
@@ -132,3 +133,87 @@ export const useUpdateTasksOrder = () => {
     isPending,
   };
 };
+
+export function useTaskPage() {
+  const pathname = usePathname();
+  const { toast } = useToast();
+  const { task, tasks, project, currentMilestone } = useAppData();
+
+  // Check if task is new based on URL
+  const isNewTask = pathname.endsWith("/new");
+
+  // Check if there is a draft milestone
+  const hasDraftMilestone = currentMilestone?.status === "draft";
+
+  // Warning message state
+  const showWarning = isNewTask && !hasDraftMilestone;
+
+  // Get highest priority number among tasks
+  const highestPriority = tasks?.length
+    ? Math.max(...tasks.map(t => t.ordinal_priority))
+    : 1;
+
+  // Priority state
+  const [priorityValue, setPriorityValue] = useState<number>(
+    task?.ordinal_priority || Math.min(highestPriority + 1, 999),
+  );
+
+  // Update priority state when task changes
+  useEffect(() => {
+    if (task?.ordinal_priority) {
+      setPriorityValue(task.ordinal_priority);
+    }
+  }, [task?.ordinal_priority]);
+
+  // Update task priority
+  const updateTaskPriorityMutation = useMutation({
+    mutationFn: async (newPriority: number) => {
+      if (!task?.id) return null;
+
+      const { data, error } = await updateTaskAction(task.id, {
+        ordinal_priority: newPriority,
+      });
+
+      if (error) throw new Error(error);
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Priority updated",
+        description: "Task priority has been successfully updated.",
+      });
+    },
+    onError: error => {
+      toast({
+        title: "Failed to update priority",
+        description: error.message,
+        variant: "destructive",
+      });
+      // Revert to original value on error
+      if (task?.ordinal_priority) {
+        setPriorityValue(task.ordinal_priority);
+      }
+    },
+  });
+
+  const handlePriorityChange = (value: number) => {
+    // Validate bounds
+    const validValue = Math.max(1, Math.min(value, highestPriority));
+    setPriorityValue(validValue);
+
+    // Only update if the task exists (not a new task)
+    if (task?.id) {
+      updateTaskPriorityMutation.mutate(validValue);
+    }
+  };
+
+  return {
+    isNewTask,
+    hasDraftMilestone,
+    showWarning,
+    priorityValue,
+    highestPriority,
+    handlePriorityChange,
+    isPriorityUpdating: updateTaskPriorityMutation.isPending,
+  };
+}
