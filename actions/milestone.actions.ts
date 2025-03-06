@@ -153,3 +153,57 @@ export const updateMilestoneAction = async (
     return getActionResponse({ error });
   }
 };
+
+// In actions/milestone.actions.ts - Add this function
+export const deleteMilestoneAction = async (
+  milestoneId: string,
+): Promise<ActionResponse<boolean>> => {
+  const actionName = "deleteMilestoneAction";
+
+  try {
+    const supabase = await getSupabaseServerActionClient();
+
+    // First check if this milestone is currently set as current_milestone_id in any project
+    const { data: projectData, error: projectError } = await supabase
+      .from("projects")
+      .select("id")
+      .eq("current_milestone_id", milestoneId)
+      .maybeSingle();
+
+    conditionalLog(actionName, { projectData, projectError }, true);
+
+    if (projectError) throw projectError;
+
+    // If this milestone is set as current in a project, remove that reference first
+    if (projectData) {
+      const { error: updateError } = await supabase
+        .from("projects")
+        .update({ current_milestone_id: null })
+        .eq("id", projectData.id);
+
+      if (updateError) throw updateError;
+    }
+
+    // Delete all milestone_tasks associations
+    const { error: tasksError } = await supabase
+      .from("milestone_tasks")
+      .delete()
+      .eq("milestone_id", milestoneId);
+
+    if (tasksError) throw tasksError;
+
+    // Delete the milestone
+    const { error } = await supabase
+      .from("milestones")
+      .delete()
+      .eq("id", milestoneId);
+
+    conditionalLog(actionName, { error }, true);
+
+    if (error) throw error;
+    return getActionResponse({ data: true });
+  } catch (error) {
+    conditionalLog(actionName, { error }, true);
+    return getActionResponse({ error });
+  }
+};

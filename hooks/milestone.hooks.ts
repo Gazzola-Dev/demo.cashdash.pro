@@ -2,6 +2,7 @@
 
 import {
   createMilestoneAction,
+  deleteMilestoneAction,
   getProjectMilestonesAction,
   setProjectCurrentMilestoneAction,
   updateMilestoneAction,
@@ -272,6 +273,66 @@ export const useUpdateMilestone = () => {
 
   return {
     updateMilestone,
+    isPending,
+  };
+};
+
+// Add to hooks/milestone.hooks.ts
+export const useDeleteMilestone = () => {
+  const hookName = "useDeleteMilestone";
+  const { toast } = useToast();
+  const { refetch, setCurrentMilestone } = useAppData();
+  const { refetch: refetchMilestones } = useGetProjectMilestones(
+    useAppData().project?.slug,
+  );
+  const queryClient = useQueryClient();
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: async (milestoneId: string) => {
+      conditionalLog(hookName, { milestoneId }, false);
+
+      const { data, error } = await deleteMilestoneAction(milestoneId);
+      conditionalLog(hookName, { data, error }, false);
+
+      if (error) throw new Error(error);
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Milestone deleted",
+        description: "The milestone has been successfully deleted.",
+      });
+
+      // Clear current milestone in local state
+      setCurrentMilestone(null);
+
+      // Refresh data
+      refetchMilestones();
+      refetch();
+
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({
+        queryKey: ["projectMilestones"],
+      });
+    },
+    onError: error => {
+      toast({
+        title: "Failed to delete milestone",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteMilestone = useCallback(
+    (milestoneId: string) => {
+      mutate(milestoneId);
+    },
+    [mutate],
+  );
+
+  return {
+    deleteMilestone,
     isPending,
   };
 };

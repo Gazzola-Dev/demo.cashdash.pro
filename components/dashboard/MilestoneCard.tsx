@@ -35,6 +35,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import {
   useCreateMilestone,
+  useDeleteMilestone,
   useGetProjectMilestones,
   useSetCurrentMilestone,
   useUpdateMilestone,
@@ -47,6 +48,7 @@ import {
   ChevronUp,
   Clock,
   Plus,
+  Trash2,
 } from "lucide-react";
 import { KeyboardEvent, useEffect, useState } from "react";
 
@@ -59,7 +61,9 @@ function MilestoneCard() {
   const { setProjectCurrentMilestone, isPending } = useSetCurrentMilestone();
   const { createMilestone, isPending: isCreating } = useCreateMilestone();
   const { updateMilestone, isPending: isUpdating } = useUpdateMilestone();
+  const { deleteMilestone, isPending: isDeleting } = useDeleteMilestone();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     title: currentMilestone?.title || "No milestone selected",
@@ -182,6 +186,13 @@ function MilestoneCard() {
     createMilestone();
   };
 
+  const handleDeleteMilestone = () => {
+    setIsDeleteDialogOpen(false);
+    if (currentMilestone) {
+      deleteMilestone(currentMilestone.id);
+    }
+  };
+
   // Calculate milestone progress
   const getProgress = () => {
     if (!currentMilestone) return 0;
@@ -237,15 +248,28 @@ function MilestoneCard() {
             </div>
             <div className="flex items-center gap-2">
               {isAdmin && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsDialogOpen(true)}
-                  disabled={isCreating}
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add
-                </Button>
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsDialogOpen(true)}
+                    disabled={isCreating}
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add
+                  </Button>
+                  {currentMilestone && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsDeleteDialogOpen(true)}
+                      disabled={isDeleting}
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Delete
+                    </Button>
+                  )}
+                </>
               )}
               <CollapsibleTrigger asChild>
                 <Button
@@ -279,7 +303,6 @@ function MilestoneCard() {
                   <SelectValue placeholder="Select a milestone" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
                   {milestones?.map(milestone => (
                     <SelectItem key={milestone.id} value={milestone.id}>
                       {milestone.title}
@@ -477,7 +500,7 @@ function MilestoneCard() {
         </Card>
       </Collapsible>
 
-      {/* Confirmation Dialog */}
+      {/* Confirmation Dialog for Adding Milestone */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -493,6 +516,34 @@ function MilestoneCard() {
             </Button>
             <Button onClick={handleCreateMilestone} disabled={isCreating}>
               {isCreating ? "Creating..." : "Create Milestone"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmation Dialog for Deleting Milestone */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Milestone</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this milestone? This action cannot
+              be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteMilestone}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete Milestone"}
             </Button>
           </DialogFooter>
         </DialogContent>
