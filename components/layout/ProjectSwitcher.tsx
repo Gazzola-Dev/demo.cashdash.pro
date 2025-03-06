@@ -32,6 +32,7 @@ export function ProjectSwitcher() {
   const { isMobile, open, setOpen } = useSidebar();
   const { projects, project, profile } = useAppData();
   const [isOpen, setIsOpen] = useState(false);
+  const { isAdmin } = useAppData();
 
   const toggleSidebar = () => {
     setOpen(!open);
@@ -141,30 +142,32 @@ export function ProjectSwitcher() {
             </TooltipProvider>
             <DropdownMenuSeparator className="dark:border-gray-700" />
 
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <DropdownMenuItem
-                    className="cursor-pointer dark:hover:bg-gray-800 dark:focus:bg-gray-800"
-                    asChild
-                  >
-                    <Link
-                      href={configuration.paths.project.new}
-                      className="dark:text-gray-100"
+            {isAdmin && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuItem
+                      className="cursor-pointer dark:hover:bg-gray-800 dark:focus:bg-gray-800"
+                      asChild
                     >
-                      <Plus className="mr-2 size-4 dark:text-gray-400" />
-                      New Project
-                    </Link>
-                  </DropdownMenuItem>
-                </TooltipTrigger>
-                <TooltipContent
-                  side="right"
-                  className="dark:bg-gray-800 dark:text-gray-100"
-                >
-                  Create a new project
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+                      <Link
+                        href={configuration.paths.project.new}
+                        className="dark:text-gray-100"
+                      >
+                        <Plus className="mr-2 size-4 dark:text-gray-400" />
+                        New Project
+                      </Link>
+                    </DropdownMenuItem>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="right"
+                    className="dark:bg-gray-800 dark:text-gray-100"
+                  >
+                    Create a new project
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
