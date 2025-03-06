@@ -58,7 +58,7 @@ export const useGetAppData = (
         setAppRole(data.appRole);
         setProjectMemberRole(data.projectMemberRole);
 
-        // Update current milestone
+        // Update current milestone with clear logging
         if (data.currentMilestone) {
           conditionalLog(
             hookName,

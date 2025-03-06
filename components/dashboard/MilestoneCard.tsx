@@ -59,6 +59,15 @@ function MilestoneCard() {
     dueDate: currentMilestone?.due_date
       ? new Date(currentMilestone.due_date).toISOString().split("T")[0]
       : "",
+    status:
+      currentMilestone?.status ||
+      ("draft" as
+        | "draft"
+        | "backlog"
+        | "planned"
+        | "in_progress"
+        | "in_review"
+        | "completed"),
   });
 
   // Update form data when currentMilestone changes
@@ -70,6 +79,15 @@ function MilestoneCard() {
         dueDate: currentMilestone.due_date
           ? new Date(currentMilestone.due_date).toISOString().split("T")[0]
           : "",
+        status:
+          currentMilestone.status ||
+          ("draft" as
+            | "draft"
+            | "backlog"
+            | "planned"
+            | "in_progress"
+            | "in_review"
+            | "completed"),
       });
     }
   }, [currentMilestone]);
@@ -84,8 +102,28 @@ function MilestoneCard() {
     }));
   };
 
+  const handleStatusChange = (value: string) => {
+    if (!currentMilestone || !isAdmin) return;
+
+    // Ensure value is cast to the correct type
+    const typedValue = value as
+      | "draft"
+      | "backlog"
+      | "planned"
+      | "in_progress"
+      | "in_review"
+      | "completed";
+
+    setFormData(prev => ({
+      ...prev,
+      status: typedValue,
+    }));
+
+    updateMilestone(currentMilestone.id, { status: typedValue });
+  };
+
   const handleSaveField = (fieldName: string) => {
-    if (!currentMilestone) return;
+    if (!currentMilestone || !isAdmin) return;
 
     // Only update if the field has changed
     let updates: Record<string, any> = {};
@@ -165,16 +203,18 @@ function MilestoneCard() {
   };
 
   const handleMilestoneChange = (milestoneId: string) => {
+    if (!isAdmin) return;
     setProjectCurrentMilestone(milestoneId === "none" ? null : milestoneId);
-    // Refetch data after a short delay to ensure the UI updates
   };
 
   const handleCreateMilestone = () => {
+    if (!isAdmin) return;
     setIsDialogOpen(false);
     createMilestone();
   };
 
   const handleDeleteMilestone = () => {
+    if (!isAdmin) return;
     setIsDeleteDialogOpen(false);
     if (currentMilestone) {
       deleteMilestone(currentMilestone.id);
@@ -339,8 +379,36 @@ function MilestoneCard() {
                   )}
                 </div>
 
-                {!isOpen ? null : (
+                {isOpen && (
                   <>
+                    <div className="space-y-2">
+                      <Label
+                        className="text-sm font-bold text-gray-600"
+                        htmlFor="status"
+                      >
+                        Status
+                      </Label>
+                      <Select
+                        value={formData.status}
+                        onValueChange={handleStatusChange}
+                        disabled={!isAdmin || isPending}
+                      >
+                        <SelectTrigger className="h-8">
+                          <SelectValue placeholder="Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="draft">Draft</SelectItem>
+                          <SelectItem value="backlog">Backlog</SelectItem>
+                          <SelectItem value="planned">Planned</SelectItem>
+                          <SelectItem value="in_progress">
+                            In Progress
+                          </SelectItem>
+                          <SelectItem value="in_review">In Review</SelectItem>
+                          <SelectItem value="completed">Completed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
                     <div className="space-y-2">
                       <Label
                         className="text-sm font-bold text-gray-600"
@@ -449,7 +517,7 @@ function MilestoneCard() {
                   </div>
                 </div>
 
-                {daysRemaining !== null && (
+                {isOpen && daysRemaining !== null && (
                   <div className="space-y-2">
                     <Label className="text-sm font-bold text-gray-600">
                       Time Remaining
@@ -469,30 +537,32 @@ function MilestoneCard() {
                   </div>
                 )}
 
-                <div className="pt-2 space-y-1">
-                  <p className="text-xs text-muted-foreground">
-                    <span className="text-sm font-bold text-gray-600">
-                      Created:
-                    </span>{" "}
-                    {formatDistanceToNow(
-                      new Date(currentMilestone.created_at),
-                      {
-                        addSuffix: true,
-                      },
-                    )}
-                  </p>
-                  {currentMilestone.updated_at && (
+                {isOpen && (
+                  <div className="pt-2 space-y-1">
                     <p className="text-xs text-muted-foreground">
                       <span className="text-sm font-bold text-gray-600">
-                        Last updated:
+                        Created:
                       </span>{" "}
                       {formatDistanceToNow(
-                        new Date(currentMilestone.updated_at),
-                        { addSuffix: true },
+                        new Date(currentMilestone.created_at),
+                        {
+                          addSuffix: true,
+                        },
                       )}
                     </p>
-                  )}
-                </div>
+                    {currentMilestone.updated_at && (
+                      <p className="text-xs text-muted-foreground">
+                        <span className="text-sm font-bold text-gray-600">
+                          Last updated:
+                        </span>{" "}
+                        {formatDistanceToNow(
+                          new Date(currentMilestone.updated_at),
+                          { addSuffix: true },
+                        )}
+                      </p>
+                    )}
+                  </div>
+                )}
               </>
             )}
           </CardContent>

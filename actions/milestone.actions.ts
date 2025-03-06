@@ -73,7 +73,7 @@ export const setProjectCurrentMilestoneAction = async (
 
 type Milestone = Tables<"milestones">;
 
-// In actions/milestone.actions.ts
+// Updated createMilestoneAction to ensure milestone data is returned with is_current flag
 export const createMilestoneAction = async (
   projectId: string,
 ): Promise<ActionResponse<MilestoneWithTasks>> => {
@@ -111,7 +111,7 @@ export const createMilestoneAction = async (
 
     if (updateError) throw updateError;
 
-    // Return the milestone with an empty tasks array to match the expected type
+    // Return the milestone with is_current flag set to true
     const result: MilestoneWithTasks = {
       ...milestoneData,
       tasks: [],

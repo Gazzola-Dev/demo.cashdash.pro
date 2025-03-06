@@ -115,7 +115,8 @@ export const useSetCurrentMilestone = () => {
 
 export const useCreateMilestone = () => {
   const { toast } = useToast();
-  const { project, refetch } = useAppData();
+  const { project, refetch, setCurrentMilestone } = useAppData();
+  const queryClient = useQueryClient();
 
   const { mutate, isPending } = useMutation({
     mutationFn: async () => {
@@ -127,12 +128,23 @@ export const useCreateMilestone = () => {
       if (error) throw new Error(error);
       return data;
     },
-    onSuccess: () => {
+    onSuccess: data => {
       toast({
         title: "Success",
         description: "New milestone created and set as current",
       });
-      // Refresh app data to get updated milestone
+
+      // Immediately update the current milestone in the app state
+      if (data) {
+        setCurrentMilestone(data);
+      }
+
+      // Invalidate project milestones query to trigger a refetch
+      queryClient.invalidateQueries({
+        queryKey: ["projectMilestones", project?.slug],
+      });
+
+      // Refresh app data to get updated project info
       refetch();
     },
     onError: (error: any) => {
