@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useUpdateProject } from "@/hooks/app.hooks";
 import useAppData from "@/hooks/useAppData";
+import { cn } from "@/lib/utils";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { KeyboardEvent, useEffect, useState } from "react";
 
@@ -53,7 +54,7 @@ const ProjectCard = () => {
   };
 
   const handleSaveField = (fieldName: string) => {
-    if (!project) return;
+    if (!project || !isAdmin) return;
 
     // Only update if the field has changed
     let updates: Record<string, any> = {};
@@ -189,7 +190,10 @@ const ProjectCard = () => {
               />
             ) : (
               <p
-                className="text-sm cursor-text bg-gray-50/70 dark:bg-gray-900 rounded py-1 px-2"
+                className={cn(
+                  "text-sm bg-gray-50/70 dark:bg-gray-900 rounded py-1 px-2",
+                  isAdmin && "cursor-text",
+                )}
                 onClick={() => isAdmin && setEditingField("name")}
               >
                 {project.name}
@@ -221,7 +225,10 @@ const ProjectCard = () => {
                   />
                 ) : (
                   <p
-                    className="text-sm cursor-text bg-gray-50/70 dark:bg-gray-900 rounded py-1 px-2"
+                    className={cn(
+                      "text-sm bg-gray-50/70 dark:bg-gray-900 rounded py-1 px-2",
+                      isAdmin && "cursor-text",
+                    )}
                     onClick={() => isAdmin && setEditingField("description")}
                   >
                     {project.description || (
@@ -232,72 +239,6 @@ const ProjectCard = () => {
                   </p>
                 )}
               </div>
-
-              {isAdmin && (
-                <>
-                  {/* <div className="space-y-2">
-                    <Label htmlFor="prefix">Project Prefix</Label>
-                    {editingField === "prefix" ? (
-                      <Input
-                        id="prefix"
-                        name="prefix"
-                        value={formData.prefix}
-                        onChange={handleChange}
-                        onBlur={() => handleBlur("prefix")}
-                        onKeyDown={e => handleKeyDown(e, "prefix")}
-                        placeholder="E.g., PRJ"
-                        autoFocus
-                        disabled={isPending}
-                      />
-                    ) : (
-                      <p
-                        className="text-sm font-medium cursor-text"
-                        onClick={() => setEditingField("prefix")}
-                      >
-                        {project.prefix}
-                      </p>
-                    )}
-                  </div> */}
-
-                  {/* <div className="space-y-2">
-                    <Label htmlFor="github_repo_url">GitHub Repository</Label>
-                    {editingField === "github_repo_url" ? (
-                      <Input
-                        id="github_repo_url"
-                        name="github_repo_url"
-                        value={formData.github_repo_url || ""}
-                        onChange={handleChange}
-                        onBlur={() => handleBlur("github_repo_url")}
-                        onKeyDown={e => handleKeyDown(e, "github_repo_url")}
-                        placeholder="https://github.com/username/repo"
-                        autoFocus
-                        disabled={isPending}
-                      />
-                    ) : (
-                      <p
-                        className="text-sm break-all cursor-text"
-                        onClick={() => setEditingField("github_repo_url")}
-                      >
-                        {project.github_repo_url ? (
-                          <a
-                            href={project.github_repo_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 dark:text-blue-400 hover:underline"
-                            onClick={e => e.stopPropagation()}
-                          >
-                            {project.github_repo_url}
-                          </a>
-                        ) : (
-                          <span className="text-gray-500 italic">
-                            Not connected
-                          </span>
-                        )}
-                      </p>
-                    )}
-                  </div> */}
-                </>
-              )}
             </>
           )}
 
@@ -305,7 +246,7 @@ const ProjectCard = () => {
             <p className="text-xs text-muted-foreground">
               <span className="text-sm font-bold text-gray-600">
                 Created on:
-              </span>
+              </span>{" "}
               {new Date(project.created_at).toLocaleDateString()}
             </p>
             {project.updated_at && (
