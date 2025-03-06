@@ -271,11 +271,11 @@ function MilestoneCard() {
             <div>
               <CardTitle>Milestone</CardTitle>
               <CardDescription>
-                {isOpen ? "Milestone details" : "Progress tracker"}
+                {isOpen ? "Milestone details" : ""}
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
-              {isAdmin && (
+              {isAdmin && isOpen && (
                 <>
                   <Button
                     variant="outline"
@@ -320,7 +320,7 @@ function MilestoneCard() {
           </CardHeader>
 
           {/* Milestone selector for admins */}
-          {isAdmin && (
+          {isAdmin && isOpen && (
             <CardContent className="pt-0 pb-2">
               <Select
                 value={currentMilestone?.id || "none"}
