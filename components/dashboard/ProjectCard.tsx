@@ -164,7 +164,7 @@ const ProjectCard = () => {
                 </>
               ) : (
                 <>
-                  Project details <ChevronDown className="h-4 w-4" />
+                  Project <ChevronDown className="h-4 w-4" />
                 </>
               )}
             </Button>
@@ -241,23 +241,24 @@ const ProjectCard = () => {
               </div>
             </>
           )}
-
-          <div className="pt-2 space-y-1">
-            <p className="text-xs text-muted-foreground">
-              <span className="text-sm font-bold text-gray-600">
-                Created on:
-              </span>{" "}
-              {new Date(project.created_at).toLocaleDateString()}
-            </p>
-            {project.updated_at && (
+          {isOpen && (
+            <div className="pt-2 space-y-1">
               <p className="text-xs text-muted-foreground">
                 <span className="text-sm font-bold text-gray-600">
-                  Last updated:{" "}
-                </span>
-                {new Date(project.updated_at).toLocaleDateString()}
+                  Created on:
+                </span>{" "}
+                {new Date(project.created_at).toLocaleDateString()}
               </p>
-            )}
-          </div>
+              {project.updated_at && (
+                <p className="text-xs text-muted-foreground">
+                  <span className="text-sm font-bold text-gray-600">
+                    Last updated:{" "}
+                  </span>
+                  {new Date(project.updated_at).toLocaleDateString()}
+                </p>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
     </Collapsible>
