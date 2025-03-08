@@ -276,7 +276,6 @@ function MilestoneCard() {
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
               <CardTitle>Milestone</CardTitle>
-              <CardDescription>{isOpen ? "Details" : ""}</CardDescription>
             </div>
             <div className="flex items-center gap-2">
               {isAdmin && isOpen && (
@@ -324,8 +323,8 @@ function MilestoneCard() {
           </CardHeader>
 
           {/* Milestone selector for admins */}
-          {isAdmin && isOpen && (
-            <CardContent className="pt-4 pb-2">
+          {isAdmin && (
+            <CardContent className="pt-4 mb-4 pb-2">
               <Select
                 value={currentMilestone?.id || ""}
                 onValueChange={handleMilestoneChange}
@@ -357,7 +356,7 @@ function MilestoneCard() {
                   <>
                     <div className="space-y-2">
                       <Label
-                        className="text-sm font-bold text-gray-600"
+                        className="text-sm font-bold text-gray-500 dark:text-gray-400"
                         htmlFor="title"
                       >
                         Milestone Name
@@ -386,7 +385,7 @@ function MilestoneCard() {
 
                     <div className="space-y-2">
                       <Label
-                        className="text-sm font-bold text-gray-600"
+                        className="text-sm font-bold text-gray-500 dark:text-gray-400"
                         htmlFor="status"
                       >
                         Status
@@ -434,7 +433,7 @@ function MilestoneCard() {
 
                     <div className="space-y-2">
                       <Label
-                        className="text-sm font-bold text-gray-600"
+                        className="text-sm font-bold text-gray-500 dark:text-gray-400"
                         htmlFor="description"
                       >
                         Description
@@ -470,7 +469,7 @@ function MilestoneCard() {
 
                     <div className="space-y-2">
                       <Label
-                        className="text-sm font-bold text-gray-600"
+                        className="text-sm font-bold text-gray-500 dark:text-gray-400"
                         htmlFor="dueDate"
                       >
                         Due Date
@@ -508,7 +507,7 @@ function MilestoneCard() {
 
                     {currentMilestone.start_date && (
                       <div className="space-y-2">
-                        <Label className="text-sm font-bold text-gray-600">
+                        <Label className="text-sm font-bold text-gray-500 dark:text-gray-400">
                           Start Date
                         </Label>
                         <p className="text-sm bg-gray-50/70 dark:bg-gray-900 rounded py-1 px-2">
@@ -537,7 +536,7 @@ function MilestoneCard() {
                 </div>
                 {isOpen && isAdmin && daysRemaining !== null && (
                   <div className="space-y-2">
-                    <Label className="text-sm font-bold text-gray-600">
+                    <Label className="text-sm font-bold text-gray-500 dark:text-gray-400">
                       Time Remaining
                     </Label>
                     <div className="flex items-center gap-1 text-sm bg-gray-50/70 dark:bg-gray-900 rounded py-1 px-2">
@@ -557,7 +556,7 @@ function MilestoneCard() {
                 {isOpen && isAdmin && (
                   <div className="pt-2 space-y-1">
                     <p className="text-xs text-muted-foreground">
-                      <span className="text-sm font-bold text-gray-600">
+                      <span className="text-sm font-bold text-gray-500 dark:text-gray-400">
                         Created:
                       </span>{" "}
                       {formatDistanceToNow(
@@ -569,8 +568,8 @@ function MilestoneCard() {
                     </p>
                     {currentMilestone.updated_at && (
                       <p className="text-xs text-muted-foreground">
-                        <span className="text-sm font-bold text-gray-600">
-                          Last updated:
+                        <span className="text-sm font-bold text-gray-500 dark:text-gray-400">
+                          Updated:
                         </span>{" "}
                         {formatDistanceToNow(
                           new Date(currentMilestone.updated_at),

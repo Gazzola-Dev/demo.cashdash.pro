@@ -20,6 +20,7 @@ import { KeyboardEvent, useEffect, useState } from "react";
 
 const ProjectCard = () => {
   const { project, isAdmin } = useAppData();
+
   const [isOpen, setIsOpen] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -54,7 +55,14 @@ const ProjectCard = () => {
   };
 
   const handleSaveField = (fieldName: string) => {
-    if (!project || !isAdmin) return;
+    if (
+      !project ||
+      (!isAdmin &&
+        !isProjectManager &&
+        fieldName !== "description" &&
+        fieldName !== "name")
+    )
+      return;
 
     // Only update if the field has changed
     let updates: Record<string, any> = {};
@@ -138,6 +146,8 @@ const ProjectCard = () => {
     );
   }
 
+  const isProjectManager = false;
+
   return (
     <Collapsible
       open={isOpen}
@@ -148,7 +158,6 @@ const ProjectCard = () => {
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <div>
             <CardTitle>Project</CardTitle>
-            <CardDescription>{isOpen ? "Details" : ""}</CardDescription>
           </div>
           <CollapsibleTrigger asChild>
             <Button
@@ -171,10 +180,13 @@ const ProjectCard = () => {
 
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label className="text-sm font-bold text-gray-600" htmlFor="name">
+            <Label
+              className="text-sm font-bold text-gray-500 dark:text-gray-400"
+              htmlFor="name"
+            >
               Project Name
             </Label>
-            {isAdmin && editingField === "name" ? (
+            {(isProjectManager || isAdmin) && editingField === "name" ? (
               <Input
                 id="name"
                 name="name"
@@ -189,10 +201,12 @@ const ProjectCard = () => {
             ) : (
               <p
                 className={cn(
-                  "text-sm bg-gray-50/70 dark:bg-gray-900 rounded py-1 px-2",
+                  "text-sm bg-gray-50/50 dark:bg-gray-900 rounded py-1 px-2",
                   isAdmin && "cursor-text",
                 )}
-                onClick={() => isAdmin && setEditingField("name")}
+                onClick={() =>
+                  (isAdmin || isProjectManager) && setEditingField("name")
+                }
               >
                 {project.name}
               </p>
@@ -203,12 +217,13 @@ const ProjectCard = () => {
             <>
               <div className="space-y-2">
                 <Label
-                  className="text-sm font-bold text-gray-600"
+                  className="text-sm font-bold text-gray-500 dark:text-gray-400"
                   htmlFor="description"
                 >
                   Description
                 </Label>
-                {isAdmin && editingField === "description" ? (
+                {(isProjectManager || isAdmin) &&
+                editingField === "description" ? (
                   <Textarea
                     id="description"
                     name="description"
@@ -224,10 +239,13 @@ const ProjectCard = () => {
                 ) : (
                   <p
                     className={cn(
-                      "text-sm bg-gray-50/70 dark:bg-gray-900 rounded py-1 px-2",
-                      isAdmin && "cursor-text",
+                      "text-sm bg-gray-50/50 dark:bg-gray-900 rounded py-1 px-2",
+                      (isAdmin || isProjectManager) && "cursor-text",
                     )}
-                    onClick={() => isAdmin && setEditingField("description")}
+                    onClick={() =>
+                      (isAdmin || isProjectManager) &&
+                      setEditingField("description")
+                    }
                   >
                     {project.description || (
                       <span className="text-gray-500 italic">
@@ -242,15 +260,15 @@ const ProjectCard = () => {
           {isOpen && isAdmin && (
             <div className="pt-2 space-y-1">
               <p className="text-xs text-muted-foreground">
-                <span className="text-sm font-bold text-gray-600">
-                  Created on:
+                <span className="text-sm font-bold text-gray-500 dark:text-gray-400">
+                  Created:
                 </span>{" "}
                 {new Date(project.created_at).toLocaleDateString()}
               </p>
               {project.updated_at && (
                 <p className="text-xs text-muted-foreground">
-                  <span className="text-sm font-bold text-gray-600">
-                    Last updated:{" "}
+                  <span className="text-sm font-bold text-gray-500 dark:text-gray-400">
+                    Updated:{" "}
                   </span>
                   {new Date(project.updated_at).toLocaleDateString()}
                 </p>
