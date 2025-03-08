@@ -81,12 +81,6 @@ export function TaskPage() {
         <div className="flex-1 space-y-6">
           <div className="flex justify-between items-center">
             <TaskHeader />
-            {!isNewTask && (
-              <Button variant="destructive" size="sm" onClick={handleDelete}>
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete Task
-              </Button>
-            )}
           </div>
 
           <TaskDescription />

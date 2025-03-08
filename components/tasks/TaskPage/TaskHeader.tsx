@@ -1,28 +1,51 @@
-// components/tasks/TaskPage/TaskHeader.tsx
 "use client";
-
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useUpdateTask } from "@/hooks/task.hooks";
 import useAppData from "@/hooks/useAppData";
-import { Edit2, Save } from "lucide-react";
-import { useState } from "react";
+import { cn } from "@/lib/utils";
+import { KeyboardEvent, useEffect, useState } from "react";
+
+// Loading Skeleton Component
+const TaskHeaderSkeleton = () => {
+  return (
+    <div className="animate-pulse flex items-start justify-between gap-4 h-10 w-full">
+      <div className="flex-1">
+        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
+      </div>
+    </div>
+  );
+};
 
 export function TaskHeader() {
-  const { task } = useAppData();
+  const { task, user, profile, tasks, project } = useAppData();
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(task?.title || "");
-  const { updateTask } = useUpdateTask();
+
+  // Loading state determination based on the same logic as in TaskSidebar
+  const isLoading =
+    (user && !profile) ||
+    (tasks.length && project?.id !== tasks?.[0]?.project_id) ||
+    !task;
+
+  // Update editedTitle when task changes
+  useEffect(() => {
+    if (task?.title) {
+      setEditedTitle(task.title);
+    }
+  }, [task?.title]);
+
+  const { updateTask, isPending } = useUpdateTask();
 
   const handleSave = () => {
-    if (task && editedTitle !== task.title) {
-      updateTask(task.id, { title: editedTitle });
+    if (task && editedTitle.trim() !== task.title) {
+      updateTask(task.id, { title: editedTitle.trim() });
     }
     setIsEditing(false);
   };
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
+      event.preventDefault();
       handleSave();
     } else if (event.key === "Escape") {
       setEditedTitle(task?.title || "");
@@ -30,36 +53,41 @@ export function TaskHeader() {
     }
   };
 
+  const handleBlur = () => {
+    handleSave();
+  };
+
   return (
-    <div className="mb-6 flex items-start justify-between gap-4">
-      <div className="flex-1">
-        {isEditing ? (
-          <Input
-            value={editedTitle}
-            onChange={e => setEditedTitle(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="text-2xl font-semibold"
-            autoFocus
-          />
-        ) : (
-          <h1 className="text-2xl font-semibold">{task?.title || ""}</h1>
-        )}
-      </div>
-      <div className="flex-none">
-        {!isEditing ? (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsEditing(true)}
-          >
-            <Edit2 className="h-4 w-4" />
-          </Button>
-        ) : (
-          <Button variant="ghost" size="icon" onClick={handleSave}>
-            <Save className="h-4 w-4" />
-          </Button>
-        )}
-      </div>
+    <div className="mb-6 flex items-start justify-between gap-4w-full  w-full">
+      {isLoading ? (
+        <TaskHeaderSkeleton />
+      ) : (
+        <div className="flex-1">
+          {isEditing ? (
+            <Input
+              value={editedTitle}
+              onChange={e => setEditedTitle(e.target.value)}
+              onBlur={handleBlur}
+              onKeyDown={handleKeyDown}
+              className="text-2xl font-semibold"
+              autoFocus
+              disabled={isPending}
+            />
+          ) : (
+            <h1
+              className={cn(
+                "text-2xl font-semibold cursor-text",
+                "bg-gray-50/70 dark:bg-gray-900 rounded py-1 px-2",
+              )}
+              onClick={() => setIsEditing(true)}
+            >
+              {task?.title || ""}
+            </h1>
+          )}
+        </div>
+      )}
     </div>
   );
 }
+
+export default TaskHeader;

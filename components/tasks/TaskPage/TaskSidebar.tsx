@@ -112,8 +112,6 @@ export function TaskSidebar() {
   const { updateTask, isPending } = useUpdateTask();
   const { updateTasksOrder } = useUpdateTasksOrder();
 
-  console.log(task?.ordinal_priority);
-
   // Loading state determination based on the same logic as in TaskList
   const isLoading =
     (user && !profile) ||

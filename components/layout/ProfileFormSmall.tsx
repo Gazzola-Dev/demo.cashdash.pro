@@ -49,7 +49,6 @@ const ProfileFormSmall = () => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
     if (file && file.type.startsWith("image/")) {
-      console.log("Updating avatar with file:", file);
       setIsDialogOpen(false);
     } else {
       toast({
@@ -63,7 +62,6 @@ const ProfileFormSmall = () => {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith("image/")) {
-      console.log("Updating avatar with file:", file);
       setIsDialogOpen(false);
     }
   };
