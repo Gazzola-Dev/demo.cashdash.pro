@@ -39,12 +39,12 @@ export const createProjectAction = async (): Promise<
       p_owner_id: user.id,
     });
 
-    conditionalLog(actionName, { data, error }, true);
+    conditionalLog(actionName, { data, error }, true, null);
 
     if (error) throw error;
     return getActionResponse({ data: data as Project });
   } catch (error) {
-    conditionalLog(actionName, { error }, true);
+    conditionalLog(actionName, { error }, true, null);
     return getActionResponse({ error });
   }
 };
@@ -64,29 +64,21 @@ export const deleteProjectAction = async (
 
     if (userError || !user) throw new Error("Not authenticated");
 
-    // Verify the user has owner permissions for this project
-    const { data: memberData, error: memberError } = await supabase
-      .from("project_members")
-      .select("role")
-      .eq("project_id", projectId)
-      .eq("user_id", user.id)
-      .single();
+    // Use the new delete_project RPC function which handles permissions and deletion
+    const { data, error } = await supabase.rpc("delete_project", {
+      p_project_id: projectId,
+      p_user_id: user.id,
+    });
 
-    if (memberError) throw new Error("Failed to verify project permissions");
+    conditionalLog(actionName, { data, error }, true);
 
-    if (memberData.role !== "owner") {
+    if (error) throw error;
+
+    // If delete_project returns false, it means user doesn't have permission
+    if (!data) {
       throw new Error("Only project owners can delete projects");
     }
 
-    // Delete the project - the RLS policies will verify the user is the owner
-    const { error } = await supabase
-      .from("projects")
-      .delete()
-      .eq("id", projectId);
-
-    conditionalLog(actionName, { error }, true);
-
-    if (error) throw error;
     return getActionResponse({ data: true });
   } catch (error) {
     conditionalLog(actionName, { error }, true);
