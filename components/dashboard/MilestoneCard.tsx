@@ -37,7 +37,16 @@ import {
 } from "@/hooks/milestone.hooks";
 import useAppData from "@/hooks/useAppData";
 import { format, formatDistanceToNow, isValid } from "date-fns";
-import { ChevronDown, ChevronUp, Clock, Plus, Trash2 } from "lucide-react";
+import {
+  ArchiveIcon,
+  CheckCircle,
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  PlayCircle,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { KeyboardEvent, useEffect, useState } from "react";
 
 function MilestoneCard() {
@@ -61,13 +70,7 @@ function MilestoneCard() {
       : "",
     status:
       currentMilestone?.status ||
-      ("draft" as
-        | "draft"
-        | "backlog"
-        | "planned"
-        | "in_progress"
-        | "in_review"
-        | "completed"),
+      ("draft" as "draft" | "active" | "completed" | "archived"),
   });
 
   // Update form data when currentMilestone changes
@@ -81,13 +84,7 @@ function MilestoneCard() {
           : "",
         status:
           currentMilestone.status ||
-          ("draft" as
-            | "draft"
-            | "backlog"
-            | "planned"
-            | "in_progress"
-            | "in_review"
-            | "completed"),
+          ("draft" as "draft" | "active" | "completed" | "archived"),
       });
     }
   }, [currentMilestone]);
@@ -106,13 +103,7 @@ function MilestoneCard() {
     if (!currentMilestone || !isAdmin) return;
 
     // Ensure value is cast to the correct type
-    const typedValue = value as
-      | "draft"
-      | "backlog"
-      | "planned"
-      | "in_progress"
-      | "in_review"
-      | "completed";
+    const typedValue = value as "draft" | "active" | "completed" | "archived";
 
     setFormData(prev => ({
       ...prev,
@@ -120,6 +111,21 @@ function MilestoneCard() {
     }));
 
     updateMilestone(currentMilestone.id, { status: typedValue });
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "draft":
+        return null;
+      case "active":
+        return <PlayCircle className="h-4 w-4 text-green-500" />;
+      case "completed":
+        return <CheckCircle className="h-4 w-4 text-blue-500" />;
+      case "archived":
+        return <ArchiveIcon className="h-4 w-4 text-gray-500" />;
+      default:
+        return null;
+    }
   };
 
   const handleSaveField = (fieldName: string) => {
@@ -204,7 +210,7 @@ function MilestoneCard() {
 
   const handleMilestoneChange = (milestoneId: string) => {
     if (!isAdmin) return;
-    setProjectCurrentMilestone(milestoneId === "none" ? null : milestoneId);
+    setProjectCurrentMilestone(milestoneId);
   };
 
   const handleCreateMilestone = () => {
@@ -270,9 +276,7 @@ function MilestoneCard() {
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
               <CardTitle>Milestone</CardTitle>
-              <CardDescription>
-                {isOpen ? "Milestone details" : ""}
-              </CardDescription>
+              <CardDescription>{isOpen ? "Details" : ""}</CardDescription>
             </div>
             <div className="flex items-center gap-2">
               {isAdmin && isOpen && (
@@ -311,7 +315,7 @@ function MilestoneCard() {
                     </>
                   ) : (
                     <>
-                      Milestone details <ChevronDown className="h-4 w-4" />
+                      Details <ChevronDown className="h-4 w-4" />
                     </>
                   )}
                 </Button>
@@ -321,9 +325,9 @@ function MilestoneCard() {
 
           {/* Milestone selector for admins */}
           {isAdmin && isOpen && (
-            <CardContent className="pt-0 pb-2">
+            <CardContent className="pt-4 pb-2">
               <Select
-                value={currentMilestone?.id || "none"}
+                value={currentMilestone?.id || ""}
                 onValueChange={handleMilestoneChange}
                 disabled={isPending}
               >
@@ -331,7 +335,6 @@ function MilestoneCard() {
                   <SelectValue placeholder="Select a milestone" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
                   {milestones?.map(milestone => (
                     <SelectItem key={milestone.id} value={milestone.id}>
                       {milestone.title}
@@ -350,37 +353,37 @@ function MilestoneCard() {
               </div>
             ) : (
               <>
-                <div className="space-y-2">
-                  <Label
-                    className="text-sm font-bold text-gray-600"
-                    htmlFor="title"
-                  >
-                    Milestone Name
-                  </Label>
-                  {isAdmin && editingField === "title" ? (
-                    <Input
-                      id="title"
-                      name="title"
-                      value={formData.title}
-                      onChange={handleChange}
-                      onBlur={() => handleBlur("title")}
-                      onKeyDown={e => handleKeyDown(e, "title")}
-                      className="h-8"
-                      autoFocus
-                      disabled={isPending}
-                    />
-                  ) : (
-                    <p
-                      className="text-sm cursor-text bg-gray-50/70 dark:bg-gray-900 rounded py-1 px-2"
-                      onClick={() => isAdmin && setEditingField("title")}
-                    >
-                      {currentMilestone.title || "Untitled Milestone"}
-                    </p>
-                  )}
-                </div>
-
                 {isOpen && (
                   <>
+                    <div className="space-y-2">
+                      <Label
+                        className="text-sm font-bold text-gray-600"
+                        htmlFor="title"
+                      >
+                        Milestone Name
+                      </Label>
+                      {isAdmin && editingField === "title" ? (
+                        <Input
+                          id="title"
+                          name="title"
+                          value={formData.title}
+                          onChange={handleChange}
+                          onBlur={() => handleBlur("title")}
+                          onKeyDown={e => handleKeyDown(e, "title")}
+                          className="h-8"
+                          autoFocus
+                          disabled={isPending}
+                        />
+                      ) : (
+                        <p
+                          className="text-sm cursor-text bg-gray-50/70 dark:bg-gray-900 rounded py-1 px-2"
+                          onClick={() => isAdmin && setEditingField("title")}
+                        >
+                          {currentMilestone.title || "Untitled Milestone"}
+                        </p>
+                      )}
+                    </div>
+
                     <div className="space-y-2">
                       <Label
                         className="text-sm font-bold text-gray-600"
@@ -394,17 +397,37 @@ function MilestoneCard() {
                         disabled={!isAdmin || isPending}
                       >
                         <SelectTrigger className="h-8">
-                          <SelectValue placeholder="Status" />
+                          <SelectValue>
+                            <div className="flex items-center gap-2">
+                              {getStatusIcon(formData.status)}
+                              <span className="capitalize">
+                                {formData.status}
+                              </span>
+                            </div>
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="draft">Draft</SelectItem>
-                          <SelectItem value="backlog">Backlog</SelectItem>
-                          <SelectItem value="planned">Planned</SelectItem>
-                          <SelectItem value="in_progress">
-                            In Progress
+                          <SelectItem value="draft">
+                            <div className="flex items-center gap-2">Draft</div>
                           </SelectItem>
-                          <SelectItem value="in_review">In Review</SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
+                          <SelectItem value="active">
+                            <div className="flex items-center gap-2">
+                              <PlayCircle className="h-4 w-4 text-green-500" />
+                              Active
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="completed">
+                            <div className="flex items-center gap-2">
+                              <CheckCircle className="h-4 w-4 text-blue-500" />
+                              Completed
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="archived">
+                            <div className="flex items-center gap-2">
+                              <ArchiveIcon className="h-4 w-4 text-gray-500" />
+                              Archived
+                            </div>
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -498,11 +521,7 @@ function MilestoneCard() {
                     )}
                   </>
                 )}
-
                 <div className="space-y-2">
-                  <Label className="text-sm font-bold text-gray-600">
-                    Progress
-                  </Label>
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span>Progress ({progress}%)</span>
@@ -516,8 +535,7 @@ function MilestoneCard() {
                     <Progress value={progress} className="h-2" />
                   </div>
                 </div>
-
-                {isOpen && daysRemaining !== null && (
+                {isOpen && isAdmin && daysRemaining !== null && (
                   <div className="space-y-2">
                     <Label className="text-sm font-bold text-gray-600">
                       Time Remaining
@@ -536,8 +554,7 @@ function MilestoneCard() {
                     </div>
                   </div>
                 )}
-
-                {isOpen && (
+                {isOpen && isAdmin && (
                   <div className="pt-2 space-y-1">
                     <p className="text-xs text-muted-foreground">
                       <span className="text-sm font-bold text-gray-600">

@@ -1143,6 +1143,13 @@ export type Database = {
         }
         Returns: undefined
       }
+      direct_set_project_milestone: {
+        Args: {
+          p_project_id: string
+          p_milestone_id: string
+        }
+        Returns: boolean
+      }
       generate_unique_slug: {
         Args: {
           base_slug: string
@@ -1430,7 +1437,8 @@ export type Database = {
       contract_status: "active" | "completed" | "cancelled"
       dispute_status: "open" | "resolved"
       invitation_status: "pending" | "accepted" | "declined" | "expired"
-      milestone_status:
+      milestone_status: "draft" | "active" | "completed" | "archived"
+      milestone_status_old:
         | "draft"
         | "backlog"
         | "planned"

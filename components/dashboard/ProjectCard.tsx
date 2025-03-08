@@ -131,7 +131,7 @@ const ProjectCard = () => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Project Details</CardTitle>
+          <CardTitle>Details</CardTitle>
           <CardDescription>No project selected</CardDescription>
         </CardHeader>
       </Card>
@@ -147,10 +147,8 @@ const ProjectCard = () => {
       <Card className="h-full">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <div>
-            <CardTitle>Project Details</CardTitle>
-            <CardDescription>
-              {isOpen ? "Project information" : ""}
-            </CardDescription>
+            <CardTitle>Project</CardTitle>
+            <CardDescription>{isOpen ? "Details" : ""}</CardDescription>
           </div>
           <CollapsibleTrigger asChild>
             <Button
@@ -164,7 +162,7 @@ const ProjectCard = () => {
                 </>
               ) : (
                 <>
-                  Project <ChevronDown className="h-4 w-4" />
+                  Project Details <ChevronDown className="h-4 w-4" />
                 </>
               )}
             </Button>
@@ -241,7 +239,7 @@ const ProjectCard = () => {
               </div>
             </>
           )}
-          {isOpen && (
+          {isOpen && isAdmin && (
             <div className="pt-2 space-y-1">
               <p className="text-xs text-muted-foreground">
                 <span className="text-sm font-bold text-gray-600">
