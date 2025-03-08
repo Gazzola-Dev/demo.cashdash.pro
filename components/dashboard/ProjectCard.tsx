@@ -9,17 +9,27 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Collapsible, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useUpdateProject } from "@/hooks/app.hooks";
+import { useCreateProject, useDeleteProject } from "@/hooks/project.hooks";
 import useAppData from "@/hooks/useAppData";
 import { cn } from "@/lib/utils";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { KeyboardEvent, useEffect, useState } from "react";
 
 const ProjectCard = () => {
   const { project, isAdmin } = useAppData();
+  const router = useRouter();
 
   const [isOpen, setIsOpen] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);
@@ -30,7 +40,12 @@ const ProjectCard = () => {
     github_repo_url: project?.github_repo_url || "",
   });
 
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
   const { updateProject, isPending } = useUpdateProject();
+  const { createProject, isPending: isCreating } = useCreateProject();
+  const { deleteProject, isPending: isDeleting } = useDeleteProject();
 
   // Update formData when project changes
   useEffect(() => {
@@ -131,6 +146,17 @@ const ProjectCard = () => {
     }
   };
 
+  const handleCreateProject = () => {
+    setIsCreateDialogOpen(false);
+    createProject();
+  };
+
+  const handleDeleteProject = () => {
+    if (!project) return;
+    setIsDeleteDialogOpen(false);
+    deleteProject(project.id);
+  };
+
   const handleBlur = (fieldName: string) => {
     handleSaveField(fieldName);
   };
@@ -159,33 +185,57 @@ const ProjectCard = () => {
           <div>
             <CardTitle>Project</CardTitle>
           </div>
-          <CollapsibleTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex items-center gap-1"
-            >
-              {isOpen ? (
-                <>
-                  Collapse <ChevronUp className="h-4 w-4" />
-                </>
-              ) : (
-                <>
-                  Project Details <ChevronDown className="h-4 w-4" />
-                </>
-              )}
-            </Button>
-          </CollapsibleTrigger>
+          <div className="flex items-center gap-2">
+            {isAdmin && isOpen && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsCreateDialogOpen(true)}
+                  disabled={isCreating}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                  disabled={isDeleting}
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Delete
+                </Button>
+              </>
+            )}
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex items-center gap-1"
+              >
+                {isOpen ? (
+                  <>
+                    Collapse <ChevronUp className="h-4 w-4" />
+                  </>
+                ) : (
+                  <>
+                    Project Details <ChevronDown className="h-4 w-4" />
+                  </>
+                )}
+              </Button>
+            </CollapsibleTrigger>
+          </div>
         </CardHeader>
 
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label
+            <label
               className="text-sm font-bold text-gray-500 dark:text-gray-400"
               htmlFor="name"
             >
               Project Name
-            </Label>
+            </label>
             {(isProjectManager || isAdmin) && editingField === "name" ? (
               <Input
                 id="name"
@@ -216,12 +266,12 @@ const ProjectCard = () => {
           {!isOpen ? null : (
             <>
               <div className="space-y-2">
-                <Label
+                <label
                   className="text-sm font-bold text-gray-500 dark:text-gray-400"
                   htmlFor="description"
                 >
                   Description
-                </Label>
+                </label>
                 {(isProjectManager || isAdmin) &&
                 editingField === "description" ? (
                   <Textarea
@@ -277,6 +327,59 @@ const ProjectCard = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Confirmation Dialog for Adding Project */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Project</DialogTitle>
+            <DialogDescription>
+              This will create a new project with default settings. You can
+              customize it after creation.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsCreateDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleCreateProject} disabled={isCreating}>
+              {isCreating ? "Creating..." : "Create Project"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmation Dialog for Deleting Project */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Project</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this project? This action cannot
+              be undone and will remove all tasks, milestones, and other data
+              associated with this project.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteProject}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete Project"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Collapsible>
   );
 };
