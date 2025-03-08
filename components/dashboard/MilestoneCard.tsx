@@ -49,8 +49,37 @@ import {
 } from "lucide-react";
 import { KeyboardEvent, useEffect, useState } from "react";
 
+// Loading Skeleton Component
+const MilestoneCardSkeleton = () => {
+  return (
+    <Card className="h-full">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <div>
+          <CardTitle>Milestone</CardTitle>
+        </div>
+        <div className="h-6 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+      </CardHeader>
+
+      <CardContent className="space-y-4">
+        {/* Only showing progress section since it's visible when collapsed */}
+
+        <div className="h-6 w-full bg-gray-200 dark:bg-gray-700 rounded py-4"></div>
+
+        <div className="space-y-2">
+          <div className="flex justify-between">
+            <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
+          </div>
+          <div className="h-2 w-full bg-gray-200 dark:bg-gray-700 rounded"></div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
 function MilestoneCard() {
-  const { project, currentMilestone, isAdmin, refetch } = useAppData();
+  const { project, currentMilestone, isAdmin, user, profile, refetch } =
+    useAppData();
   const [isOpen, setIsOpen] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);
   const { data: milestones, refetch: refetchMilestones } =
@@ -61,6 +90,9 @@ function MilestoneCard() {
   const { deleteMilestone, isPending: isDeleting } = useDeleteMilestone();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  // Loading state determination
+  const isLoading = (user && !profile) || (milestones && !project);
 
   const [formData, setFormData] = useState({
     title: currentMilestone?.title || "No milestone selected",
@@ -253,6 +285,14 @@ function MilestoneCard() {
 
   const progress = getProgress();
   const daysRemaining = getDaysRemaining();
+
+  if (isLoading) {
+    return (
+      <div className="h-full w-full md:w-1/2">
+        <MilestoneCardSkeleton />
+      </div>
+    );
+  }
 
   if (!project) {
     return (

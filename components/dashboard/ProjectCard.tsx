@@ -27,9 +27,36 @@ import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { KeyboardEvent, useEffect, useState } from "react";
 
+// Loading Skeleton Component
+const ProjectCardSkeleton = () => {
+  return (
+    <Card className="h-full">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <div>
+          <CardTitle>Project</CardTitle>
+        </div>
+        <div className="h-6 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+      </CardHeader>
+
+      <CardContent className="space-y-4">
+        {/* Only showing project name since it's visible when collapsed */}
+        <div className="space-y-2">
+          <div className="h-5 w-28 bg-gray-200 dark:bg-gray-700 rounded"></div>
+          <div className="h-8 w-full bg-gray-200 dark:bg-gray-700 rounded"></div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
 const ProjectCard = () => {
-  const { project, isAdmin } = useAppData();
+  const { project, isAdmin, user, profile } = useAppData();
   const router = useRouter();
+
+  // Loading state determination
+  const isLoading = !!(user && !profile) || !!(user && !project);
+
+  console.log(isLoading);
 
   const [isOpen, setIsOpen] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);
@@ -161,6 +188,16 @@ const ProjectCard = () => {
     handleSaveField(fieldName);
   };
 
+  const isProjectManager = false;
+
+  if (isLoading) {
+    return (
+      <div className="h-full w-full md:w-1/2">
+        <ProjectCardSkeleton />
+      </div>
+    );
+  }
+
   if (!project) {
     return (
       <Card>
@@ -171,8 +208,6 @@ const ProjectCard = () => {
       </Card>
     );
   }
-
-  const isProjectManager = false;
 
   return (
     <Collapsible
@@ -258,7 +293,7 @@ const ProjectCard = () => {
                   (isAdmin || isProjectManager) && setEditingField("name")
                 }
               >
-                {project.name}
+                {project?.name}
               </p>
             )}
           </div>
@@ -297,7 +332,7 @@ const ProjectCard = () => {
                       setEditingField("description")
                     }
                   >
-                    {project.description || (
+                    {project?.description || (
                       <span className="text-gray-500 italic">
                         No description provided
                       </span>
@@ -313,14 +348,15 @@ const ProjectCard = () => {
                 <span className="text-sm font-bold text-gray-500 dark:text-gray-400">
                   Created:
                 </span>{" "}
-                {new Date(project.created_at).toLocaleDateString()}
+                {project?.created_at &&
+                  new Date(project?.created_at).toLocaleDateString()}
               </p>
-              {project.updated_at && (
+              {project?.updated_at && (
                 <p className="text-xs text-muted-foreground">
                   <span className="text-sm font-bold text-gray-500 dark:text-gray-400">
                     Updated:{" "}
                   </span>
-                  {new Date(project.updated_at).toLocaleDateString()}
+                  {new Date(project?.updated_at).toLocaleDateString()}
                 </p>
               )}
             </div>
