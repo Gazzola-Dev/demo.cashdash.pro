@@ -118,16 +118,35 @@ export const useUpdateTask = () => {
 export const useUpdateTasksOrder = () => {
   const hookName = "useUpdateTasksOrder";
   const { toast } = useToast();
-  const { tasks, setTasks } = useAppData();
+  const { tasks, setTasks, task: currentTask, setTask } = useAppData();
   const [prevState, setPrevState] = useState<TaskWithAssignee[]>([]);
+  const [prevCurrentTask, setPrevCurrentTask] = useState<TaskComplete | null>(
+    null,
+  );
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (orderedTasks: TaskWithAssignee[]) => {
       // Store current state for potential rollback
       setPrevState([...tasks]);
+      if (currentTask) {
+        setPrevCurrentTask({ ...currentTask });
+      }
 
       // Optimistically update the UI
       setTasks(orderedTasks);
+
+      // Update the current task if it exists in the ordered tasks
+      if (currentTask) {
+        const updatedCurrentTask = orderedTasks.find(
+          t => t.id === currentTask.id,
+        );
+        if (updatedCurrentTask) {
+          setTask({
+            ...currentTask,
+            ordinal_priority: updatedCurrentTask.ordinal_priority,
+          });
+        }
+      }
 
       // Prepare data for the server action
       const taskIds = orderedTasks.map(task => task.id);
@@ -150,6 +169,9 @@ export const useUpdateTasksOrder = () => {
       // Restore previous state on error
       if (prevState.length > 0) {
         setTasks(prevState);
+      }
+      if (prevCurrentTask) {
+        setTask(prevCurrentTask);
       }
       toast({
         title: "Failed to update task order",

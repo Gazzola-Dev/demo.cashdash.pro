@@ -1,7 +1,5 @@
 // components/tasks/TaskPage/TaskPage.tsx
 "use client";
-import { SubtaskSidebar } from "@/components/tasks/TaskPage/SubtaskSidebar";
-import { TaskComments } from "@/components/tasks/TaskPage/TaskComments";
 import { TaskDescription } from "@/components/tasks/TaskPage/TaskDescription";
 import { TaskHeader } from "@/components/tasks/TaskPage/TaskHeader";
 import TaskSidebar from "@/components/tasks/TaskPage/TaskSidebar";
@@ -93,13 +91,13 @@ export function TaskPage() {
 
           <TaskDescription />
 
-          <TaskComments />
+          {/* <TaskComments /> */}
         </div>
 
         <div className="w-80 space-y-6">
           <TaskSidebar />
 
-          <SubtaskSidebar />
+          {/* <SubtaskSidebar /> */}
         </div>
       </div>
     </div>

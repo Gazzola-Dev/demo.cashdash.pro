@@ -195,7 +195,7 @@ export default function RouteBreadcrumb() {
             <BreadcrumbItem className="h-full">
               <BreadcrumbPage className="h-full flex items-center px-2">
                 {task
-                  ? `${project?.prefix || "Task"}-${task?.ordinal_id}: ${capitalizeFirstLetter(task.title)}`
+                  ? `${task?.ordinal_id}: ${capitalizeFirstLetter(task.title)}`
                   : segments[1]}
               </BreadcrumbPage>
             </BreadcrumbItem>
