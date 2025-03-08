@@ -4,6 +4,7 @@ import {
   updateProfileAction,
   updateProjectAction,
 } from "@/actions/app.actions";
+import configuration from "@/configuration";
 import { useToast } from "@/hooks/use-toast";
 import useAppData from "@/hooks/useAppData";
 import { conditionalLog } from "@/lib/log.utils";
@@ -11,6 +12,7 @@ import { useAppStore } from "@/stores/app.store";
 import { AppState, ProjectWithDetails, TaskComplete } from "@/types/app.types";
 import { Tables } from "@/types/database.types";
 import { UseQueryOptions, useMutation, useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 
 type Profile = Tables<"profiles">;
@@ -163,6 +165,7 @@ export const useUpdateProfile = () => {
 export const useUpdateProject = () => {
   const hookName = "useUpdateProject";
   const { toast } = useToast();
+  const router = useRouter();
   const { project, setProject } = useAppData();
   const [prevProject, setPrevProject] = useState<ProjectWithDetails | null>(
     null,
@@ -180,6 +183,9 @@ export const useUpdateProject = () => {
       conditionalLog(hookName, { projectId, updates }, false);
       setPrevProject(project);
 
+      // Save the old slug to check if it changed
+      const oldSlug = project?.slug;
+
       // Optimistically update project
       if (project) {
         setProject({ ...project, ...updates });
@@ -187,15 +193,23 @@ export const useUpdateProject = () => {
 
       const { data, error } = await updateProjectAction(projectId, updates);
       if (error) throw new Error(error);
-      return data;
+      return { data, oldSlug };
     },
-    onSuccess: () => {
+    onSuccess: ({ data, oldSlug }) => {
       toast({
         title: "Project updated",
         description: "Project has been successfully updated.",
       });
       setPrevProject(null);
       refetchAppData();
+
+      // If the slug changed, redirect to the new project URL
+      if (data && "slug" in data && data.slug !== oldSlug) {
+        const newProjectRoute = configuration.paths.project.view({
+          project_slug: data.slug,
+        });
+        router.push(newProjectRoute);
+      }
     },
     onError: error => {
       // Restore previous project on error
