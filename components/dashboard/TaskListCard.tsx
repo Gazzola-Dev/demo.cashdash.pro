@@ -25,7 +25,7 @@ import configuration from "@/configuration";
 import { useTaskListCard } from "@/hooks/useTaskListCard";
 import { capitalizeFirstLetter } from "@/lib/string.util";
 import { cn } from "@/lib/utils";
-import { Database } from "@/types/database.types";
+import { useAppData } from "@/stores/app.store";
 import {
   DragDropContext,
   Draggable,
@@ -45,43 +45,76 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-type TaskStatus = Database["public"]["Enums"]["task_status"];
-
-interface TaskSkeletonProps {
-  open: boolean;
-}
-
-const TaskSkeleton = ({ open }: TaskSkeletonProps) => {
+// Loading Skeleton Component
+const TaskListCardSkeleton = () => {
   return (
-    <div
-      className={cn(
-        "flex items-center gap-2 py-1.5 select-none text-sm bg-white dark:bg-gray-900 animate-pulse",
-        open ? "pl-4 pr-3 rounded-l-lg rounded-r-full" : "rounded-br-lg",
-      )}
-    >
-      {/* Priority number */}
-      <div className="w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded"></div>
+    <Card className="h-full max-h-[calc(100vh-100px)] md:max-h-[40rem]">
+      <CardHeader className="pb-3">
+        <div className="flex flex-row items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <div className="h-6 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+          </CardTitle>
+          <div className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <div className="flex-1 h-9 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+          <div className="w-24 h-9 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+          <div className="w-[150px] h-9 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+        </div>
+      </CardHeader>
+      <CardContent className="flex-1 pb-3 flex flex-col overflow-hidden">
+        <div className="border rounded-md flex flex-col overflow-hidden h-full">
+          {/* Fixed header row that doesn't scroll */}
+          <div className="grid grid-cols-[30px_60px_50px_120px_1fr_120px] bg-muted px-2 py-2 text-xs font-medium">
+            <div className="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+            <div className="h-4 w-12 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+            <div className="h-4 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+            <div className="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+            <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+            <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+          </div>
 
-      {open && (
-        <>
-          {/* Status icon */}
-          <div className="w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded"></div>
-
-          {/* Task ID */}
-          <div className="w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded"></div>
-
-          {/* Task title */}
-          <div className="flex-1 h-6 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
-
-          {/* Avatar */}
-          <div className="w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
-        </>
-      )}
-    </div>
+          {/* Scrollable content */}
+          <div
+            className="overflow-y-auto"
+            style={{ maxHeight: "calc(100% - 32px)" }}
+          >
+            <div className="divide-y">
+              {/* Render 5 skeleton rows */}
+              {[...Array(5)].map((_, index) => (
+                <div
+                  key={index}
+                  className="grid grid-cols-[30px_60px_50px_120px_1fr_120px] items-center px-2 py-2"
+                >
+                  <div className="flex justify-center">
+                    <div className="h-5 w-5 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                  </div>
+                  <div className="text-center">
+                    <div className="h-5 w-10 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mx-auto"></div>
+                  </div>
+                  <div className="flex justify-center">
+                    <div className="h-5 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                  </div>
+                  <div>
+                    <div className="h-7 w-[110px] bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                  </div>
+                  <div className="overflow-hidden">
+                    <div className="h-5 w-3/4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                  </div>
+                  <div>
+                    <div className="h-7 w-[110px] bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
-const TaskListCard: React.FC = () => {
+const TaskListCard = () => {
   const {
     project,
     isAdmin,
@@ -106,11 +139,18 @@ const TaskListCard: React.FC = () => {
     handleIdHeaderClick,
     handleStatusHeaderClick,
     getIdHeaderText,
+    tasks,
   } = useTaskListCard();
+  const { user, profile } = useAppData();
+
+  // Loading state determination
+  const isLoading =
+    (user && !profile) ||
+    (tasks?.length && project?.id !== tasks?.[0]?.project_id);
 
   return (
     <div className="relative h-full flex-shrink-0">
-      {!isAdmin && (
+      {!isAdmin && !isLoading && (
         <div className="absolute inset-0 flex items-center justify-center z-10">
           <Card className="w-56 bg-white/70 dark:bg-black/70">
             <CardHeader className="flex items-center justify-between text-gray-700 dark:text-gray-300 gap-2 pb-5">
@@ -132,312 +172,332 @@ const TaskListCard: React.FC = () => {
           </Card>
         </div>
       )}
-      <Card
-        className={cn(
-          !isAdmin && "blur",
-          "flex flex-col",
-          "h-full max-h-[calc(100vh-100px)] md:max-h-[40rem]",
-        )}
-      >
-        <CardHeader className="pb-3">
-          <div className="flex flex-row items-center justify-between">
-            <CardTitle>Tasks ({limitedTasks.length})</CardTitle>
-            <Button size="sm" onClick={createNewTask}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Task
-            </Button>
-          </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <div className="flex-1 relative">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+
+      {isLoading ? (
+        <TaskListCardSkeleton />
+      ) : (
+        <Card
+          className={cn(
+            !isAdmin && "blur",
+            "flex flex-col",
+            "h-full max-h-[calc(100vh-100px)] md:max-h-[40rem]",
+          )}
+        >
+          <CardHeader className="pb-3">
+            <div className="flex flex-row items-center justify-between">
+              <CardTitle>Tasks ({limitedTasks.length})</CardTitle>
+              <Button size="sm" onClick={createNewTask}>
+                <Plus className="h-4 w-4 mr-2" />
+                New Task
+              </Button>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <div className="flex-1 relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search tasks..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="pl-8 min-w-[150px]"
+                />
+              </div>
               <Input
-                placeholder="Search tasks..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="pl-8 min-w-[150px]"
+                placeholder="Filter by ID..."
+                value={ordinalSearch}
+                onChange={e => setOrdinalSearch(e.target.value)}
+                className="w-24"
               />
-            </div>
-            <Input
-              placeholder="Filter by ID..."
-              value={ordinalSearch}
-              onChange={e => setOrdinalSearch(e.target.value)}
-              className="w-24"
-            />
-            <Popover
-              open={isAssigneePopoverOpen}
-              onOpenChange={setIsAssigneePopoverOpen}
-            >
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-[150px] justify-between">
-                  <span className="truncate">
-                    {getSelectedAssigneesDisplayText()}
-                  </span>
-                  <ChevronDown className="h-4 w-4 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[150px] p-0" align="end">
-                {members.map(member => (
-                  <div
-                    key={member.user_id}
-                    role="button"
-                    onClick={() => toggleAssignee(member.user_id)}
-                    className={cn(
-                      "flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent",
-                      selectedAssignees.includes(member.user_id) && "bg-accent",
-                    )}
+              <Popover
+                open={isAssigneePopoverOpen}
+                onOpenChange={setIsAssigneePopoverOpen}
+              >
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-[150px] justify-between"
                   >
-                    <span className="flex-1">
-                      {member.profile?.display_name}
+                    <span className="truncate">
+                      {getSelectedAssigneesDisplayText()}
                     </span>
-                    {selectedAssignees.includes(member.user_id) && (
-                      <Check className="h-4 w-4" />
-                    )}
-                  </div>
-                ))}
-              </PopoverContent>
-            </Popover>
-          </div>
-        </CardHeader>
-        <CardContent className="flex-1 pb-3 flex flex-col overflow-hidden">
-          <div className="border rounded-md flex flex-col overflow-hidden h-full">
-            {/* Fixed header row that doesn't scroll */}
-            <div className="grid grid-cols-[30px_60px_50px_120px_1fr_120px] bg-muted px-2 py-2 text-xs font-medium">
-              <div></div>
-              <button
-                onClick={handlePriorityHeaderClick}
-                className="text-center hover:underline cursor-pointer flex items-center justify-center"
-              >
-                Priority
-                {prioritySortAscending ? (
-                  <ChevronUp className="h-3 w-3 ml-1" />
-                ) : (
-                  <ChevronDown className="h-3 w-3 ml-1" />
-                )}
-              </button>
-              <button
-                onClick={handleIdHeaderClick}
-                className="text-center hover:underline cursor-pointer"
-              >
-                {getIdHeaderText()}
-              </button>
-              <button
-                onClick={handleStatusHeaderClick}
-                className="hover:underline cursor-pointer flex items-center"
-              >
-                {selectedStatus
-                  ? capitalizeFirstLetter(selectedStatus.replace("_", " "))
-                  : "Status"}
-              </button>
-              <div>Title</div>
-              <div>Assignee</div>
-            </div>
-
-            {/* Scrollable content */}
-            <div
-              className="overflow-y-auto"
-              style={{ maxHeight: "calc(100% - 32px)" }}
-            >
-              <DragDropContext onDragEnd={handleDragEnd}>
-                <Droppable droppableId="tasks">
-                  {(provided: DroppableProvided) => (
+                    <ChevronDown className="h-4 w-4 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[150px] p-0" align="end">
+                  {members.map(member => (
                     <div
-                      {...provided.droppableProps}
-                      ref={provided.innerRef}
-                      className="divide-y"
+                      key={member.user_id}
+                      role="button"
+                      onClick={() => toggleAssignee(member.user_id)}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent",
+                        selectedAssignees.includes(member.user_id) &&
+                          "bg-accent",
+                      )}
                     >
-                      {limitedTasks.map((task, index) => {
-                        const assigneeProfile = task.assignee_profile;
-                        const taskPath = configuration.paths.tasks.view({
-                          project_slug: project?.slug,
-                          ordinal_id: task.ordinal_id,
-                        });
+                      <span className="flex-1">
+                        {member.profile?.display_name}
+                      </span>
+                      {selectedAssignees.includes(member.user_id) && (
+                        <Check className="h-4 w-4" />
+                      )}
+                    </div>
+                  ))}
+                </PopoverContent>
+              </Popover>
+            </div>
+          </CardHeader>
+          <CardContent className="flex-1 pb-3 flex flex-col overflow-hidden">
+            <div className="border rounded-md flex flex-col overflow-hidden h-full">
+              {/* Fixed header row that doesn't scroll */}
+              <div className="grid grid-cols-[30px_60px_50px_120px_1fr_120px] bg-muted px-2 py-2 text-xs font-medium">
+                <div></div>
+                <button
+                  onClick={handlePriorityHeaderClick}
+                  className="text-center hover:underline cursor-pointer flex items-center justify-center"
+                >
+                  Priority
+                  {prioritySortAscending ? (
+                    <ChevronUp className="h-3 w-3 ml-1" />
+                  ) : (
+                    <ChevronDown className="h-3 w-3 ml-1" />
+                  )}
+                </button>
+                <button
+                  onClick={handleIdHeaderClick}
+                  className="text-center hover:underline cursor-pointer"
+                >
+                  {getIdHeaderText()}
+                </button>
+                <button
+                  onClick={handleStatusHeaderClick}
+                  className="hover:underline cursor-pointer flex items-center"
+                >
+                  {selectedStatus
+                    ? capitalizeFirstLetter(selectedStatus.replace("_", " "))
+                    : "Status"}
+                </button>
+                <div>Title</div>
+                <div>Assignee</div>
+              </div>
 
-                        return (
-                          <Draggable
-                            key={task.id}
-                            draggableId={task.id}
-                            index={index}
-                          >
-                            {(provided: DraggableProvided) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                className="grid grid-cols-[30px_60px_50px_120px_1fr_120px] items-center px-2 py-2"
-                              >
-                                <div {...provided.dragHandleProps}>
-                                  <Menu className="size-4 text-gray-500 hover:text-black dark:hover:text-white cursor-grab" />
-                                </div>
-                                <div className="text-center">
-                                  <span className="capitalize text-sm">
-                                    <span className="text-base">
-                                      {task.ordinal_priority}{" "}
+              {/* Scrollable content */}
+              <div
+                className="overflow-y-auto"
+                style={{ maxHeight: "calc(100% - 32px)" }}
+              >
+                <DragDropContext onDragEnd={handleDragEnd}>
+                  <Droppable droppableId="tasks">
+                    {(provided: DroppableProvided) => (
+                      <div
+                        {...provided.droppableProps}
+                        ref={provided.innerRef}
+                        className="divide-y"
+                      >
+                        {limitedTasks.map((task, index) => {
+                          const assigneeProfile = task.assignee_profile;
+                          const taskPath = configuration.paths.tasks.view({
+                            project_slug: project?.slug,
+                            ordinal_id: task.ordinal_id,
+                          });
+
+                          return (
+                            <Draggable
+                              key={task.id}
+                              draggableId={task.id}
+                              index={index}
+                            >
+                              {(provided: DraggableProvided) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  className="grid grid-cols-[30px_60px_50px_120px_1fr_120px] items-center px-2 py-2"
+                                >
+                                  <div {...provided.dragHandleProps}>
+                                    <Menu className="size-4 text-gray-500 hover:text-black dark:hover:text-white cursor-grab" />
+                                  </div>
+                                  <div className="text-center">
+                                    <span className="capitalize text-sm">
+                                      <span className="text-base">
+                                        {task.ordinal_priority}{" "}
+                                      </span>
+                                      <span className="text-xs text-gray-600 dark:text-gray-300 lowercase">
+                                        {task.ordinal_priority === 1
+                                          ? "st"
+                                          : task.ordinal_priority === 2
+                                            ? "nd"
+                                            : task.ordinal_priority === 3
+                                              ? "rd"
+                                              : "th"}
+                                      </span>
                                     </span>
-                                    <span className="text-xs text-gray-600 dark:text-gray-300 lowercase">
-                                      {task.ordinal_priority === 1
-                                        ? "st"
-                                        : task.ordinal_priority === 2
-                                          ? "nd"
-                                          : task.ordinal_priority === 3
-                                            ? "rd"
-                                            : "th"}
-                                    </span>
-                                  </span>
-                                </div>
-                                <div className="flex justify-center">
-                                  <Link
-                                    href={taskPath}
-                                    className="border-b border-gray-700 dark:border-gray-400 px-1 rounded-bl py-0.5"
-                                  >
-                                    {task.ordinal_id}
-                                  </Link>
-                                </div>
-                                <div>
-                                  <Select
-                                    value={task.status}
-                                    onValueChange={value =>
-                                      handleStatusChange(task.id, value)
-                                    }
-                                  >
-                                    <SelectTrigger className="w-[110px]">
-                                      <SelectValue>
-                                        <div className="flex items-center gap-1">
-                                          <StatusIconSimple
-                                            status={task.status}
-                                          />
-                                          <span className="capitalize text-xs">
-                                            {task.status.replace("_", " ")}
-                                          </span>
-                                        </div>
-                                      </SelectValue>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {[
-                                        "backlog",
-                                        "todo",
-                                        "in_progress",
-                                        "in_review",
-                                        "completed",
-                                      ].map(status => (
-                                        <SelectItem key={status} value={status}>
-                                          <div className="flex items-center gap-2">
-                                            <StatusIconSimple status={status} />
-                                            <span className="capitalize">
-                                              {status.replace("_", " ")}
+                                  </div>
+                                  <div className="flex justify-center">
+                                    <Link
+                                      href={taskPath}
+                                      className="border-b border-gray-700 dark:border-gray-400 px-1 rounded-bl py-0.5"
+                                    >
+                                      {task.ordinal_id}
+                                    </Link>
+                                  </div>
+                                  <div>
+                                    <Select
+                                      value={task.status}
+                                      onValueChange={value =>
+                                        handleStatusChange(task.id, value)
+                                      }
+                                    >
+                                      <SelectTrigger className="w-[110px]">
+                                        <SelectValue>
+                                          <div className="flex items-center gap-1">
+                                            <StatusIconSimple
+                                              status={task.status}
+                                            />
+                                            <span className="capitalize text-xs">
+                                              {task.status.replace("_", " ")}
                                             </span>
                                           </div>
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                <div className="overflow-hidden">
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Link
-                                          href={taskPath}
-                                          className="hover:underline block truncate"
-                                        >
+                                        </SelectValue>
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {[
+                                          "backlog",
+                                          "todo",
+                                          "in_progress",
+                                          "in_review",
+                                          "completed",
+                                        ].map(status => (
+                                          <SelectItem
+                                            key={status}
+                                            value={status}
+                                          >
+                                            <div className="flex items-center gap-2">
+                                              <StatusIconSimple
+                                                status={status}
+                                              />
+                                              <span className="capitalize">
+                                                {status.replace("_", " ")}
+                                              </span>
+                                            </div>
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  <div className="overflow-hidden">
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Link
+                                            href={taskPath}
+                                            className="hover:underline block truncate"
+                                          >
+                                            {task.title}
+                                          </Link>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
                                           {task.title}
-                                        </Link>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        {task.title}
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                </div>
-                                <div>
-                                  <Select
-                                    value={task.assignee || "unassigned"}
-                                    onValueChange={value =>
-                                      handleAssigneeChange(
-                                        task.id,
-                                        value === "unassigned" ? null : value,
-                                      )
-                                    }
-                                  >
-                                    <SelectTrigger className="w-[110px]">
-                                      <SelectValue>
-                                        <div className="flex items-center gap-1">
-                                          <Avatar className="h-5 w-5">
-                                            <AvatarImage
-                                              src={
-                                                assigneeProfile?.avatar_url ||
-                                                undefined
-                                              }
-                                            />
-                                            <AvatarFallback className="text-xs bg-gray-200 dark:bg-gray-700 dark:text-gray-100">
-                                              {assigneeProfile
-                                                ? capitalizeFirstLetter(
-                                                    assigneeProfile.display_name?.slice(
-                                                      0,
-                                                      2,
-                                                    ) || "??",
-                                                  )
-                                                : "NA"}
-                                            </AvatarFallback>
-                                          </Avatar>
-                                          <span className="text-xs truncate">
-                                            {assigneeProfile?.display_name ||
-                                              "Unassigned"}
-                                          </span>
-                                        </div>
-                                      </SelectValue>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="unassigned">
-                                        <div className="flex items-center gap-2">
-                                          <Avatar className="h-6 w-6">
-                                            <AvatarFallback>UA</AvatarFallback>
-                                          </Avatar>
-                                          <span>Unassigned</span>
-                                        </div>
-                                      </SelectItem>
-                                      {project?.project_members?.map(member => (
-                                        <SelectItem
-                                          key={member.user_id}
-                                          value={member.user_id}
-                                        >
-                                          <div className="flex items-center gap-2">
-                                            <Avatar className="h-6 w-6">
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  </div>
+                                  <div>
+                                    <Select
+                                      value={task.assignee || "unassigned"}
+                                      onValueChange={value =>
+                                        handleAssigneeChange(
+                                          task.id,
+                                          value === "unassigned" ? null : value,
+                                        )
+                                      }
+                                    >
+                                      <SelectTrigger className="w-[110px]">
+                                        <SelectValue>
+                                          <div className="flex items-center gap-1">
+                                            <Avatar className="h-5 w-5">
                                               <AvatarImage
                                                 src={
-                                                  member.profile?.avatar_url ||
+                                                  assigneeProfile?.avatar_url ||
                                                   undefined
                                                 }
                                               />
-                                              <AvatarFallback>
-                                                {member.profile?.display_name?.slice(
-                                                  0,
-                                                  2,
-                                                ) || "??"}
+                                              <AvatarFallback className="text-xs bg-gray-200 dark:bg-gray-700 dark:text-gray-100">
+                                                {assigneeProfile
+                                                  ? capitalizeFirstLetter(
+                                                      assigneeProfile.display_name?.slice(
+                                                        0,
+                                                        2,
+                                                      ) || "??",
+                                                    )
+                                                  : "NA"}
                                               </AvatarFallback>
                                             </Avatar>
-                                            <span>
-                                              {member.profile?.display_name ||
-                                                "Unknown User"}
+                                            <span className="text-xs truncate">
+                                              {assigneeProfile?.display_name ||
+                                                "Unassigned"}
                                             </span>
                                           </div>
+                                        </SelectValue>
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="unassigned">
+                                          <div className="flex items-center gap-2">
+                                            <Avatar className="h-6 w-6">
+                                              <AvatarFallback>
+                                                UA
+                                              </AvatarFallback>
+                                            </Avatar>
+                                            <span>Unassigned</span>
+                                          </div>
                                         </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
+                                        {project?.project_members?.map(
+                                          member => (
+                                            <SelectItem
+                                              key={member.user_id}
+                                              value={member.user_id}
+                                            >
+                                              <div className="flex items-center gap-2">
+                                                <Avatar className="h-6 w-6">
+                                                  <AvatarImage
+                                                    src={
+                                                      member.profile
+                                                        ?.avatar_url ||
+                                                      undefined
+                                                    }
+                                                  />
+                                                  <AvatarFallback>
+                                                    {member.profile?.display_name?.slice(
+                                                      0,
+                                                      2,
+                                                    ) || "??"}
+                                                  </AvatarFallback>
+                                                </Avatar>
+                                                <span>
+                                                  {member.profile
+                                                    ?.display_name ||
+                                                    "Unknown User"}
+                                                </span>
+                                              </div>
+                                            </SelectItem>
+                                          ),
+                                        )}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
                                 </div>
-                              </div>
-                            )}
-                          </Draggable>
-                        );
-                      })}
-                      {provided.placeholder}
-                    </div>
-                  )}
-                </Droppable>
-              </DragDropContext>
+                              )}
+                            </Draggable>
+                          );
+                        })}
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
+                </DragDropContext>
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
