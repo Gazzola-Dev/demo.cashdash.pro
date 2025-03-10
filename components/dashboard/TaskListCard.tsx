@@ -145,7 +145,8 @@ const TaskListCard = () => {
 
   // Loading state determination
   const isLoading =
-    (user && !profile) ||
+    !user ||
+    !profile ||
     (tasks?.length && project?.id !== tasks?.[0]?.project_id);
 
   return (

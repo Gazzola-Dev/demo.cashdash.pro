@@ -54,9 +54,7 @@ const ProjectCard = () => {
   const router = useRouter();
 
   // Loading state determination
-  const isLoading = !!(user && !profile) || !!(user && !project);
-
-  console.log(isLoading);
+  const isLoading = !user || !profile || !!(user && !project);
 
   const [isOpen, setIsOpen] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);

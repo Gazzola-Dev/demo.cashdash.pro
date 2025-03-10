@@ -92,7 +92,7 @@ function MilestoneCard() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Loading state determination
-  const isLoading = (user && !profile) || (milestones && !project);
+  const isLoading = !user || !profile || (milestones && !project);
 
   const [formData, setFormData] = useState({
     title: currentMilestone?.title || "No milestone selected",
