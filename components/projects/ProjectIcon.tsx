@@ -1,10 +1,16 @@
 import { cn } from "@/lib/utils";
 import { useAppData } from "@/stores/app.store";
+import { Tables } from "@/types/database.types";
 import * as LucideIcons from "lucide-react";
 import { type LucideProps } from "lucide-react";
 
-const ProjectIcon = ({ ...props }: LucideProps & { className?: string }) => {
-  const { project } = useAppData();
+const ProjectIcon = ({
+  ...props
+}: LucideProps & { className?: string; project?: Tables<"projects"> }) => {
+  const { project: projectState } = useAppData();
+
+  const project = props.project || projectState;
+
   let iconName = project?.icon_name;
   let cleanIconName = iconName?.replace("lucide:", "") || "code-2";
   let iconColorFg = project?.icon_color_fg;

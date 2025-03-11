@@ -123,7 +123,10 @@ export function ProjectSwitcher() {
                         )}
                       >
                         <div className="flex size-6 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-700">
-                          <ProjectIcon className="size-4 shrink-0 dark:text-gray-100" />
+                          <ProjectIcon
+                            project={p}
+                            className="size-4 shrink-0 dark:text-gray-100"
+                          />
                         </div>
                         <div className="ml-2 flex-1 truncate dark:text-gray-100">
                           {p.name}
