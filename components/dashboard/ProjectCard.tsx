@@ -1,5 +1,6 @@
 "use client";
 
+import ProjectIconSelect from "@/components/dashboard/ProjectIconSelect";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -63,6 +64,9 @@ const ProjectCard = () => {
     description: project?.description || "",
     prefix: project?.prefix || "",
     github_repo_url: project?.github_repo_url || "",
+    icon_name: project?.icon_name || "Code2",
+    icon_color_fg: project?.icon_color_fg || "#000000",
+    icon_color_bg: project?.icon_color_bg || "#FFFFFF",
   });
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -80,6 +84,9 @@ const ProjectCard = () => {
         description: project.description || "",
         prefix: project.prefix || "",
         github_repo_url: project.github_repo_url || "",
+        icon_name: project.icon_name || "Code2",
+        icon_color_fg: project.icon_color_fg || "#000000",
+        icon_color_bg: project.icon_color_bg || "#FFFFFF",
       });
     }
   }, [project]);
@@ -126,6 +133,24 @@ const ProjectCard = () => {
     ) {
       updates.github_repo_url = formData.github_repo_url;
       hasChanged = true;
+    } else if (
+      fieldName === "icon_name" &&
+      formData.icon_name !== project.icon_name
+    ) {
+      updates.icon_name = formData.icon_name;
+      hasChanged = true;
+    } else if (
+      fieldName === "icon_color_fg" &&
+      formData.icon_color_fg !== project.icon_color_fg
+    ) {
+      updates.icon_color_fg = formData.icon_color_fg;
+      hasChanged = true;
+    } else if (
+      fieldName === "icon_color_bg" &&
+      formData.icon_color_bg !== project.icon_color_bg
+    ) {
+      updates.icon_color_bg = formData.icon_color_bg;
+      hasChanged = true;
     }
 
     if (hasChanged) {
@@ -165,6 +190,21 @@ const ProjectCard = () => {
           setFormData(prev => ({
             ...prev,
             github_repo_url: project.github_repo_url || "",
+          }));
+        } else if (fieldName === "icon_name") {
+          setFormData(prev => ({
+            ...prev,
+            icon_name: project.icon_name || "",
+          }));
+        } else if (fieldName === "icon_color_fg") {
+          setFormData(prev => ({
+            ...prev,
+            icon_color_fg: project.icon_color_fg || "",
+          }));
+        } else if (fieldName === "icon_color_bg") {
+          setFormData(prev => ({
+            ...prev,
+            icon_color_bg: project.icon_color_bg || "",
           }));
         }
       }
@@ -338,6 +378,84 @@ const ProjectCard = () => {
                   </p>
                 )}
               </div>
+
+              {isAdmin && <ProjectIconSelect />}
+
+              {isAdmin && (
+                <div className="space-y-2">
+                  <label
+                    className="text-sm font-bold text-gray-500 dark:text-gray-400"
+                    htmlFor="prefix"
+                  >
+                    Prefix
+                  </label>
+                  {editingField === "prefix" ? (
+                    <Input
+                      id="prefix"
+                      name="prefix"
+                      value={formData.prefix}
+                      onChange={handleChange}
+                      onBlur={() => handleBlur("prefix")}
+                      onKeyDown={e => handleKeyDown(e, "prefix")}
+                      className="h-8"
+                      autoFocus
+                      disabled={isPending}
+                    />
+                  ) : (
+                    <p
+                      className={cn(
+                        "text-sm bg-gray-50/50 dark:bg-gray-900 rounded py-1 px-2",
+                        isAdmin && "cursor-text",
+                      )}
+                      onClick={() => isAdmin && setEditingField("prefix")}
+                    >
+                      {project?.prefix || (
+                        <span className="text-gray-500 italic">No prefix</span>
+                      )}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {isAdmin && (
+                <div className="space-y-2">
+                  <label
+                    className="text-sm font-bold text-gray-500 dark:text-gray-400"
+                    htmlFor="github_repo_url"
+                  >
+                    GitHub Repository URL
+                  </label>
+                  {editingField === "github_repo_url" ? (
+                    <Input
+                      id="github_repo_url"
+                      name="github_repo_url"
+                      value={formData.github_repo_url || ""}
+                      onChange={handleChange}
+                      onBlur={() => handleBlur("github_repo_url")}
+                      onKeyDown={e => handleKeyDown(e, "github_repo_url")}
+                      className="h-8"
+                      autoFocus
+                      disabled={isPending}
+                    />
+                  ) : (
+                    <p
+                      className={cn(
+                        "text-sm bg-gray-50/50 dark:bg-gray-900 rounded py-1 px-2",
+                        isAdmin && "cursor-text",
+                      )}
+                      onClick={() =>
+                        isAdmin && setEditingField("github_repo_url")
+                      }
+                    >
+                      {project?.github_repo_url || (
+                        <span className="text-gray-500 italic">
+                          No GitHub repository linked
+                        </span>
+                      )}
+                    </p>
+                  )}
+                </div>
+              )}
             </>
           )}
           {isOpen && isAdmin && (

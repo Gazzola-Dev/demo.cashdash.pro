@@ -23,6 +23,11 @@ const blacklistedDirs = [
   "components/ui", // Exclude shadcn components
 ];
 
+// Specific files to exclude even if under whitelisted directories
+const blacklistedFiles = [
+  "components/dashboard/ProjectIconSelect.tsx", // Specific file to exclude
+];
+
 // Whitelist of specific files that should be included when in repo root
 const whitelistedRootFiles = [
   // Core configuration files
@@ -86,13 +91,17 @@ function clearDirectory(dirPath) {
 }
 
 // Function to check if a file should be included
-// Function to check if a file should be included
 function shouldIncludeFile(filePath) {
   const normalizedPath = filePath.replace(/\\/g, "/");
   const fileName = path.basename(normalizedPath);
 
   // Check system files
   if (ignoredFiles.includes(fileName)) {
+    return false;
+  }
+
+  // Check blacklisted files - exact match with normalized path
+  if (blacklistedFiles.includes(normalizedPath)) {
     return false;
   }
 
