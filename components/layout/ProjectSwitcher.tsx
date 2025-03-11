@@ -1,5 +1,6 @@
 "use client";
 
+import ProjectSwitcherSkeleton from "@/components/layout/ProjectSwitcherLoadingSkeleton";
 import { default as ProjectIcon } from "@/components/projects/ProjectIcon";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,13 +31,20 @@ import { useState } from "react";
 
 export function ProjectSwitcher() {
   const { isMobile, open, setOpen } = useSidebar();
-  const { projects, project, profile } = useAppData();
+  const { projects, project, profile, user } = useAppData();
   const [isOpen, setIsOpen] = useState(false);
   const { isAdmin } = useAppData();
+
+  // Loading state determination
+  const isLoading = !user || !profile;
 
   const toggleSidebar = () => {
     setOpen(!open);
   };
+
+  if (isLoading) {
+    return <ProjectSwitcherSkeleton />;
+  }
 
   return (
     <SidebarMenu>

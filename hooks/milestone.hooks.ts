@@ -3,6 +3,7 @@
 import {
   createMilestoneAction,
   deleteMilestoneAction,
+  getMilestoneEventsAction,
   getProjectMilestonesAction,
   setProjectCurrentMilestoneAction,
   updateMilestoneAction,
@@ -181,6 +182,11 @@ export const useUpdateMilestone = () => {
   const { data: milestones, refetch: refetchMilestones } =
     useGetProjectMilestones(projectSlug);
 
+  // Add a reference to the events query for the current milestone
+  const { refetch: refetchEvents } = useGetMilestoneEvents(
+    currentMilestone?.id,
+  );
+
   const { mutate, isPending } = useMutation({
     mutationFn: async ({
       milestoneId,
@@ -202,6 +208,11 @@ export const useUpdateMilestone = () => {
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({
         queryKey: ["projectMilestones", projectSlug],
+      });
+
+      // Also cancel events refetches
+      await queryClient.cancelQueries({
+        queryKey: ["milestoneEvents", milestoneId],
       });
 
       // Save the previous milestone state
@@ -234,6 +245,9 @@ export const useUpdateMilestone = () => {
       return { previousMilestones };
     },
     onSuccess: (data, { milestoneId }) => {
+      // After a successful update, refetch the events for this milestone
+      refetchEvents();
+
       // Apply update to the current milestone in state
       if (currentMilestone && currentMilestone.id === milestoneId) {
         const updatedMilestone = {
@@ -267,10 +281,15 @@ export const useUpdateMilestone = () => {
         variant: "destructive",
       });
     },
-    onSettled: () => {
+    onSettled: (_, __, { milestoneId }) => {
       // Always refetch to ensure server-client consistency
       queryClient.invalidateQueries({
         queryKey: ["projectMilestones", projectSlug],
+      });
+
+      // Also invalidate events
+      queryClient.invalidateQueries({
+        queryKey: ["milestoneEvents", milestoneId],
       });
     },
   });
@@ -351,6 +370,25 @@ export const useDeleteMilestone = () => {
     deleteMilestone,
     isPending,
   };
+};
+
+export const useGetMilestoneEvents = (milestoneId?: string) => {
+  const hookName = "useGetMilestoneEvents";
+
+  return useQuery({
+    queryKey: ["milestoneEvents", milestoneId],
+    queryFn: async () => {
+      if (!milestoneId) return null;
+
+      const { data, error } = await getMilestoneEventsAction(milestoneId);
+      conditionalLog(hookName, { data, error }, false);
+
+      if (error) throw new Error(error);
+      return data;
+    },
+    enabled: !!milestoneId,
+    staleTime: 1000 * 60, // 1 minute
+  });
 };
 
 export default useCreateMilestone;

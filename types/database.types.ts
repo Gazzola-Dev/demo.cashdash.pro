@@ -372,6 +372,53 @@ export type Database = {
           },
         ]
       }
+      milestone_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_role: Database["public"]["Enums"]["actor_role"]
+          created_at: string
+          details: string | null
+          event_type: Database["public"]["Enums"]["event_type"]
+          icon_type: string | null
+          id: string
+          metadata: Json | null
+          milestone_id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_role: Database["public"]["Enums"]["actor_role"]
+          created_at?: string
+          details?: string | null
+          event_type: Database["public"]["Enums"]["event_type"]
+          icon_type?: string | null
+          id?: string
+          metadata?: Json | null
+          milestone_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_role?: Database["public"]["Enums"]["actor_role"]
+          created_at?: string
+          details?: string | null
+          event_type?: Database["public"]["Enums"]["event_type"]
+          icon_type?: string | null
+          id?: string
+          metadata?: Json | null
+          milestone_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "milestone_events_milestone_id_fkey"
+            columns: ["milestone_id"]
+            isOneToOne: false
+            referencedRelation: "milestones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       milestone_tasks: {
         Row: {
           created_at: string
@@ -1015,7 +1062,38 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      milestone_events_view: {
+        Row: {
+          action: string | null
+          actor_avatar: string | null
+          actor_id: string | null
+          actor_name: string | null
+          actor_role: Database["public"]["Enums"]["actor_role"] | null
+          created_at: string | null
+          details: string | null
+          event_type: Database["public"]["Enums"]["event_type"] | null
+          icon_type: string | null
+          id: string | null
+          milestone_id: string | null
+          project_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "milestone_events_milestone_id_fkey"
+            columns: ["milestone_id"]
+            isOneToOne: false
+            referencedRelation: "milestones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "milestones_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       authorize: {
@@ -1209,6 +1287,12 @@ export type Database = {
             }
             Returns: Json
           }
+      get_milestone_events: {
+        Args: {
+          milestone_id: string
+        }
+        Returns: Json[]
+      }
       get_priority_tasks_data:
         | {
             Args: {
@@ -1300,6 +1384,12 @@ export type Database = {
           p_expires_at?: string
         }
         Returns: Json
+      }
+      list_milestone_events: {
+        Args: {
+          p_milestone_id: string
+        }
+        Returns: Json[]
       }
       list_project_members: {
         Args: {
@@ -1432,6 +1522,7 @@ export type Database = {
       }
     }
     Enums: {
+      actor_role: "pm" | "client" | "system" | "developer"
       app_permission:
         | "products.manage"
         | "orders.manage"
@@ -1443,6 +1534,16 @@ export type Database = {
       contract_milestone_status: "pending" | "funded" | "released"
       contract_status: "active" | "completed" | "cancelled"
       dispute_status: "open" | "resolved"
+      event_type:
+        | "creation"
+        | "update"
+        | "status_change"
+        | "price_change"
+        | "date_change"
+        | "approval"
+        | "system_notification"
+        | "dispute"
+        | "completion"
       invitation_status: "pending" | "accepted" | "declined" | "expired"
       milestone_status: "draft" | "active" | "completed" | "archived"
       milestone_status_old:

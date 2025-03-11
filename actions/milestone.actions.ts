@@ -4,7 +4,7 @@ import getSupabaseServerActionClient from "@/clients/action-client";
 import getActionResponse from "@/lib/action.util";
 import { conditionalLog } from "@/lib/log.utils";
 import { ActionResponse } from "@/types/action.types";
-import { MilestoneWithTasks } from "@/types/app.types";
+import { MilestoneEvent, MilestoneWithTasks } from "@/types/app.types";
 import { Tables } from "@/types/database.types";
 
 export const getProjectMilestonesAction = async (
@@ -15,6 +15,7 @@ export const getProjectMilestonesAction = async (
   try {
     const supabase = await getSupabaseServerActionClient();
 
+    // Get all milestones for the project
     const { data, error } = await supabase.rpc("list_project_milestones", {
       project_slug: projectSlug,
     });
@@ -22,7 +23,36 @@ export const getProjectMilestonesAction = async (
     conditionalLog(actionName, { data, error }, true);
 
     if (error) throw error;
-    return getActionResponse({ data: data as any as MilestoneWithTasks[] });
+
+    // For each milestone, fetch its events
+    const milestonesWithEvents = await Promise.all(
+      (data as any as MilestoneWithTasks[]).map(async milestone => {
+        try {
+          // Fetch events for this milestone
+          const { data: events } = await supabase.rpc("list_milestone_events", {
+            p_milestone_id: milestone.id,
+          });
+
+          // Return milestone with events
+          return {
+            ...milestone,
+            events: events || [],
+          };
+        } catch (err) {
+          // If there's an error fetching events, just return the milestone without events
+          conditionalLog(
+            actionName,
+            { eventsError: err, milestoneId: milestone.id },
+            true,
+          );
+          return milestone;
+        }
+      }),
+    );
+
+    return getActionResponse({
+      data: milestonesWithEvents as MilestoneWithTasks[],
+    });
   } catch (error) {
     conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });
@@ -74,6 +104,7 @@ export const setProjectCurrentMilestoneAction = async (
 type Milestone = Tables<"milestones">;
 
 // Updated createMilestoneAction to ensure milestone data is returned with is_current flag
+
 export const createMilestoneAction = async (
   projectId: string,
 ): Promise<ActionResponse<MilestoneWithTasks>> => {
@@ -111,13 +142,27 @@ export const createMilestoneAction = async (
 
     if (updateError) throw updateError;
 
-    // Return the milestone with is_current flag set to true
+    // Fetch initial events for the new milestone
+    const { data: eventsData, error: eventsError } = await supabase.rpc(
+      "list_milestone_events",
+      {
+        p_milestone_id: milestoneData.id,
+      },
+    );
+
+    if (eventsError) {
+      conditionalLog(actionName, { eventsError }, true);
+      // Don't throw here, we can still return the milestone without events
+    }
+
+    // Return the milestone with is_current flag set to true and events if available
     const result: MilestoneWithTasks = {
       ...milestoneData,
       tasks: [],
       tasks_count: 0,
       tasks_completed: 0,
       is_current: true,
+      events: (eventsData as any as MilestoneEvent[]) || [],
     };
 
     return getActionResponse({ data: result });
@@ -202,6 +247,28 @@ export const deleteMilestoneAction = async (
 
     if (error) throw error;
     return getActionResponse({ data: true });
+  } catch (error) {
+    conditionalLog(actionName, { error }, true);
+    return getActionResponse({ error });
+  }
+};
+
+export const getMilestoneEventsAction = async (
+  milestoneId: string,
+): Promise<ActionResponse<MilestoneEvent[]>> => {
+  const actionName = "getMilestoneEventsAction";
+
+  try {
+    const supabase = await getSupabaseServerActionClient();
+
+    const { data, error } = await supabase.rpc("list_milestone_events", {
+      p_milestone_id: milestoneId,
+    });
+
+    conditionalLog(actionName, { data, error }, true);
+
+    if (error) throw error;
+    return getActionResponse({ data: data as any as MilestoneEvent[] });
   } catch (error) {
     conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });

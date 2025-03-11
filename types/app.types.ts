@@ -63,6 +63,7 @@ export interface MilestoneWithTasks extends Milestone {
   tasks_count?: number;
   tasks_completed?: number;
   is_current?: boolean;
+  events?: MilestoneEvent[]; // Add events to the interface
 }
 
 // Define the main app state interface
@@ -104,4 +105,23 @@ export interface AppState {
   setProjectMemberRole: (projectMemberRole: string | null) => void;
   setMilestone: (milestone: MilestoneWithTasks | null) => void;
   reset: () => void;
+}
+
+export interface MilestoneEventActor {
+  id: string | null;
+  name: string | null;
+  role: string; // 'pm' | 'client' | 'system' | 'developer'
+  avatar: string | null;
+}
+
+// Define the milestone event
+export interface MilestoneEvent {
+  id: string;
+  milestone_id: string;
+  event_type: string;
+  action: string;
+  details: string | null;
+  icon_type: string | null;
+  created_at: string;
+  actor: MilestoneEventActor;
 }
