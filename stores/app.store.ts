@@ -50,7 +50,7 @@ export const useAppData = () => {
     subscription: store.subscription,
     appRole: store.appRole,
     projectMemberRole: store.projectMemberRole,
-    currentMilestone: store.milestone,
+    milestone: store.milestone,
     isAdmin: store.appRole === "admin",
 
     // Actions
@@ -64,7 +64,7 @@ export const useAppData = () => {
     setSubscription: store.setSubscription,
     setAppRole: store.setAppRole,
     setProjectMemberRole: store.setProjectMemberRole,
-    setCurrentMilestone: store.setCurrentMilestone,
+    setMilestone: store.setMilestone,
     reset: store.reset,
   };
 };
