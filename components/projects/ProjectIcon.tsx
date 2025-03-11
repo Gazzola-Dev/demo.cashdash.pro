@@ -4,12 +4,12 @@ import * as LucideIcons from "lucide-react";
 import { type LucideProps } from "lucide-react";
 
 const ProjectIcon = ({ ...props }: LucideProps & { className?: string }) => {
-  const { project, profile } = useAppData();
+  const { project } = useAppData();
   let iconName = project?.icon_name;
   let cleanIconName = iconName?.replace("lucide:", "") || "code-2";
   let iconColorFg = project?.icon_color_fg;
-  let iconColorBg = project?.icon_color_fg;
-  if (!profile) {
+  let iconColorBg = project?.icon_color_bg;
+  if (!project) {
     iconName = "log-in";
     cleanIconName = iconName?.replace("lucide:", "") || "code-2";
     iconColorBg = "#dddddd";
