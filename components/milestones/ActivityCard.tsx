@@ -171,7 +171,7 @@ const ActivityCard = () => {
     <Collapsible
       open={isOpen}
       onOpenChange={setIsOpen}
-      className="h-[calc(100vh-100px)] flex flex-col"
+      className={cn("flex flex-col", isOpen ? "h-[calc(100vh-100px)]" : "")}
     >
       <Card className="h-full flex flex-col">
         <CardHeader className="flex flex-row items-center justify-between pb-2 flex-shrink-0">
