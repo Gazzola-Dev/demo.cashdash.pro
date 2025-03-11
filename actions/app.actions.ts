@@ -81,7 +81,7 @@ export const getAppDataAction = async (): Promise<
     }
 
     // Fetch current milestone if there's a current project
-    let currentMilestone = null;
+    let milestone = null;
     if (data?.project?.id && data?.project?.current_milestone_id) {
       // First get the basic milestone data
       const { data: milestoneData, error: milestoneError } = await supabase
@@ -107,7 +107,7 @@ export const getAppDataAction = async (): Promise<
             item => item.tasks.status === "completed",
           ).length;
 
-          currentMilestone = {
+          milestone = {
             ...milestoneData,
             tasks: taskData.map(item => ({
               id: item.tasks.id,
@@ -119,7 +119,7 @@ export const getAppDataAction = async (): Promise<
           } as MilestoneWithTasks;
         } else {
           // Even if we can't get task counts, at least include the milestone data
-          currentMilestone = {
+          milestone = {
             ...milestoneData,
             tasks: [],
             tasks_count: 0,
@@ -136,7 +136,7 @@ export const getAppDataAction = async (): Promise<
       appRole,
       projectMemberRole,
       subscription,
-      currentMilestone,
+      milestone,
       project: data?.project || data?.projects?.[0],
     };
 

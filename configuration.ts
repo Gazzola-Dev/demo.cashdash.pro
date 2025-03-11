@@ -52,6 +52,7 @@ const configuration = {
       view: ({ project_slug = "", ordinal_id = 0 }: Slugs) =>
         `/${project_slug}/${ordinal_id}`,
     },
+    milestone: ({ project_slug = "" }: Slugs) => `/${project_slug}/milestone`,
     settings: {
       all: "/settings",
       new: "/settings/billing",

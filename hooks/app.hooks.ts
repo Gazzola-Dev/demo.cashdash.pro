@@ -37,7 +37,7 @@ export const useGetAppData = (
     setSubscription,
     setAppRole,
     setProjectMemberRole,
-    setCurrentMilestone,
+    setMilestone: setMilestone,
   } = useAppStore();
 
   return useQuery({
@@ -61,15 +61,11 @@ export const useGetAppData = (
         setProjectMemberRole(data.projectMemberRole);
 
         // Update current milestone with clear logging
-        if (data.currentMilestone) {
-          conditionalLog(
-            hookName,
-            { currentMilestone: data.currentMilestone },
-            false,
-          );
-          setCurrentMilestone(data.currentMilestone);
+        if (data.milestone) {
+          conditionalLog(hookName, { milestone: data.milestone }, false);
+          setMilestone(data.milestone);
         } else {
-          setCurrentMilestone(null);
+          setMilestone(null);
         }
       }
 

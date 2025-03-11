@@ -197,13 +197,13 @@ export const useUpdateTasksOrder = () => {
 export function useTaskPage() {
   const pathname = usePathname();
   const { toast } = useToast();
-  const { task, tasks, project, currentMilestone } = useAppData();
+  const { task, tasks, project, milestone } = useAppData();
 
   // Check if task is new based on URL
   const isNewTask = pathname.endsWith("/new");
 
   // Check if there is a draft milestone
-  const hasDraftMilestone = currentMilestone?.status === "draft";
+  const hasDraftMilestone = milestone?.status === "draft";
 
   // Warning message state
   const showWarning = isNewTask && !hasDraftMilestone;

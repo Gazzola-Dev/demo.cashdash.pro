@@ -81,7 +81,7 @@ export interface AppState {
   invitations: ProjectInvitation[];
 
   // Milestone data
-  currentMilestone: MilestoneWithTasks | null;
+  milestone: MilestoneWithTasks | null;
 
   // Subscription data
   subscription: ProjectSubscription | null;
@@ -102,6 +102,6 @@ export interface AppState {
   setSubscription: (subscription: ProjectSubscription | null) => void;
   setAppRole: (appRole: string | null) => void;
   setProjectMemberRole: (projectMemberRole: string | null) => void;
-  setCurrentMilestone: (milestone: MilestoneWithTasks | null) => void;
+  setMilestone: (milestone: MilestoneWithTasks | null) => void;
   reset: () => void;
 }

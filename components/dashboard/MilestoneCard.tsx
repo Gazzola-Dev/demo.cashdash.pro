@@ -78,8 +78,14 @@ const MilestoneCardSkeleton = () => {
 };
 
 function MilestoneCard() {
-  const { project, currentMilestone, isAdmin, user, profile, refetch } =
-    useAppData();
+  const {
+    project,
+    milestone: currentMilestone,
+    isAdmin,
+    user,
+    profile,
+    refetch,
+  } = useAppData();
   const [isOpen, setIsOpen] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);
   const { data: milestones, refetch: refetchMilestones } =

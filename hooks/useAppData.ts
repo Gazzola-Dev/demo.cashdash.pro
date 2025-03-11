@@ -48,7 +48,7 @@ export const useAppData = () => {
     appRole: store.appRole,
     isAdmin: store.appRole === "admin",
     projectMemberRole: store.projectMemberRole,
-    currentMilestone: store.currentMilestone,
+    milestone: store.milestone,
 
     // Actions
     setUser: store.setUser,
@@ -62,7 +62,7 @@ export const useAppData = () => {
     setSubscription: store.setSubscription,
     setAppRole: store.setAppRole,
     setProjectMemberRole: store.setProjectMemberRole,
-    setCurrentMilestone: store.setCurrentMilestone,
+    setMilestone: store.setMilestone,
     refetch,
 
     // Derived data

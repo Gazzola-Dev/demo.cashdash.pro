@@ -25,7 +25,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     setProject,
     setUser,
     reset,
-    setCurrentMilestone,
+    setMilestone,
     project,
   } = useAppStore();
   const { refetch: refetchTask } = useGetTask(secondSegment);
@@ -80,7 +80,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
       setTask(null);
 
       // Reset current milestone when changing project
-      setCurrentMilestone(null);
+      setMilestone(null);
 
       // Refetch app data to get the correct milestone for the new project
       refetchAppData();
@@ -92,7 +92,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     profile,
     updateProfile,
     setTask,
-    setCurrentMilestone,
+    setMilestone,
     refetchAppData,
   ]);
 

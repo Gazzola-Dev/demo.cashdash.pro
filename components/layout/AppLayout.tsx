@@ -57,6 +57,7 @@ import {
   LoaderCircle,
   LogOut,
   MailOpen,
+  Milestone,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -77,18 +78,7 @@ type FormValues = z.infer<typeof formSchema>;
 function AppSidebar() {
   // const [billingDialogOpen, setBillingDialogOpen] = useState(false);
   const { open } = useSidebar();
-  const {
-    project,
-    profile,
-    user,
-    projects,
-    tasks,
-    task,
-    invitations,
-    subscription,
-    appRole,
-    projectMemberRole,
-  } = useAppData();
+  const { project, profile, user, task } = useAppData();
 
   const router = useRouter();
   const { dialog } = useDialogQueue();
@@ -236,6 +226,40 @@ function AppSidebar() {
                         {open ? "Project roadmap" : "Calendar"}
                       </TooltipContent>
                     </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <SidebarMenuItem>
+                          <SidebarButton
+                            href={configuration.paths.milestone({
+                              project_slug: project?.slug,
+                            })}
+                            matchPattern={
+                              configuration.paths.milestone({
+                                project_slug: project?.slug,
+                              }) + "$"
+                            }
+                          >
+                            <div className="flex w-full items-center justify-between gap-2">
+                              <div className="flex items-center gap-2">
+                                <Milestone className="size-5" />
+                                <span>Milestone</span>
+                              </div>
+                              <div className="flex items-center gap-2 font-medium">
+                                <div className="space-x-0.5 text-xs text-blue-700 dark:text-blue-300 p-1 rounded-lg pb-[0.45rem]"></div>
+                                <div className="text-sm text-blue-900 dark:text-blue-100 pr-1 pl-2 rounded-bl-lg border-b border-blue-600 dark:border-blue-400">
+                                  {task?.ordinal_id}
+                                </div>
+                              </div>
+                            </div>
+                          </SidebarButton>
+                        </SidebarMenuItem>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">
+                        Add/edit/switch the active Milestone for this Project
+                      </TooltipContent>
+                    </Tooltip>
+
                     {/* <Tooltip>
                 <TooltipTrigger>
                   <SidebarMenuItem>
