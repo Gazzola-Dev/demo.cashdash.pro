@@ -1,3 +1,4 @@
+import { icons } from "@/lib/iconList.util";
 import { cn } from "@/lib/utils";
 import { useAppData } from "@/stores/app.store";
 import { Tables } from "@/types/database.types";
@@ -7,15 +8,18 @@ import { type LucideProps } from "lucide-react";
 const ProjectIcon = ({
   ...props
 }: LucideProps & { className?: string; project?: Tables<"projects"> }) => {
-  const { project: projectState } = useAppData();
+  const { project: appProject } = useAppData();
+  const propProject = props.project;
+  let iconName = propProject ? propProject?.icon_name : appProject?.icon_name;
+  let iconColorFg = propProject
+    ? propProject?.icon_color_fg
+    : appProject?.icon_color_fg;
+  let iconColorBg = propProject
+    ? propProject?.icon_color_bg
+    : appProject?.icon_color_bg;
 
-  const project = props.project || projectState;
-
-  let iconName = project?.icon_name;
   let cleanIconName = iconName?.replace("lucide:", "") || "code-2";
-  let iconColorFg = project?.icon_color_fg;
-  let iconColorBg = project?.icon_color_bg;
-  if (!project) {
+  if (!propProject && !appProject) {
     iconName = "log-in";
     cleanIconName = iconName?.replace("lucide:", "") || "code-2";
     iconColorBg = "#dddddd";
@@ -26,10 +30,8 @@ const ProjectIcon = ({
     .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
     .join("");
 
-  const BaseIcon =
-    (LucideIcons[
-      pascalCaseName as keyof typeof LucideIcons
-    ] as LucideIcons.LucideIcon) || LucideIcons.Code2;
+  const ProjectIcon =
+    icons.find(icon => icon.name === iconName)?.component || LucideIcons.Code2;
 
   return (
     <div
@@ -38,7 +40,7 @@ const ProjectIcon = ({
         backgroundColor: iconColorBg || "",
       }}
     >
-      <BaseIcon
+      <ProjectIcon
         {...props}
         style={{
           color: iconColorFg || "",

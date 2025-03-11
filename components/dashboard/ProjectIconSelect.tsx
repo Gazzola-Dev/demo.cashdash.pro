@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -10,8 +12,7 @@ import { useUpdateProject } from "@/hooks/app.hooks";
 import useAppData from "@/hooks/useAppData";
 import { icons } from "@/lib/iconList.util";
 import { cn } from "@/lib/utils";
-import { Code2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ChevronDown, Code2 } from "lucide-react";
 
 // Common colors used in the color picker
 const colors = [
@@ -41,14 +42,15 @@ const colors = [
 const ProjectIconSelect = () => {
   const { project } = useAppData();
   const { updateProject, isPending } = useUpdateProject();
+  const [open, setOpen] = useState(false);
+  const [selectedIcon, setSelectedIcon] = useState(
+    project?.icon_name || "Code2",
+  );
   const [iconColorFg, setIconColorFg] = useState(
     project?.icon_color_fg || "#000000",
   );
   const [iconColorBg, setIconColorBg] = useState(
     project?.icon_color_bg || "#FFFFFF",
-  );
-  const [selectedIcon, setSelectedIcon] = useState(
-    project?.icon_name || "Code2",
   );
 
   // Update state when project changes
@@ -59,6 +61,17 @@ const ProjectIconSelect = () => {
       setIconColorBg(project.icon_color_bg || "#FFFFFF");
     }
   }, [project]);
+
+  const handleSelectIcon = (iconName: string) => {
+    setSelectedIcon(iconName);
+
+    // Save to database when icon is selected
+    if (project) {
+      updateProject(project.id, { icon_name: iconName });
+    }
+
+    setOpen(false);
+  };
 
   const handleColorChange = (type: "fg" | "bg", color: string) => {
     if (type === "fg") {
@@ -83,23 +96,76 @@ const ProjectIconSelect = () => {
         Project Icon
       </Label>
       <div className="flex items-center space-x-3">
-        <div
-          className="flex-shrink-0 w-9 h-9 rounded-md flex items-center justify-center"
-          style={{ backgroundColor: iconColorBg }}
-        >
-          <SelectedIconComponent
-            className="h-5 w-5"
-            style={{ color: iconColorFg }}
-          />
-        </div>
+        <div className="flex flex-1 gap-3">
+          {/* Icon Picker */}
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="flex items-center justify-between"
+                disabled={isPending}
+              >
+                <div
+                  className="flex-shrink-0 w-9 h-9 rounded-md flex items-center justify-center"
+                  style={{ backgroundColor: iconColorBg }}
+                >
+                  <SelectedIconComponent
+                    className=""
+                    style={{
+                      color: iconColorFg,
+                      width: "1.5rem",
+                      height: "1.5rem",
+                      strokeWidth: 2,
+                    }}
+                  />
+                </div>
+                <ChevronDown className="h-4 w-4 ml-2 opacity-70" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-72 p-2"
+              align="start"
+              style={{
+                backgroundColor: iconColorBg,
+              }}
+            >
+              <div className="space-y-3">
+                <div className="max-h-[240px] overflow-y-auto p-2">
+                  <div className="grid grid-cols-5 gap-2">
+                    {icons.map(icon => {
+                      const IconComponent = icon.component;
+                      return (
+                        <div
+                          key={icon.name}
+                          onClick={() => handleSelectIcon(icon.name)}
+                          className={cn(
+                            "flex flex-col items-center justify-center p-2 cursor-pointer rounded-md hover:bg-gray-100/20 dark:hover:bg-gray-800/20 transition-colors",
+                            selectedIcon === icon.name &&
+                              "bg-gray-100/30 dark:bg-gray-800/30 border border-gray-300 dark:border-gray-600/30",
+                          )}
+                          title={icon.name}
+                        >
+                          <IconComponent
+                            className="h-7 w-7 p-1 rounded"
+                            style={{
+                              color: iconColorFg,
+                            }}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
 
-        <div className="flex gap-2">
           {/* Foreground Color Picker */}
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className="h-8 px-2 flex items-center gap-2"
+                className="h-9 px-2 flex items-center gap-2"
                 style={{ borderColor: iconColorFg }}
               >
                 <div
@@ -152,7 +218,7 @@ const ProjectIconSelect = () => {
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className="h-8 px-2 flex items-center gap-2"
+                className="h-9 px-2 flex items-center gap-2"
                 style={{ borderColor: iconColorBg }}
               >
                 <div
