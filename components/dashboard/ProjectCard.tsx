@@ -251,7 +251,7 @@ const ProjectCard = () => {
     <Collapsible
       open={isOpen}
       onOpenChange={setIsOpen}
-      className="h-full w-full md:w-1/2"
+      className="h-full w-full"
     >
       <Card className="h-full">
         <CardHeader className="flex flex-row items-center justify-between pb-2">

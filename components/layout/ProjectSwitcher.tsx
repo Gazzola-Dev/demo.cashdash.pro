@@ -103,7 +103,7 @@ export function ProjectSwitcher() {
             side={isMobile ? "bottom" : "right"}
             sideOffset={4}
           >
-            <DropdownMenuLabel className="text-sm dark:text-gray-400 pb-3 text-gray-700">
+            <DropdownMenuLabel className="text-sm pb-3 text-gray-500 dark:text-gray-400">
               My Projects
             </DropdownMenuLabel>
             <TooltipProvider>
