@@ -10,8 +10,10 @@ import {
 } from "@/actions/milestone.actions";
 import { useToast } from "@/hooks/use-toast";
 import useAppData from "@/hooks/useAppData";
+import useSupabase from "@/hooks/useSupabase";
 import { conditionalLog } from "@/lib/log.utils";
-import { MilestoneWithTasks } from "@/types/app.types";
+import { useAppStore } from "@/stores/app.store";
+import { MilestoneEvent, MilestoneWithTasks } from "@/types/app.types";
 import { Tables } from "@/types/database.types";
 import {
   UseQueryOptions,
@@ -19,7 +21,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 interface QueryConfig<TData>
   extends Omit<UseQueryOptions<TData, Error>, "queryKey" | "queryFn"> {}
@@ -391,4 +393,83 @@ export const useGetMilestoneEvents = (milestoneId?: string) => {
   });
 };
 
-export default useCreateMilestone;
+export const useMilestoneEventsRealtime = (milestoneId?: string) => {
+  const hookName = "useMilestoneEventsRealtime";
+  const supabase = useSupabase();
+  const { milestone, setMilestone } = useAppStore();
+
+  useEffect(() => {
+    if (!supabase || !milestoneId || !milestone) return;
+
+    conditionalLog(hookName, { subscribing: true, milestoneId }, false);
+
+    // Subscribe to changes in the milestone_events table for this milestone
+    const channel = supabase
+      .channel(`milestone-events-${milestoneId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*", // Listen for all events (insert, update, delete)
+          schema: "public",
+          table: "milestone_events",
+          filter: `milestone_id=eq.${milestoneId}`,
+        },
+        payload => {
+          conditionalLog(hookName, { payload }, false);
+
+          // Handle different event types
+          if (payload.eventType === "INSERT") {
+            const newEvent = payload.new as any;
+
+            // Fetch the actor information since it's not included in the payload
+            supabase
+              .from("profiles")
+              .select("id, display_name, avatar_url, professional_title")
+              .eq("id", newEvent.actor_id)
+              .maybeSingle()
+              .then(({ data: profile }) => {
+                // Format the event to match your MilestoneEvent type
+                const formattedEvent: MilestoneEvent = {
+                  id: newEvent.id,
+                  milestone_id: newEvent.milestone_id,
+                  event_type: newEvent.event_type,
+                  action: newEvent.action,
+                  details: newEvent.details,
+                  icon_type: newEvent.icon_type,
+                  created_at: newEvent.created_at,
+                  actor: {
+                    id: newEvent.actor_id,
+                    name: profile?.display_name || null,
+                    role: newEvent.actor_role,
+                    avatar: profile?.avatar_url || null,
+                  },
+                };
+
+                // Update the milestone with the new event
+                if (milestone) {
+                  const updatedEvents = [
+                    formattedEvent,
+                    ...(milestone.events || []),
+                  ];
+
+                  setMilestone({
+                    ...milestone,
+                    events: updatedEvents,
+                  });
+                }
+              });
+          }
+          // You could handle UPDATE and DELETE events similarly if needed
+        },
+      )
+      .subscribe();
+
+    // Cleanup subscription on unmount
+    return () => {
+      conditionalLog(hookName, { unsubscribing: true, milestoneId }, false);
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, milestoneId, milestone, setMilestone]);
+};
+
+export default useMilestoneEventsRealtime;
