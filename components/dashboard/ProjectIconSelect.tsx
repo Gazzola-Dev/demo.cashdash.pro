@@ -9,9 +9,9 @@ import {
 } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUpdateProject } from "@/hooks/app.hooks";
-import useAppData from "@/hooks/useAppData";
 import { icons } from "@/lib/iconList.util";
 import { cn } from "@/lib/utils";
+import { useAppData } from "@/stores/app.store";
 import { ChevronDown, Code2 } from "lucide-react";
 
 // Common colors used in the color picker

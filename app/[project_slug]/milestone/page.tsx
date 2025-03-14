@@ -13,7 +13,7 @@ const MilestonePage = () => {
   return (
     <div className="container w-full mx-auto flex flex-col gap-5 max-w-5xl">
       <MilestoneCard />
-      {milestone && <ContractCard milestoneId={milestone.id} />}
+      <ContractCard />
       <ActivityCard />
     </div>
   );

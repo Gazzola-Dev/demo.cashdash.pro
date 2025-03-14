@@ -1,4 +1,3 @@
-// components/milestones/ContractCard.tsx
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -15,59 +14,28 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useGetContractByMilestone } from "@/hooks/contract.hooks";
-import useAppData from "@/hooks/useAppData";
+import { formatCurrency } from "@/lib/contract.util";
+import { useAppData } from "@/stores/app.store";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import React, { useState } from "react";
+import { useState } from "react";
 import { ContractDetails } from "./ContractDetails";
 import { ContractMembers } from "./ContractMembers";
 import { ContractPayment } from "./ContractPayment";
 import { ContractTasks } from "./ContractTasks";
 
-export type ContractMember = {
-  id: string;
-  display_name: string | null;
-  email: string;
-  role?: string | null;
-  hasApproved: boolean;
-  avatar_url?: string | null;
-};
-
-export const ContractCard: React.FC = () => {
-  const { milestone } = useAppData();
+export const ContractCard = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
-  const [members, setMembers] = useState<ContractMember[]>([]);
   const [allPMsApproved, setAllPMsApproved] = useState(false);
 
-  const { profile, project, tasks } = useAppData();
-  const {
-    data: contract,
-    isLoading,
-    error,
-  } = useGetContractByMilestone(milestone?.id);
+  // Get data from the app store
+  const { milestone, contract, tasks } = useAppData();
 
-  console.log({ contract });
+  const contractMembers = contract?.members || [];
 
-  // Create current user object from profile data
-  const currentUser: ContractMember = profile
-    ? {
-        id: profile.id,
-        display_name: profile.display_name,
-        email: profile.email || "",
-        role:
-          project?.project_members?.find(m => m.user_id === profile.id)?.role ||
-          null,
-        hasApproved: false,
-        avatar_url: profile.avatar_url,
-      }
-    : {
-        id: "",
-        display_name: "",
-        email: "",
-        role: null,
-        hasApproved: false,
-      };
+  // Initialize the fetch but don't use the returned data directly
+  const { isLoading, error } = useGetContractByMilestone(milestone?.id);
 
   const handleApprovalToggle = () => {
     setIsApprovalDialogOpen(true);
@@ -78,16 +46,18 @@ export const ContractCard: React.FC = () => {
     setIsApprovalDialogOpen(false);
 
     // Update the members array with the new approval status
-    const updatedMembers = members.map(member =>
-      member.id === currentUser.id
+    const updatedMembers = contractMembers.map(member =>
+      member.id === contractMembers[0]?.id
         ? { ...member, hasApproved: !isApproved }
         : member,
     );
-    setMembers(updatedMembers);
 
     // Check if all project managers have approved
     const projectManagers = updatedMembers.filter(
-      member => member.role === "project manager" || member.role === "admin",
+      member =>
+        member.role === "project_manager" ||
+        member.role === "admin" ||
+        member.role === "owner",
     );
     const allApproved = projectManagers.every(pm => pm.hasApproved);
     setAllPMsApproved(allApproved);
@@ -137,6 +107,7 @@ export const ContractCard: React.FC = () => {
       </Card>
     );
   }
+
   return (
     <>
       <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
@@ -171,7 +142,7 @@ export const ContractCard: React.FC = () => {
                 )}
                 <div className="flex items-center text-muted-foreground">
                   <span className="font-semibold text-foreground">
-                    ${contract.total_amount_cents / 100}
+                    ${formatCurrency(contract.total_amount_cents / 100)}
                   </span>
                 </div>
               </div>
@@ -187,12 +158,7 @@ export const ContractCard: React.FC = () => {
 
               <ContractTasks tasks={tasks} />
 
-              <ContractMembers
-                members={members}
-                currentUser={currentUser}
-                isApproved={isApproved}
-                onApprovalToggle={handleApprovalToggle}
-              />
+              <ContractMembers />
 
               {/* Contract Payment - only visible when expanded */}
               <ContractPayment
@@ -203,10 +169,10 @@ export const ContractCard: React.FC = () => {
                   project_id: contract.project_id,
                   startDate: new Date(contract.start_date),
                   tasks: tasks,
-                  members: members,
+                  members: contractMembers,
                 }}
-                currentUser={currentUser}
-                allMembers={members}
+                currentUser={contractMembers[0] || {}}
+                allMembers={contractMembers}
                 expanded={isOpen}
                 allPMsApproved={allPMsApproved}
               />

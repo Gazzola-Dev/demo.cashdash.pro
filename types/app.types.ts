@@ -29,6 +29,7 @@ type Subtask = Tables<"subtasks">;
 type ProjectSubscription = Tables<"project_subscriptions">;
 type UserRole = Tables<"user_roles">;
 type Milestone = Tables<"milestones">;
+type Contract = Tables<"contracts">;
 
 // Define member with profile
 export interface ProjectMemberWithProfile extends ProjectMember {
@@ -66,6 +67,40 @@ export interface MilestoneWithTasks extends Milestone {
   events?: MilestoneEvent[]; // Add events to the interface
 }
 
+export interface MilestoneEventActor {
+  id: string | null;
+  name: string | null;
+  role: string; // 'pm' | 'client' | 'system' | 'developer'
+  avatar: string | null;
+}
+
+// Define the milestone event
+export interface MilestoneEvent {
+  id: string;
+  milestone_id: string;
+  event_type: string;
+  action: string;
+  details: string | null;
+  icon_type: string | null;
+  created_at: string;
+  actor: MilestoneEventActor;
+}
+
+// Define ContractMember interface
+export interface ContractMember {
+  id: string;
+  display_name: string | null;
+  email: string;
+  avatar_url?: string | null;
+  role?: string | null;
+  hasApproved?: boolean;
+}
+
+// Define Contract with Members
+export interface ContractWithMembers extends Contract {
+  members: ContractMember[];
+}
+
 // Define the main app state interface
 export interface AppState {
   // Core user data
@@ -83,6 +118,9 @@ export interface AppState {
 
   // Milestone data
   milestone: MilestoneWithTasks | null;
+
+  // Contract data
+  contract: ContractWithMembers | null;
 
   // Subscription data
   subscription: ProjectSubscription | null;
@@ -104,24 +142,22 @@ export interface AppState {
   setAppRole: (appRole: string | null) => void;
   setProjectMemberRole: (projectMemberRole: string | null) => void;
   setMilestone: (milestone: MilestoneWithTasks | null) => void;
+  setContract: (contract: ContractWithMembers | null) => void;
   reset: () => void;
 }
 
-export interface MilestoneEventActor {
-  id: string | null;
-  name: string | null;
-  role: string; // 'pm' | 'client' | 'system' | 'developer'
-  avatar: string | null;
+// Contract Member Type
+export interface ContractMember {
+  id: string;
+  display_name: string | null;
+  email: string;
+  hasApproved?: boolean;
+  avatar_url?: string | null;
+  role?: string | null;
 }
 
-// Define the milestone event
-export interface MilestoneEvent {
-  id: string;
-  milestone_id: string;
-  event_type: string;
-  action: string;
-  details: string | null;
-  icon_type: string | null;
-  created_at: string;
-  actor: MilestoneEventActor;
+// Contract with Members Type
+export interface ContractWithMembers {
+  contract: Contract;
+  members: ContractMember[];
 }

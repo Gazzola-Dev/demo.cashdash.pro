@@ -1381,6 +1381,12 @@ export type Database = {
             }
             Returns: Json
           }
+      get_contract_by_milestone: {
+        Args: {
+          p_milestone_id: string
+        }
+        Returns: Json
+      }
       get_current_project_data:
         | {
             Args: Record<PropertyKey, never>

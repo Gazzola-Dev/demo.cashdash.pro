@@ -9,9 +9,9 @@ import { Input } from "@/components/ui/input";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useUpdateProfile } from "@/hooks/app.hooks";
 import { useToast } from "@/hooks/use-toast";
-import useAppData from "@/hooks/useAppData";
 import { capitalizeFirstLetter } from "@/lib/string.util";
 import { cn } from "@/lib/utils";
+import { useAppData } from "@/stores/app.store";
 import { Upload } from "lucide-react";
 import { useEffect, useState } from "react";
 

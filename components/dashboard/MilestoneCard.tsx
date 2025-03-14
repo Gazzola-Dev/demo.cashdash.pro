@@ -35,7 +35,7 @@ import {
   useSetCurrentMilestone,
   useUpdateMilestone,
 } from "@/hooks/milestone.hooks";
-import useAppData from "@/hooks/useAppData";
+import { useAppData } from "@/stores/app.store";
 import { format, formatDistanceToNow, isValid } from "date-fns";
 import {
   ArchiveIcon,
@@ -84,7 +84,6 @@ function MilestoneCard() {
     isAdmin,
     user,
     profile,
-    refetch,
   } = useAppData();
   const [isOpen, setIsOpen] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);

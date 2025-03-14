@@ -1,10 +1,10 @@
 // components/milestones/ContractPayment.tsx
-import { ContractMember } from "@/components/milestones/ContractCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { formatCurrency, formatDate } from "@/lib/contract.util";
+import { ContractMember } from "@/types/app.types";
 import {
   CheckCircle,
   CreditCard,

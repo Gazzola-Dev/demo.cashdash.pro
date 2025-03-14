@@ -1,7 +1,7 @@
 import configuration from "@/configuration";
 import { useUpdateTask, useUpdateTasksOrder } from "@/hooks/task.hooks";
 import { useIsMobile } from "@/hooks/use-mobile";
-import useAppData from "@/hooks/useAppData";
+import { useAppData } from "@/stores/app.store";
 import { Database } from "@/types/database.types";
 import { OnDragEndResponder } from "@hello-pangea/dnd";
 import { useState } from "react";

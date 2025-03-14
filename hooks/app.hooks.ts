@@ -6,9 +6,8 @@ import {
 } from "@/actions/app.actions";
 import configuration from "@/configuration";
 import { useToast } from "@/hooks/use-toast";
-import useAppData from "@/hooks/useAppData";
 import { conditionalLog } from "@/lib/log.utils";
-import { useAppStore } from "@/stores/app.store";
+import { useAppData, useAppStore } from "@/stores/app.store";
 import { AppState, ProjectWithDetails, TaskComplete } from "@/types/app.types";
 import { Tables } from "@/types/database.types";
 import { UseQueryOptions, useMutation, useQuery } from "@tanstack/react-query";

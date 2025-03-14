@@ -23,17 +23,16 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import configuration from "@/configuration";
-import useAppData from "@/hooks/useAppData";
 import { cn } from "@/lib/utils";
+import { useAppData } from "@/stores/app.store";
 import { Book, BookOpenText, Plus } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
 export function ProjectSwitcher() {
   const { isMobile, open, setOpen } = useSidebar();
-  const { projects, project, profile, user } = useAppData();
+  const { projects, project, profile, user, isAdmin } = useAppData();
   const [isOpen, setIsOpen] = useState(false);
-  const { isAdmin } = useAppData();
 
   // Loading state determination
   const isLoading = !user || !profile;

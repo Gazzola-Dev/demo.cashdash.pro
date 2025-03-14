@@ -5,8 +5,8 @@ import {
   updateTasksOrderAction,
 } from "@/actions/task.action";
 import { useToast } from "@/hooks/use-toast";
-import useAppData from "@/hooks/useAppData";
 import { conditionalLog } from "@/lib/log.utils";
+import { useAppData } from "@/stores/app.store";
 import { TaskComplete, TaskWithAssignee } from "@/types/app.types";
 import { Tables } from "@/types/database.types";
 import { useMutation } from "@tanstack/react-query";

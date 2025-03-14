@@ -12,8 +12,8 @@ import configuration, {
   firstRouteSegments,
   secondRouteSegments,
 } from "@/configuration";
-import useAppData from "@/hooks/useAppData";
 import { capitalizeFirstLetter, truncateString } from "@/lib/string.util";
+import { useAppData } from "@/stores/app.store";
 import { usePathname } from "next/navigation";
 
 const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);

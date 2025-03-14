@@ -4,8 +4,8 @@ import {
   createProjectAction,
   deleteProjectAction,
 } from "@/actions/project.actions";
+import { useGetAppData } from "@/hooks/app.hooks";
 import { useToast } from "@/hooks/use-toast";
-import useAppData from "@/hooks/useAppData";
 import { conditionalLog } from "@/lib/log.utils";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -14,7 +14,7 @@ export const useCreateProject = () => {
   const hookName = "useCreateProject";
   const { toast } = useToast();
   const router = useRouter();
-  const { refetch } = useAppData();
+  const { refetch } = useGetAppData();
 
   const { mutate, isPending } = useMutation({
     mutationFn: async () => {
@@ -57,7 +57,7 @@ export const useDeleteProject = () => {
   const hookName = "useDeleteProject";
   const { toast } = useToast();
   const router = useRouter();
-  const { refetch, project } = useAppData();
+  const { refetch } = useGetAppData();
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (projectId: string) => {

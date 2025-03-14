@@ -1,24 +1,16 @@
 // components/milestones/ContractMembers.tsx
-import { ContractMember } from "@/components/milestones/ContractDemo";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { useAppData } from "@/stores/app.store";
+import { ContractMember } from "@/types/app.types";
 import { CheckCircle, XCircle } from "lucide-react";
 import React from "react";
 
-interface ContractMembersProps {
-  members: ContractMember[];
-  currentUser: ContractMember;
-  isApproved: boolean;
-  onApprovalToggle: () => void;
-}
+export const ContractMembers: React.FC = () => {
+  const { contract, user } = useAppData();
+  const members = contract?.members || [];
 
-export const ContractMembers: React.FC<ContractMembersProps> = ({
-  members,
-  currentUser,
-  isApproved,
-  onApprovalToggle,
-}) => {
   // Get initials for avatar fallback
   const getInitials = (name: string) => {
     return name
@@ -30,8 +22,12 @@ export const ContractMembers: React.FC<ContractMembersProps> = ({
 
   // Check if a member is the current user
   const isCurrentUser = (member: ContractMember) => {
-    return member.id === currentUser.id;
+    return member.id === user?.id;
   };
+
+  const onApprovalToggle = () => {};
+
+  const isApproved = false;
 
   return (
     <div className="space-y-4">

@@ -45,10 +45,10 @@ import {
 } from "@/components/ui/tooltip";
 import configuration from "@/configuration";
 import { useToast } from "@/hooks/use-toast";
-import useAppData from "@/hooks/useAppData";
 import { useDialogQueue } from "@/hooks/useDialogQueue";
 import useSupabase from "@/hooks/useSupabase";
 import { cn } from "@/lib/utils";
+import { useAppData } from "@/stores/app.store";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Dot,

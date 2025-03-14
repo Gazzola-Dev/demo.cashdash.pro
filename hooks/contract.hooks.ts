@@ -6,6 +6,8 @@ import {
 } from "@/actions/contract.actions";
 import { useToast } from "@/hooks/use-toast";
 import { conditionalLog } from "@/lib/log.utils";
+import { useAppData } from "@/stores/app.store";
+import { ContractWithMembers } from "@/types/app.types";
 import { Tables } from "@/types/database.types";
 import {
   UseQueryOptions,
@@ -22,8 +24,9 @@ interface QueryConfig<TData>
 
 export const useGetContractByMilestone = (
   milestoneId?: string,
-  config?: QueryConfig<Contract | null>,
+  config?: QueryConfig<ContractWithMembers | null>,
 ) => {
+  const { setContract } = useAppData();
   const hookName = "useGetContractByMilestone";
 
   return useQuery({
@@ -32,7 +35,8 @@ export const useGetContractByMilestone = (
       if (!milestoneId) return null;
 
       const { data, error } = await getContractByMilestoneAction(milestoneId);
-      conditionalLog(hookName, { data, error }, false, null);
+      conditionalLog(hookName, { data, error }, false);
+      setContract(data);
 
       if (error) throw new Error(error);
       return data;
@@ -82,9 +86,12 @@ export const useUpdateContract = () => {
       // Optimistically update the contract
       queryClient.setQueryData(
         ["contract", contractId],
-        (old: Contract | null) => {
+        (old: ContractWithMembers | null) => {
           if (!old) return null;
-          return { ...old, ...updates };
+          return {
+            ...old,
+            contract: { ...old.contract, ...updates },
+          };
         },
       );
 
@@ -124,10 +131,10 @@ export const useUpdateContract = () => {
       const currentContract = queryClient.getQueryData([
         "contract",
         contractId,
-      ]) as Contract | null;
+      ]) as ContractWithMembers | null;
 
       if (currentContract) {
-        setPrevState(currentContract);
+        setPrevState(currentContract.contract);
       }
 
       mutate({ contractId, updates });

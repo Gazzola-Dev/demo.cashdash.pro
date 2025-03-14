@@ -11,8 +11,8 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { useGetMilestoneEvents } from "@/hooks/milestone.hooks";
-import useAppData from "@/hooks/useAppData";
 import { cn } from "@/lib/utils";
+import { useAppData } from "@/stores/app.store";
 import { format } from "date-fns";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";

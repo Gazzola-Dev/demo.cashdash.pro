@@ -2,7 +2,7 @@ export const conditionalLog = (
   name: string,
   data: any,
   isServer = false,
-  sliceCount: number | null = 10,
+  sliceCount: number | null = 20,
 ) => {
   const isVerbose = process.env.NEXT_PUBLIC_VERBOSE_LOGS === "true";
   const serverShouldLog = process.env.SERVER_DEBUG === "true" && isServer;

@@ -8,11 +8,11 @@ import {
   setProjectCurrentMilestoneAction,
   updateMilestoneAction,
 } from "@/actions/milestone.actions";
+import { useGetAppData } from "@/hooks/app.hooks";
 import { useToast } from "@/hooks/use-toast";
-import useAppData from "@/hooks/useAppData";
 import useSupabase from "@/hooks/useSupabase";
 import { conditionalLog } from "@/lib/log.utils";
-import { useAppStore } from "@/stores/app.store";
+import { useAppData, useAppStore } from "@/stores/app.store";
 import { MilestoneEvent, MilestoneWithTasks } from "@/types/app.types";
 import { Tables } from "@/types/database.types";
 import {
@@ -51,9 +51,10 @@ export const useGetProjectMilestones = (
 
 export const useSetCurrentMilestone = () => {
   const { toast } = useToast();
-  const { project, refetch, setMilestone: setCurrentMilestone } = useAppData();
+  const { project, setMilestone: setCurrentMilestone } = useAppData();
   const { refetch: refetchMilestones } = useGetProjectMilestones(project?.slug);
 
+  const { refetch } = useGetAppData();
   const { mutate, isPending } = useMutation({
     mutationFn: async ({
       projectId,
@@ -118,7 +119,8 @@ export const useSetCurrentMilestone = () => {
 
 export const useCreateMilestone = () => {
   const { toast } = useToast();
-  const { project, refetch, setMilestone: setCurrentMilestone } = useAppData();
+  const { project, setMilestone: setCurrentMilestone } = useAppData();
+  const { refetch } = useGetAppData();
   const queryClient = useQueryClient();
 
   const { mutate, isPending } = useMutation({
@@ -170,11 +172,9 @@ type Milestone = Tables<"milestones">;
 export const useUpdateMilestone = () => {
   const hookName = "useUpdateMilestone";
   const { toast } = useToast();
-  const {
-    milestone: currentMilestone,
-    refetch,
-    setMilestone: setCurrentMilestone,
-  } = useAppData();
+  const { milestone: currentMilestone, setMilestone: setCurrentMilestone } =
+    useAppData();
+  const { refetch } = useGetAppData();
   const [prevState, setPrevState] = useState<MilestoneWithTasks | null>(null);
   const queryClient = useQueryClient();
 
@@ -318,7 +318,8 @@ export const useUpdateMilestone = () => {
 export const useDeleteMilestone = () => {
   const hookName = "useDeleteMilestone";
   const { toast } = useToast();
-  const { refetch, setMilestone: setCurrentMilestone } = useAppData();
+  const { setMilestone: setCurrentMilestone } = useAppData();
+  const { refetch } = useGetAppData();
   const { refetch: refetchMilestones } = useGetProjectMilestones(
     useAppData().project?.slug,
   );
