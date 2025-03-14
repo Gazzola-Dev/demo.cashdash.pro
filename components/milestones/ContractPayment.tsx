@@ -1,5 +1,5 @@
 // components/milestones/ContractPayment.tsx
-import { Contract, ContractMember } from "@/components/milestones/ContractDemo";
+import { ContractMember } from "@/components/milestones/ContractCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,8 +14,23 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
+interface ContractInfo {
+  id: string;
+  title: string;
+  price: number;
+  project_id: string;
+  startDate: Date;
+  tasks: {
+    id: string;
+    ordinal_id: number;
+    title: string;
+    description: string | null;
+  }[];
+  members: ContractMember[];
+}
+
 interface ContractPaymentProps {
-  contract: Contract;
+  contract: ContractInfo;
   currentUser: ContractMember;
   allMembers: ContractMember[];
   expanded: boolean; // Control visibility based on parent component state
@@ -46,8 +61,7 @@ export const ContractPayment: React.FC<ContractPaymentProps> = ({
   );
   const approvedPMs = projectManagers.filter(pm => pm.hasApproved);
 
-  // Use the provided prop instead of calculating it here
-  // Use the prop we receive directly to determine if all PMs have approved
+  // Use the provided prop directly to determine if all PMs have approved
   // This ensures we're using the most up-to-date approval state
 
   const getPendingPMNames = () => {
