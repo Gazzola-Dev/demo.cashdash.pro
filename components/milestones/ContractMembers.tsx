@@ -1,3 +1,4 @@
+// components/milestones/ContractMembers.tsx
 import { ContractMember } from "@/components/milestones/ContractDemo";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";

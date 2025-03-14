@@ -1,12 +1,15 @@
-import { Tables, TablesInsert } from "@/types/database.types";
-import React from "react";
+// components/milestones/ContractDemo.tsx
+import React, { useState } from "react";
 import { ContractCard } from "./ContractCard";
 
 // Define types for our data model
-
-export interface ContractMember extends TablesInsert<"profiles"> {
-  hasApproved: boolean;
+export interface ContractMember {
+  id: string;
+  display_name: string | null;
+  email: string;
   role?: string | null;
+  hasApproved: boolean;
+  avatar_url?: string | null;
 }
 
 export interface Contract {
@@ -14,26 +17,53 @@ export interface Contract {
   title?: string;
   price: number;
   startDate: Date;
-  tasks: Partial<Tables<"tasks">>[];
+  project_id: string;
+  tasks: {
+    id: string;
+    ordinal_id: number;
+    title: string;
+    description: string | null;
+  }[];
   members: ContractMember[];
 }
 
 // Demo component with placeholder data
 export const ContractCardDemo: React.FC = () => {
-  // Mock current user
-  const currentUser: ContractMember = {
-    id: "user-1",
-    display_name: "John Doe",
-    email: "john.doe@example.com",
-    role: "project manager",
-    hasApproved: false,
-  };
+  // State to track approvals
+  const [members, setMembers] = useState<ContractMember[]>([
+    {
+      id: "user-1",
+      display_name: "John Doe",
+      email: "john.doe@example.com",
+      role: "project manager",
+      hasApproved: false,
+    },
+    {
+      id: "user-2",
+      display_name: "Jane Smith",
+      email: "jane.smith@example.com",
+      role: "admin",
+      hasApproved: true,
+    },
+    {
+      id: "user-3",
+      display_name: "Mike Johnson",
+      email: "mike.johnson@example.com",
+      role: "project manager",
+      hasApproved: true,
+    },
+  ]);
+
+  // Mock current user - this is the one the app would identify as the logged-in user
+  const currentUser: ContractMember =
+    members.find(m => m.id === "user-1") || members[0];
 
   // Mock contract data
   const contractData: Contract = {
     id: "contract-1",
     title: "Website Redesign Project",
     price: 15000,
+    project_id: "project-123",
     startDate: new Date(2024, 8, 15), // September 15, 2024
     tasks: [
       {
@@ -65,34 +95,10 @@ export const ContractCardDemo: React.FC = () => {
           "Optimize application performance including code splitting, lazy loading, and image optimization. Target a Lighthouse score of 90+ on all categories.",
       },
     ],
-    members: [
-      {
-        id: "user-1",
-        display_name: "John Doe",
-        email: "john.doe@example.com",
-        role: "project manager",
-        hasApproved: false,
-      },
-      {
-        id: "user-2",
-        display_name: "Jane Smith",
-        email: "jane.smith@example.com",
-        role: "admin",
-        hasApproved: true,
-      },
-      {
-        id: "user-3",
-        display_name: "Mike Johnson",
-        email: "mike.johnson@example.com",
-        role: "project manager",
-        hasApproved: true,
-      },
-    ],
+    members: members,
   };
 
-  return (
-    <>
-      <ContractCard contract={contractData} currentUser={currentUser} />
-    </>
-  );
+  return <ContractCard contract={contractData} currentUser={currentUser} />;
 };
+
+export default ContractCardDemo;

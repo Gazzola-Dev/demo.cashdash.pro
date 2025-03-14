@@ -1,3 +1,4 @@
+// components/milestones/ContractCard.tsx
 import { Contract, ContractMember } from "@/components/milestones/ContractDemo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,9 +16,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ContractDetails } from "./ContractDetails";
 import { ContractMembers } from "./ContractMembers";
+import { ContractPayment } from "./ContractPayment";
 import { ContractTasks } from "./ContractTasks";
 
 interface ContractCardProps {
@@ -32,6 +34,37 @@ export const ContractCard: React.FC<ContractCardProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
+  const [members, setMembers] = useState<ContractMember[]>(contract.members);
+
+  // Calculate if all PMs have approved
+  const [allPMsApproved, setAllPMsApproved] = useState(false);
+
+  // Check if all project managers have approved whenever members or isApproved changes
+  useEffect(() => {
+    const projectManagers = members.filter(
+      member => member.role === "project manager" || member.role === "admin",
+    );
+
+    // Create a new array with the current user's approval status updated
+    const updatedMembers = members.map(member =>
+      member.id === currentUser.id
+        ? { ...member, hasApproved: isApproved }
+        : member,
+    );
+
+    // Check if all PMs have approved
+    const allApproved = updatedMembers
+      .filter(
+        member => member.role === "project manager" || member.role === "admin",
+      )
+      .every(pm => pm.hasApproved);
+
+    // Update the members state with the current user's updated approval status
+    setMembers(updatedMembers);
+
+    // Update the allPMsApproved state
+    setAllPMsApproved(allApproved);
+  }, [isApproved, currentUser.id]);
 
   const handleApprovalToggle = () => {
     setIsApprovalDialogOpen(true);
@@ -40,6 +73,21 @@ export const ContractCard: React.FC<ContractCardProps> = ({
   const handleConfirmApproval = () => {
     setIsApproved(!isApproved);
     setIsApprovalDialogOpen(false);
+
+    // Update the members array with the new approval status
+    const updatedMembers = members.map(member =>
+      member.id === currentUser.id
+        ? { ...member, hasApproved: !isApproved }
+        : member,
+    );
+    setMembers(updatedMembers);
+
+    // Check if all project managers have approved
+    const projectManagers = updatedMembers.filter(
+      member => member.role === "project manager" || member.role === "admin",
+    );
+    const allApproved = projectManagers.every(pm => pm.hasApproved);
+    setAllPMsApproved(allApproved);
   };
 
   return (
@@ -69,7 +117,6 @@ export const ContractCard: React.FC<ContractCardProps> = ({
 
           <CardContent className="space-y-4">
             {/* Always show contract price and title summary when collapsed */}
-
             {!isOpen && (
               <div className="flex flex-col sm:flex-row sm:justify-between space-y-2 sm:space-y-0">
                 {contract.title && (
@@ -94,10 +141,19 @@ export const ContractCard: React.FC<ContractCardProps> = ({
               <ContractTasks tasks={contract.tasks} />
 
               <ContractMembers
-                members={contract.members}
+                members={members}
                 currentUser={currentUser}
                 isApproved={isApproved}
                 onApprovalToggle={handleApprovalToggle}
+              />
+
+              {/* Contract Payment - only visible when expanded */}
+              <ContractPayment
+                contract={contract}
+                currentUser={currentUser}
+                allMembers={members}
+                expanded={isOpen}
+                allPMsApproved={allPMsApproved}
               />
             </CollapsibleContent>
           </CardContent>
