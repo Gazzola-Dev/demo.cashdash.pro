@@ -158,6 +158,73 @@ export type Database = {
           },
         ]
       }
+      contract_approvals: {
+        Row: {
+          approval_type: string
+          approved: boolean
+          contract_id: string
+          id: string
+          timestamp: string
+          user_id: string
+        }
+        Insert: {
+          approval_type: string
+          approved?: boolean
+          contract_id: string
+          id?: string
+          timestamp?: string
+          user_id: string
+        }
+        Update: {
+          approval_type?: string
+          approved?: boolean
+          contract_id?: string
+          id?: string
+          timestamp?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_approvals_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_members: {
+        Row: {
+          contract_id: string
+          id: string
+          joined_at: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          contract_id: string
+          id?: string
+          joined_at?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          contract_id?: string
+          id?: string
+          joined_at?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_members_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_milestones: {
         Row: {
           amount_cents: number
@@ -198,6 +265,66 @@ export type Database = {
             columns: ["contract_id"]
             isOneToOne: false
             referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_payments: {
+        Row: {
+          amount_cents: number
+          contract_id: string
+          created_at: string
+          id: string
+          milestone_id: string | null
+          payee_id: string | null
+          payer_id: string | null
+          payment_date: string | null
+          payment_id: string | null
+          payment_method: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          contract_id: string
+          created_at?: string
+          id?: string
+          milestone_id?: string | null
+          payee_id?: string | null
+          payer_id?: string | null
+          payment_date?: string | null
+          payment_id?: string | null
+          payment_method?: string | null
+          status: string
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          contract_id?: string
+          created_at?: string
+          id?: string
+          milestone_id?: string | null
+          payee_id?: string | null
+          payer_id?: string | null
+          payment_date?: string | null
+          payment_id?: string | null
+          payment_method?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_payments_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_payments_milestone_id_fkey"
+            columns: ["milestone_id"]
+            isOneToOne: false
+            referencedRelation: "contract_milestones"
             referencedColumns: ["id"]
           },
         ]
@@ -1439,6 +1566,12 @@ export type Database = {
       mark_all_notifications_seen: {
         Args: {
           p_user_id: string
+        }
+        Returns: undefined
+      }
+      populate_contract_members: {
+        Args: {
+          p_contract_id: string
         }
         Returns: undefined
       }
