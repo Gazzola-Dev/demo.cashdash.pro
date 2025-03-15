@@ -5,13 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { formatCurrency, formatDate } from "@/lib/contract.util";
 import { ContractMember } from "@/types/app.types";
-import {
-  CheckCircle,
-  CreditCard,
-  DollarSign,
-  LoaderCircle,
-  LockIcon,
-} from "lucide-react";
+import { CheckCircle, CreditCard, LoaderCircle, LockIcon } from "lucide-react";
 import { useState } from "react";
 
 interface ContractInfo {
@@ -130,17 +124,6 @@ export const ContractPayment: React.FC<ContractPaymentProps> = ({
   return (
     <div className="mt-6">
       <div className="mb-4">
-        <h3 className="text-lg font-semibold flex items-center gap-2 mb-3">
-          <DollarSign className="h-5 w-5" />
-          Payment
-        </h3>
-        <div className="flex justify-between mb-4">
-          <span className="font-medium">Contract Total:</span>
-          <span className="font-bold text-lg">
-            {formatCurrency(contract.price)}
-          </span>
-        </div>
-
         <Separator className="my-4" />
 
         {!allPMsApproved ? (

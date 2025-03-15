@@ -1,3 +1,4 @@
+import ContractDetails from "@/components/milestones/ContractDetails";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -18,7 +19,6 @@ import { formatCurrency } from "@/lib/contract.util";
 import { useAppData } from "@/stores/app.store";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
-import { ContractDetails } from "./ContractDetails";
 import { ContractMembers } from "./ContractMembers";
 import { ContractPayment } from "./ContractPayment";
 import { ContractTasks } from "./ContractTasks";
@@ -30,16 +30,17 @@ export const ContractCard = () => {
   const [allPMsApproved, setAllPMsApproved] = useState(false);
 
   // Get data from the app store
-  const { milestone, contract, tasks } = useAppData();
-
-  const contractMembers = contract?.members || [];
+  const { milestone, contract: appContract, tasks } = useAppData();
 
   // Initialize the fetch but don't use the returned data directly
-  const { isLoading, error } = useGetContractByMilestone(milestone?.id);
+  const {
+    isLoading,
+    error,
+    data: queryContract,
+  } = useGetContractByMilestone(milestone?.id);
 
-  const handleApprovalToggle = () => {
-    setIsApprovalDialogOpen(true);
-  };
+  const contract = appContract || queryContract;
+  const contractMembers = contract?.members || [];
 
   const handleConfirmApproval = () => {
     setIsApproved(!isApproved);
@@ -64,7 +65,7 @@ export const ContractCard = () => {
   };
 
   // Show loading state
-  if (isLoading) {
+  if (isLoading || !contract) {
     return (
       <Card className="w-full">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -87,22 +88,6 @@ export const ContractCard = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-red-500">Error loading contract data</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Show empty state if no contract is found
-  if (!contract) {
-    return (
-      <Card className="w-full">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle>Contract</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-muted-foreground">
-            No contract associated with this milestone
-          </p>
         </CardContent>
       </Card>
     );
@@ -142,7 +127,7 @@ export const ContractCard = () => {
                 )}
                 <div className="flex items-center text-muted-foreground">
                   <span className="font-semibold text-foreground">
-                    ${formatCurrency(contract.total_amount_cents / 100)}
+                    {formatCurrency(contract.total_amount_cents / 100)}
                   </span>
                 </div>
               </div>
@@ -150,11 +135,7 @@ export const ContractCard = () => {
 
             {/* Expanded content */}
             <CollapsibleContent className="space-y-6 pt-4">
-              <ContractDetails
-                price={contract.total_amount_cents / 100}
-                startDate={new Date(contract.start_date)}
-                title={contract.title}
-              />
+              <ContractDetails />
 
               <ContractTasks tasks={tasks} />
 
