@@ -12,24 +12,22 @@ type Contract = Tables<"contracts">;
 export const updateContractAction = async (
   contractId: string,
   updates: Partial<Contract>,
-): Promise<ActionResponse<Contract>> => {
+): Promise<ActionResponse<ContractWithMembers>> => {
   const actionName = "updateContractAction";
 
   try {
     const supabase = await getSupabaseServerActionClient();
 
-    // Make the API call
-    const { data, error } = await supabase
-      .from("contracts")
-      .update(updates)
-      .eq("id", contractId)
-      .select()
-      .single();
+    // Use the new RPC function instead of direct update
+    const { data, error } = await supabase.rpc("update_contract_with_members", {
+      p_contract_id: contractId,
+      p_updates: updates,
+    });
 
     conditionalLog(actionName, { data, error }, true, null);
 
     if (error) throw error;
-    return getActionResponse({ data: data as Contract });
+    return getActionResponse({ data: data as any as ContractWithMembers });
   } catch (error) {
     conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });

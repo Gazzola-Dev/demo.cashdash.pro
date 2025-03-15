@@ -49,7 +49,9 @@ export const ContractDetails = () => {
     }
   }, [contract]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -110,6 +112,7 @@ export const ContractDetails = () => {
     }
 
     if (hasChanged && contract.id) {
+      // Call the API to update the contract
       updateContract(contract.id, updates);
     }
 

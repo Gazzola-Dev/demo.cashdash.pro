@@ -1,5 +1,3 @@
-"use client";
-
 import {
   getContractByMilestoneAction,
   updateContractAction,
@@ -50,8 +48,9 @@ export const useGetContractByMilestone = (
 export const useUpdateContract = () => {
   const hookName = "useUpdateContract";
   const { toast } = useToast();
-  const [prevState, setPrevState] = useState<Contract | null>(null);
+  const [prevState, setPrevState] = useState<ContractWithMembers | null>(null);
   const queryClient = useQueryClient();
+  const { contract, setContract } = useAppData();
 
   const { mutate, isPending } = useMutation({
     mutationFn: async ({
@@ -81,19 +80,27 @@ export const useUpdateContract = () => {
         "contract",
         contractId,
       ]);
-      setPrevState(previousContract as Contract | null);
+      setPrevState(previousContract as ContractWithMembers | null);
 
-      // Optimistically update the contract
+      // Optimistically update the contract in query cache
       queryClient.setQueryData(
         ["contract", contractId],
         (old: ContractWithMembers | null) => {
           if (!old) return null;
           return {
             ...old,
-            contract: { ...old.contract, ...updates },
+            ...updates,
           };
         },
       );
+
+      // Also update the contract in app store for immediate UI reflection
+      if (contract && contract.id === contractId) {
+        setContract({
+          ...contract,
+          ...updates,
+        });
+      }
 
       return { previousContract };
     },
@@ -102,6 +109,18 @@ export const useUpdateContract = () => {
         title: "Contract updated",
         description: "Contract has been successfully updated.",
       });
+
+      // Update the contract in the app store with the response from the server
+      if (data) {
+        console.log(data);
+        const updatedContract = {
+          ...contract,
+          ...data,
+          members: data.members || [],
+        };
+
+        setContract(updatedContract);
+      }
 
       // Invalidate relevant queries to ensure fresh data
       queryClient.invalidateQueries({
@@ -112,9 +131,14 @@ export const useUpdateContract = () => {
       // Restore previous state if needed
       if (context?.previousContract) {
         queryClient.setQueryData(
-          ["contract", (context.previousContract as Contract).id],
+          ["contract", (context.previousContract as ContractWithMembers).id],
           context.previousContract,
         );
+
+        // Also restore the app store state
+        if (prevState) {
+          setContract(prevState);
+        }
       }
 
       toast({
@@ -134,7 +158,7 @@ export const useUpdateContract = () => {
       ]) as ContractWithMembers | null;
 
       if (currentContract) {
-        setPrevState(currentContract.contract);
+        setPrevState(currentContract);
       }
 
       mutate({ contractId, updates });

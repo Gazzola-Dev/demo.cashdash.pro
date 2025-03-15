@@ -1609,6 +1609,13 @@ export type Database = {
         }
         Returns: Json
       }
+      update_contract_with_members: {
+        Args: {
+          p_contract_id: string
+          p_updates: Json
+        }
+        Returns: Json
+      }
       update_profile_data: {
         Args: {
           p_user_id: string

@@ -1,6 +1,8 @@
 const fs = require("fs");
 const path = require("path");
 
+const includeSquashedMigration = true;
+
 // Whitelist of directories that contain reference-worthy code
 const whitelistedDirs = [
   "actions", // Core business logic
@@ -285,7 +287,7 @@ function main() {
   const llmDevMappings = [];
 
   // Create squashed migration if exists
-  if (fs.existsSync("supabase/migrations")) {
+  if (fs.existsSync("supabase/migrations") && includeSquashedMigration) {
     const migrationMapping = createSquashedMigration(
       "supabase/migrations",
       ".llm",
