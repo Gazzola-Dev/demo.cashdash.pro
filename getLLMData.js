@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const includeSquashedMigration = false;
+const includeSquashedMigration = true;
 
 // Whitelist of directories that contain reference-worthy code
 const whitelistedDirs = [

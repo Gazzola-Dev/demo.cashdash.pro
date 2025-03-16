@@ -1223,6 +1223,14 @@ export type Database = {
       }
     }
     Functions: {
+      add_contract_member: {
+        Args: {
+          p_contract_id: string
+          p_user_id: string
+          p_role?: string
+        }
+        Returns: Json
+      }
       authorize: {
         Args: {
           requested_permission: Database["public"]["Enums"]["app_permission"]
@@ -1388,6 +1396,12 @@ export type Database = {
             }
             Returns: Json
           }
+      get_contract_by_id: {
+        Args: {
+          p_contract_id: string
+        }
+        Returns: Json
+      }
       get_contract_by_milestone: {
         Args: {
           p_milestone_id: string
@@ -1588,6 +1602,13 @@ export type Database = {
         }
         Returns: undefined
       }
+      remove_contract_member: {
+        Args: {
+          p_contract_id: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       set_project_current_milestone: {
         Args: {
           p_project_id: string
@@ -1613,6 +1634,14 @@ export type Database = {
           comment_id: string
           comment_content: string
           user_id: string
+        }
+        Returns: Json
+      }
+      update_contract_member_approval: {
+        Args: {
+          p_contract_id: string
+          p_user_id: string
+          p_approved: boolean
         }
         Returns: Json
       }
