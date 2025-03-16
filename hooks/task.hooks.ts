@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  createTaskAction,
   updateTaskAction,
   updateTasksOrderAction,
 } from "@/actions/task.action";
@@ -10,7 +11,7 @@ import { useAppData } from "@/stores/app.store";
 import { TaskComplete, TaskWithAssignee } from "@/types/app.types";
 import { Tables } from "@/types/database.types";
 import { useMutation } from "@tanstack/react-query";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 type Task = Tables<"tasks">;
@@ -190,6 +191,111 @@ export const useUpdateTasksOrder = () => {
 
   return {
     updateTasksOrder,
+    isPending,
+  };
+};
+
+export const useCreateTask = () => {
+  const hookName = "useCreateTask";
+  const { toast } = useToast();
+  const router = useRouter();
+  const { project, milestone, tasks, setTasks } = useAppData();
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: async () => {
+      if (!project?.id) {
+        throw new Error("No project selected");
+      }
+
+      const milestoneId = milestone?.id || null;
+
+      // Call the server action to create the task
+      const { data, error } = await createTaskAction(project.id, milestoneId);
+      conditionalLog(hookName, { data, error }, false);
+
+      if (error) throw new Error(error);
+      return data;
+    },
+    onMutate: () => {
+      // Optimistically add a temporary task to the UI
+      if (project) {
+        const tempId = `temp-${Date.now()}`;
+        const nextOrdinalId =
+          tasks.length > 0 ? Math.max(...tasks.map(t => t.ordinal_id)) + 1 : 1;
+        const nextPriority =
+          tasks.length > 0
+            ? Math.max(...tasks.map(t => t.ordinal_priority)) + 1
+            : 1;
+
+        const tempTask: TaskWithAssignee = {
+          id: tempId,
+          title: "New Task",
+          description: "",
+          project_id: project.id,
+          prefix: project.prefix || "TASK",
+          slug: `${project.id.substring(0, 8)}-${(project.prefix || "TASK").toLowerCase()}-${nextOrdinalId}`,
+          ordinal_id: nextOrdinalId,
+          ordinal_priority: nextPriority,
+          status: "draft",
+          priority: "medium",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          assignee: null,
+          assignee_profile: null,
+          budget_cents: null,
+          estimated_minutes: null,
+          recorded_minutes: null,
+          start_time: null,
+        };
+
+        // Update tasks in the app store
+        setTasks([...tasks, tempTask]);
+
+        return { tempId };
+      }
+      return {};
+    },
+    onSuccess: (data, _, context) => {
+      if (data) {
+        // Navigate to the task page
+
+        // Update the tasks list by replacing the temporary task with the real one
+        if (context?.tempId) {
+          setTasks(
+            tasks.map(t =>
+              t.id === context.tempId
+                ? ({ ...data, assignee_profile: null } as TaskWithAssignee)
+                : t,
+            ),
+          );
+        }
+
+        toast({
+          title: "Task Created",
+          description: "New task has been created successfully.",
+        });
+      }
+    },
+    onError: error => {
+      // Remove the temporary task on error
+      if (tasks.find(t => t.id.startsWith("temp-"))) {
+        setTasks(tasks.filter(t => !t.id.startsWith("temp-")));
+      }
+
+      toast({
+        title: "Failed to create task",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const createTask = useCallback(() => {
+    mutate();
+  }, [mutate]);
+
+  return {
+    createTask,
     isPending,
   };
 };

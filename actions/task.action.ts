@@ -4,6 +4,7 @@ import getSupabaseServerActionClient from "@/clients/action-client";
 import getActionResponse from "@/lib/action.util";
 import { conditionalLog } from "@/lib/log.utils";
 import { ActionResponse } from "@/types/action.types";
+import { TaskWithAssignee } from "@/types/app.types";
 import { Tables } from "@/types/database.types";
 
 type Task = Tables<"tasks">;
@@ -78,6 +79,39 @@ export const updateTasksOrderAction = async (
 
     conditionalLog(actionName, { success: true }, true);
     return getActionResponse({ data: true });
+  } catch (error) {
+    conditionalLog(actionName, { error }, true);
+    return getActionResponse({ error });
+  }
+};
+
+export const createTaskAction = async (
+  projectId: string,
+  milestoneId?: string | null,
+): Promise<ActionResponse<TaskWithAssignee>> => {
+  const actionName = "createTaskAction";
+
+  try {
+    const supabase = await getSupabaseServerActionClient();
+
+    // Call the new create_task database function with the project and milestone IDs
+    const { data, error } = await supabase.rpc("create_task", {
+      p_project_id: projectId,
+      p_milestone_id: milestoneId || undefined,
+    });
+
+    conditionalLog(actionName, { data, error }, true);
+
+    if (error) throw error;
+
+    // Cast the response to the required type for the app state
+    const taskWithAssignee: TaskWithAssignee = {
+      // @ts-ignore: allow type casting
+      ...data,
+      assignee_profile: null, // Add the required properties for TaskWithAssignee
+    };
+
+    return getActionResponse({ data: taskWithAssignee });
   } catch (error) {
     conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });

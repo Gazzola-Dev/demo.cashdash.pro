@@ -5,19 +5,19 @@ import { TaskHeader } from "@/components/tasks/TaskPage/TaskHeader";
 import TaskSidebar from "@/components/tasks/TaskPage/TaskSidebar";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import useAppData from "@/hooks/useAppData";
+import { useAppData } from "@/stores/app.store";
 import { AlertTriangle, TerminalIcon, Trash2 } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 export function TaskPage() {
   const pathname = usePathname();
-  const { project, currentMilestone } = useAppData();
+  const { project, milestone } = useAppData();
 
   // Check if we're on the new task route
   const isNewTask = pathname.endsWith("/new");
 
   // Check if there's a draft milestone
-  const hasDraftMilestone = currentMilestone?.status === "draft";
+  const hasDraftMilestone = milestone?.status === "draft";
 
   // Show warning if it's a new task and there's no draft milestone
   const showMilestoneWarning = isNewTask && !hasDraftMilestone;

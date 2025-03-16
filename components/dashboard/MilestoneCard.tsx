@@ -293,7 +293,7 @@ function MilestoneCard() {
 
   if (isLoading) {
     return (
-      <div className="h-full w-full md:w-1/2">
+      <div className="h-full w-full">
         <MilestoneCardSkeleton />
       </div>
     );

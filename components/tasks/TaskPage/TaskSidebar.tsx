@@ -6,8 +6,8 @@ import {
 } from "@/components/tasks/TaskSelectComponents";
 import { Card, CardContent } from "@/components/ui/card";
 import { useUpdateTask, useUpdateTasksOrder } from "@/hooks/task.hooks";
-import useAppData from "@/hooks/useAppData";
 import { cn } from "@/lib/utils";
+import { useAppData } from "@/stores/app.store";
 import { Tables } from "@/types/database.types";
 import { Award, ChevronDown, ChevronUp } from "lucide-react";
 import { useCallback } from "react";

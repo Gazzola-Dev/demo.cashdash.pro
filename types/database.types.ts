@@ -1322,6 +1322,13 @@ export type Database = {
         }
         Returns: Json
       }
+      create_task: {
+        Args: {
+          p_project_id: string
+          p_milestone_id?: string
+        }
+        Returns: Json
+      }
       custom_access_token_hook: {
         Args: {
           event: Json
