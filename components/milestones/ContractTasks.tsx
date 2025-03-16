@@ -13,7 +13,7 @@ import { useCreateTask, useUpdateTask } from "@/hooks/task.hooks";
 import { useToast } from "@/hooks/use-toast";
 import { useAppData } from "@/stores/app.store";
 import { Tables } from "@/types/database.types";
-import { Check, Edit, PlusCircle } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { KeyboardEvent, useState } from "react";
 
@@ -25,7 +25,7 @@ interface ContractTasksProps {
 
 export const ContractTasks: React.FC<ContractTasksProps> = ({ tasks }) => {
   const { toast } = useToast();
-  const { updateTask, isPending } = useUpdateTask();
+  const { updateTask } = useUpdateTask();
   const { createTask, isPending: isCreating } = useCreateTask();
   const { milestone, project } = useAppData();
   const router = useRouter();
@@ -48,13 +48,13 @@ export const ContractTasks: React.FC<ContractTasksProps> = ({ tasks }) => {
     }
   };
 
-  // Handle save
-  const handleSave = (taskId: string) => {
+  // Handle saving changes with optimistic update
+  const handleSave = (taskId: string, field: string) => {
     const updates: Partial<Task> = {};
 
-    if (editingField === "title" && editedTitle.trim()) {
+    if (field === "title" && editedTitle.trim()) {
       updates.title = editedTitle.trim();
-    } else if (editingField === "description") {
+    } else if (field === "description") {
       updates.description = editedDescription.trim();
     }
 
@@ -72,10 +72,11 @@ export const ContractTasks: React.FC<ContractTasksProps> = ({ tasks }) => {
   const handleKeyDown = (
     e: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
     taskId: string,
+    field: string,
   ) => {
-    if (e.key === "Enter" && editingField === "title") {
+    if (e.key === "Enter" && field === "title") {
       e.preventDefault();
-      handleSave(taskId);
+      handleSave(taskId, field);
     } else if (e.key === "Escape") {
       setEditingTaskId(null);
       setEditingField(null);
@@ -135,11 +136,10 @@ export const ContractTasks: React.FC<ContractTasksProps> = ({ tasks }) => {
                       <Input
                         value={editedTitle}
                         onChange={e => setEditedTitle(e.target.value)}
-                        onBlur={() => handleSave(task.id!)}
-                        onKeyDown={e => handleKeyDown(e, task.id!)}
+                        onBlur={() => handleSave(task.id!, "title")}
+                        onKeyDown={e => handleKeyDown(e, task.id!, "title")}
                         className="h-8"
                         autoFocus
-                        disabled={isPending}
                       />
                     </div>
                   ) : (
@@ -151,7 +151,6 @@ export const ContractTasks: React.FC<ContractTasksProps> = ({ tasks }) => {
                       }}
                     >
                       <span>{task.title}</span>
-                      <Edit className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100" />
                     </div>
                   )}
                 </div>
@@ -169,24 +168,14 @@ export const ContractTasks: React.FC<ContractTasksProps> = ({ tasks }) => {
                         <Textarea
                           value={editedDescription}
                           onChange={e => setEditedDescription(e.target.value)}
-                          onKeyDown={e => handleKeyDown(e, task.id!)}
+                          onBlur={() => handleSave(task.id!, "description")}
+                          onKeyDown={e =>
+                            handleKeyDown(e, task.id!, "description")
+                          }
                           className="min-h-[100px]"
                           placeholder="Add a description for this task..."
                           autoFocus
-                          disabled={isPending}
                         />
-                        <div className="flex justify-end">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleSave(task.id!)}
-                            disabled={isPending}
-                            className="flex items-center gap-1"
-                          >
-                            <Check className="h-4 w-4" />
-                            Save
-                          </Button>
-                        </div>
                       </div>
                     ) : (
                       <div

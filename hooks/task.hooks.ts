@@ -10,7 +10,7 @@ import { conditionalLog } from "@/lib/log.utils";
 import { useAppData } from "@/stores/app.store";
 import { TaskComplete, TaskWithAssignee } from "@/types/app.types";
 import { Tables } from "@/types/database.types";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
@@ -19,6 +19,7 @@ type Task = Tables<"tasks">;
 export const useUpdateTask = () => {
   const hookName = "useUpdateTask";
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const { tasks, setTasks, task: currentTask, setTask, project } = useAppData();
   const [prevState, setPrevState] = useState<TaskWithAssignee[]>([]);
   const [prevCurrentTask, setPrevCurrentTask] = useState<TaskComplete | null>(
@@ -81,7 +82,12 @@ export const useUpdateTask = () => {
       if (error) throw new Error(error);
       return data;
     },
-    onSuccess: () => {
+    onSuccess: data => {
+      // Invalidate relevant queries to ensure data consistency
+      if (data?.id) {
+        queryClient.invalidateQueries({ queryKey: ["task", data.id] });
+      }
+
       toast({
         title: "Task updated",
         description: "Task has been successfully updated.",
@@ -119,6 +125,7 @@ export const useUpdateTask = () => {
 export const useUpdateTasksOrder = () => {
   const hookName = "useUpdateTasksOrder";
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const { tasks, setTasks, task: currentTask, setTask } = useAppData();
   const [prevState, setPrevState] = useState<TaskWithAssignee[]>([]);
   const [prevCurrentTask, setPrevCurrentTask] = useState<TaskComplete | null>(
@@ -161,6 +168,9 @@ export const useUpdateTasksOrder = () => {
       return data;
     },
     onSuccess: () => {
+      // Invalidate relevant queries to ensure data consistency
+      queryClient.invalidateQueries({ queryKey: ["appData"] });
+
       toast({
         title: "Task order updated",
         description: "Task priorities have been successfully updated.",
@@ -199,6 +209,7 @@ export const useCreateTask = () => {
   const hookName = "useCreateTask";
   const { toast } = useToast();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { project, milestone, tasks, setTasks } = useAppData();
 
   const { mutate, isPending } = useMutation({
@@ -258,6 +269,8 @@ export const useCreateTask = () => {
     onSuccess: (data, _, context) => {
       if (data) {
         // Navigate to the task page
+        const taskUrl = `/${project?.slug}/${data.ordinal_id}`;
+        router.push(taskUrl);
 
         // Update the tasks list by replacing the temporary task with the real one
         if (context?.tempId) {
@@ -268,6 +281,14 @@ export const useCreateTask = () => {
                 : t,
             ),
           );
+        }
+
+        // Invalidate relevant queries to ensure data consistency
+        queryClient.invalidateQueries({ queryKey: ["appData"] });
+        if (milestone?.id) {
+          queryClient.invalidateQueries({
+            queryKey: ["projectMilestones", project?.slug],
+          });
         }
 
         toast({
@@ -300,9 +321,40 @@ export const useCreateTask = () => {
   };
 };
 
+// Separate mutation for task priority updates
+export const useUpdateTaskPriority = () => {
+  const { toast } = useToast();
+  const { task } = useAppData();
+
+  return useMutation({
+    mutationFn: async (newPriority: number) => {
+      if (!task?.id) throw new Error("No task selected");
+
+      const { data, error } = await updateTaskAction(task.id, {
+        ordinal_priority: newPriority,
+      });
+
+      if (error) throw new Error(error);
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Priority updated",
+        description: "Task priority has been successfully updated.",
+      });
+    },
+    onError: error => {
+      toast({
+        title: "Failed to update priority",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+};
+
 export function useTaskPage() {
   const pathname = usePathname();
-  const { toast } = useToast();
   const { task, tasks, project, milestone } = useAppData();
 
   // Check if task is new based on URL
@@ -331,36 +383,8 @@ export function useTaskPage() {
     }
   }, [task?.ordinal_priority]);
 
-  // Update task priority
-  const updateTaskPriorityMutation = useMutation({
-    mutationFn: async (newPriority: number) => {
-      if (!task?.id) return null;
-
-      const { data, error } = await updateTaskAction(task.id, {
-        ordinal_priority: newPriority,
-      });
-
-      if (error) throw new Error(error);
-      return data;
-    },
-    onSuccess: () => {
-      toast({
-        title: "Priority updated",
-        description: "Task priority has been successfully updated.",
-      });
-    },
-    onError: error => {
-      toast({
-        title: "Failed to update priority",
-        description: error.message,
-        variant: "destructive",
-      });
-      // Revert to original value on error
-      if (task?.ordinal_priority) {
-        setPriorityValue(task.ordinal_priority);
-      }
-    },
-  });
+  // Use the specialized task priority mutation
+  const updateTaskPriorityMutation = useUpdateTaskPriority();
 
   const handlePriorityChange = (value: number) => {
     // Validate bounds
