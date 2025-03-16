@@ -1,10 +1,9 @@
-// components/home/AuthenticatedHome.tsx
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import useAppData from "@/hooks/useAppData";
 import { useToastQueue } from "@/hooks/useToastQueue";
 import { redactEmail } from "@/lib/string.util";
 import { cn } from "@/lib/utils";
+import { useAppData } from "@/stores/app.store";
 import { User } from "@supabase/supabase-js";
 import { Check, Edit2, LogOut, Shield } from "lucide-react";
 import { useState } from "react";
