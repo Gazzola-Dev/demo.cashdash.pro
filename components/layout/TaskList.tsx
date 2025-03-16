@@ -132,6 +132,7 @@ const TaskList = () => {
     return initialsOnly ? name.slice(0, 2) : name;
   };
 
+  if (!sortedTasks.length) return <div className="flex-grow"></div>;
   return (
     <>
       {open && (
