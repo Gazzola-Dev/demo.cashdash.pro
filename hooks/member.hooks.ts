@@ -1,4 +1,4 @@
-// hooks/member.hooks.ts - Updated version
+// hooks/member.hooks.ts
 
 "use client";
 
@@ -40,6 +40,7 @@ export const useGetProjectMembers = (projectId?: string) => {
 // New hook to get project invitations
 export const useGetProjectInvitations = (projectId?: string) => {
   const hookName = "useGetProjectInvitations";
+  const { project, setInvitations } = useAppData();
 
   return useQuery({
     queryKey: ["projectInvitations", projectId],
@@ -50,6 +51,12 @@ export const useGetProjectInvitations = (projectId?: string) => {
       conditionalLog(hookName, { data, error }, false);
 
       if (error) throw new Error(error);
+
+      // Update the app store with the invitations
+      if (data) {
+        setInvitations(data);
+      }
+
       return data;
     },
     enabled: !!projectId,
@@ -165,7 +172,7 @@ export const useInviteProjectMembers = () => {
   const hookName = "useInviteProjectMembers";
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { project } = useAppData();
+  const { project, invitations, setInvitations } = useAppData();
 
   const { mutate, isPending } = useMutation({
     mutationFn: async ({ emailsInput }: { emailsInput: string }) => {
@@ -357,7 +364,7 @@ export const useCancelInvitation = () => {
   const hookName = "useCancelInvitation";
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { project } = useAppData();
+  const { project, invitations, setInvitations } = useAppData();
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (invitationId: string) => {
@@ -392,6 +399,13 @@ export const useCancelInvitation = () => {
         );
       }
 
+      // Also update the app store
+      if (invitations) {
+        setInvitations(
+          invitations.filter(invite => invite.id !== invitationId),
+        );
+      }
+
       // Return the previous state
       return { previousInvitations };
     },
@@ -418,6 +432,11 @@ export const useCancelInvitation = () => {
           ["projectInvitations", project.id],
           context.previousInvitations,
         );
+
+        // Restore app store
+        if (context.previousInvitations) {
+          setInvitations(context.previousInvitations);
+        }
       }
 
       toast({

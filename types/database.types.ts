@@ -1478,6 +1478,12 @@ export type Database = {
         }
         Returns: Json
       }
+      get_project_invites: {
+        Args: {
+          p_project_id: string
+        }
+        Returns: Json[]
+      }
       get_project_name_by_id: {
         Args: {
           p_project_id: string

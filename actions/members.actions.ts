@@ -276,24 +276,23 @@ export const getProjectMembersAction = async (
   }
 };
 
-// New function to get project invitations
+// Updated function to get project invitations using the new DB function
 export const getProjectInvitationsAction = async (
   projectId: string,
 ): Promise<ActionResponse<Tables<"project_invitations">[]>> => {
   const actionName = "getProjectInvitationsAction";
-
   try {
     const supabase = await getSupabaseServerActionClient();
 
-    // Fetch project invitations
-    const { data, error } = await supabase
-      .from("project_invitations")
-      .select("*")
-      .eq("project_id", projectId);
+    // Use the new function instead of directly querying the table
+    const { data, error } = await supabase.rpc("get_project_invites", {
+      p_project_id: projectId,
+    });
 
-    conditionalLog(actionName, { data, error }, true);
+    conditionalLog(actionName, { data, error }, true, null);
 
     if (error) throw error;
+
     return getActionResponse({
       data: data as Tables<"project_invitations">[],
     });

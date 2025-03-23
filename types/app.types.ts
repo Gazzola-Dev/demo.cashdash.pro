@@ -86,6 +86,15 @@ export interface MilestoneEvent {
   actor: MilestoneEventActor;
 }
 
+// Define contract invitation
+export interface ContractInvitation {
+  id: string;
+  email: string;
+  status: string;
+  role: string;
+  created_at: string;
+}
+
 // Define ContractMember interface
 export interface ContractMember {
   id: string;
@@ -99,6 +108,7 @@ export interface ContractMember {
 // Define Contract with Members
 export interface ContractWithMembers extends Contract {
   members: ContractMember[];
+  invitations?: ContractInvitation[];
 }
 
 // Define the main app state interface
@@ -146,7 +156,7 @@ export interface AppState {
   reset: () => void;
 }
 
-// Contract Member Type
+// Contract Member Type (already defined above, keeping for backwards compatibility)
 export interface ContractMember {
   id: string;
   display_name: string | null;
@@ -154,10 +164,4 @@ export interface ContractMember {
   hasApproved?: boolean;
   avatar_url?: string | null;
   role?: string | null;
-}
-
-// Contract with Members Type
-export interface ContractWithMembers {
-  contract: Contract;
-  members: ContractMember[];
 }
