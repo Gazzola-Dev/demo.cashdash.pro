@@ -198,21 +198,21 @@ export type Database = {
           contract_id: string
           id: string
           joined_at: string
-          role: string
+          role: Database["public"]["Enums"]["contract_member_role"]
           user_id: string
         }
         Insert: {
           contract_id: string
           id?: string
           joined_at?: string
-          role: string
+          role: Database["public"]["Enums"]["contract_member_role"]
           user_id: string
         }
         Update: {
           contract_id?: string
           id?: string
           joined_at?: string
-          role?: string
+          role?: Database["public"]["Enums"]["contract_member_role"]
           user_id?: string
         }
         Relationships: [
@@ -1478,6 +1478,12 @@ export type Database = {
         }
         Returns: Json
       }
+      get_project_name_by_id: {
+        Args: {
+          p_project_id: string
+        }
+        Returns: string
+      }
       get_recent_tasks_data:
         | {
             Args: {
@@ -1534,7 +1540,7 @@ export type Database = {
           p_project_id: string
           p_inviter_id: string
           p_email: string
-          p_role: string
+          p_role?: string
           p_expires_at?: string
         }
         Returns: Json
@@ -1629,6 +1635,14 @@ export type Database = {
         }
         Returns: string
       }
+      togglecontractmemberaction: {
+        Args: {
+          p_contract_id: string
+          p_user_id: string
+          p_role?: string
+        }
+        Returns: Json
+      }
       update_comment_data: {
         Args: {
           comment_id: string
@@ -1713,6 +1727,7 @@ export type Database = {
       app_role: "admin"
       approval_type: "payment" | "completion" | "cancellation"
       content_type: "project" | "task" | "milestone" | "subtask" | "comment"
+      contract_member_role: "admin" | "project_manager" | "developer" | "client"
       contract_milestone_status: "pending" | "funded" | "released"
       contract_status: "active" | "completed" | "cancelled"
       dispute_status: "open" | "resolved"

@@ -1,7 +1,7 @@
 "use client";
 import MilestoneCard from "@/components/dashboard/MilestoneCard";
 import ProjectCard from "@/components/dashboard/ProjectCard";
-import ProjectMemberListCard from "@/components/dashboard/ProjectMemberList";
+import ProjectMembersCard from "@/components/dashboard/ProjectMemberCard";
 import TaskListCard from "@/components/dashboard/TaskListCard";
 
 const DashboardPage = () => {
@@ -14,7 +14,7 @@ const DashboardPage = () => {
 
       <TaskListCard />
 
-      <ProjectMemberListCard />
+      <ProjectMembersCard />
 
       <div className="md:hidden flex flex-col md:flex-row gap-5 ">
         <ProjectCard />
