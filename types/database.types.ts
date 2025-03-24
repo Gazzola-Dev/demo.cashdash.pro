@@ -1301,25 +1301,36 @@ export type Database = {
         }
         Returns: Json
       }
-      create_notification: {
-        Args: {
-          p_recipient_id: string
-          p_content_id: string
-          p_content_type: Database["public"]["Enums"]["content_type"]
-          p_message: string
-          p_url_path?: string
-        }
-        Returns: {
-          content_id: string
-          content_type: Database["public"]["Enums"]["content_type"]
-          created_at: string
-          id: string
-          message: string
-          recipient_id: string
-          seen: boolean
-          url_path: string | null
-        }
-      }
+      create_notification:
+        | {
+            Args: {
+              p_recipient_id: string
+              p_content_id: string
+              p_content_type: Database["public"]["Enums"]["content_type"]
+              p_message: string
+              p_url_path?: string
+            }
+            Returns: {
+              content_id: string
+              content_type: Database["public"]["Enums"]["content_type"]
+              created_at: string
+              id: string
+              message: string
+              recipient_id: string
+              seen: boolean
+              url_path: string | null
+            }
+          }
+        | {
+            Args: {
+              p_user_id: string
+              p_content_id: string
+              p_content_type: Database["public"]["Enums"]["content_type"]
+              p_message: string
+              p_link: string
+            }
+            Returns: string
+          }
       create_project_with_owner: {
         Args: {
           p_name: string

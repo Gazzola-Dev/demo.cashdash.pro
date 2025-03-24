@@ -1,8 +1,15 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useGetAppData, useGetTask, useUpdateProfile } from "@/hooks/app.hooks";
 import { useHandleInvitationResponse } from "@/hooks/invitation.hooks";
-import { useDialogQueue } from "@/hooks/useDialogQueue";
 import useSupabase from "@/hooks/useSupabase";
 import { useAppStore } from "@/stores/app.store";
 import { Session } from "@supabase/supabase-js";
@@ -36,10 +43,14 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     user,
   } = useAppStore();
 
+  // State for handling invitation dialogs
+  const [currentInvitationIndex, setCurrentInvitationIndex] =
+    useState<number>(0);
+  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+
   const { refetch: refetchTask } = useGetTask(secondSegment);
   const { refetch: refetchAppData } = useGetAppData();
   const { updateProfile } = useUpdateProfile();
-  const { dialog } = useDialogQueue();
   const { handleInvitationResponse, isPending: isInvitationResponsePending } =
     useHandleInvitationResponse();
   const queryClient = useQueryClient();
@@ -52,18 +63,50 @@ export const AppProvider = ({ children }: AppProviderProps) => {
   const onAcceptInvitation = useCallback(
     (invitationId: string) => {
       handleInvitationResponse(invitationId, true);
+      setIsDialogOpen(false);
+
+      // Move to the next invitation if available
+      if (currentInvitationIndex < userInvitations.length - 1) {
+        setCurrentInvitationIndex(prevIndex => prevIndex + 1);
+      }
     },
-    [handleInvitationResponse],
+    [handleInvitationResponse, currentInvitationIndex, userInvitations.length],
   );
 
   const onDeclineInvitation = useCallback(
     (invitationId: string) => {
       handleInvitationResponse(invitationId, false);
+      setIsDialogOpen(false);
+
+      // Move to the next invitation if available
+      if (currentInvitationIndex < userInvitations.length - 1) {
+        setCurrentInvitationIndex(prevIndex => prevIndex + 1);
+      }
     },
-    [handleInvitationResponse],
+    [handleInvitationResponse, currentInvitationIndex, userInvitations.length],
   );
 
-  // // Set up real-time monitoring of invitation changes
+  // Show invitation dialog when there are invitations available
+  useEffect(() => {
+    if (
+      userInvitations &&
+      userInvitations.length > 0 &&
+      !isInvitationResponsePending
+    ) {
+      setIsDialogOpen(true);
+    } else {
+      setIsDialogOpen(false);
+    }
+  }, [userInvitations, isInvitationResponsePending]);
+
+  // Reset the invitation index when invitations change
+  useEffect(() => {
+    if (userInvitations && userInvitations.length === 0) {
+      setCurrentInvitationIndex(0);
+    }
+  }, [userInvitations]);
+
+  // Set up real-time monitoring of invitation changes
   const [isListening, setIsListening] = useState(false);
 
   useEffect(() => {
@@ -98,52 +141,12 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     };
   }, [supabase, profile?.email, isListening, queryClient]);
 
-  // // Refetch invitations when the user signs in or when invitations change
-  // const {
-  //   refetch: refetchInvitations,
-  //   isSuccess: isGetInvitationsSuccess,
-  //   data: pendingInvitations,
-  // } = useGetUserPendingInvitations();
-
-  // // Queue dialogs for pending invitations
-  // useEffect(() => {
-  //   if (
-  //     !pendingInvitations ||
-  //     pendingInvitations.length === 0 ||
-  //     isInvitationResponsePending
-  //   )
-  //     return;
-
-  //   // Process each pending invitation with a dialog
-  //   pendingInvitations.forEach(invitation => {
-  //     dialog({
-  //       title: "Project Invitation",
-  //       description: `You've been invited to join "${invitation.project?.name || "a project"}"${invitation.sender_profile.display_name ? ` by ${invitation.sender_profile.display_name}` : ""}.`,
-  //       confirmText: "Accept",
-  //       cancelText: "Decline",
-  //       onConfirm: () => onAcceptInvitation(invitation.invitation.id),
-  //       onCancel: () => onDeclineInvitation(invitation.invitation.id),
-  //     });
-  //   });
-  // }, [
-  //   pendingInvitations,
-  //   dialog,
-  //   onAcceptInvitation,
-  //   onDeclineInvitation,
-  //   isInvitationResponsePending,
-  // ]);
-
-  // useEffect(() => {
-  //   hasInitialInvitationsRef.current = true;
-  // }, [isGetInvitationsSuccess]);
-
   // Handle auth state changes
   const handleSignIn = useCallback(
     (session: Session | null) => {
       if (session?.user) {
         setUser(session.user);
         refetchAppData();
-        // refetchInvitations(); // Fetch invitations when user signs in
       }
     },
     [setUser, refetchAppData],
@@ -244,7 +247,51 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     task,
   ]);
 
-  return <>{children}</>;
+  // Get the current invitation
+  const currentInvitation = userInvitations[currentInvitationIndex];
+
+  return (
+    <>
+      {children}
+
+      {/* Invitation Dialog */}
+      {currentInvitation && (
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Project Invitation</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              You&apos;ve been invited to join{" "}
+              <span className="font-semibold">
+                {currentInvitation.project?.name || "a project"}
+              </span>
+              .
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() =>
+                  onDeclineInvitation(currentInvitation.invitation.id)
+                }
+                disabled={isInvitationResponsePending}
+              >
+                Decline
+              </Button>
+              <Button
+                onClick={() =>
+                  onAcceptInvitation(currentInvitation.invitation.id)
+                }
+                disabled={isInvitationResponsePending}
+              >
+                Accept
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
+  );
 };
 
 export default AppProvider;
