@@ -136,14 +136,6 @@ function AppSidebar() {
     });
   };
 
-  // Check if current path matches the task view path
-  const isTaskViewPath =
-    task &&
-    configuration.paths.tasks.view({
-      project_slug: project?.slug,
-      ordinal_id: task?.ordinal_id,
-    }) + "$";
-
   return (
     <>
       <Sidebar collapsible="icon">
@@ -497,7 +489,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </header>
             <div className="flex flex-1 flex-col gap-4 p-4 justify-between w-full pb-1">
               <main className="flex flex-col items-center overflow-auto">
-                {children}
+                {!!user && children}
               </main>
               <footer className="flex items-center justify-end w-full text-xs text-gray-500 gap-2">
                 <div className="flex items-center gap-2">

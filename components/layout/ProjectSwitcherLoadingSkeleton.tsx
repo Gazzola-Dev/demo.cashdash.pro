@@ -11,10 +11,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { useAppStore } from "@/stores/app.store";
 import { Book, BookOpenText } from "lucide-react";
 
 export const ProjectSwitcherSkeleton = () => {
   const { open } = useSidebar();
+  const { user } = useAppStore();
 
   return (
     <SidebarMenu>
@@ -52,13 +54,20 @@ export const ProjectSwitcherSkeleton = () => {
         >
           <div
             className={cn(
-              "flex aspect-square items-center justify-center rounded-lg bg-gray-200 dark:bg-gray-700 animate-pulse",
+              "flex aspect-square items-center justify-center rounded-lg bg-gray-200 dark:bg-gray-700",
               open ? "size-8" : "size-6",
+              user ? "animate-pulse" : "opacity-0",
             )}
           ></div>
+
           {open && (
             <div className="grid flex-1 text-left text-sm leading-tight ml-2">
-              <div className="h-5 w-28 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+              <div
+                className={cn(
+                  "h-5 w-28 bg-gray-200 dark:bg-gray-700 rounded animate-pulse",
+                  user ? "animate-pulse" : "opacity-0",
+                )}
+              ></div>
             </div>
           )}
         </Button>

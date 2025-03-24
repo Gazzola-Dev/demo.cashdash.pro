@@ -21,7 +21,7 @@ const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
 export default function RouteBreadcrumb() {
   const pathname = usePathname();
   const segments = pathname.split("/").filter(Boolean);
-  const { project, tasks } = useAppData();
+  const { project, tasks, user } = useAppData();
 
   const homeBreadcrumb = !segments.length ? (
     <BreadcrumbItem className="h-full p-2">
@@ -37,6 +37,8 @@ export default function RouteBreadcrumb() {
       </BreadcrumbLink>
     </BreadcrumbItem>
   );
+
+  if (!user) return homeBreadcrumb;
 
   if (!segments.length)
     return (
