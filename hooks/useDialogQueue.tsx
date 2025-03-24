@@ -8,6 +8,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ReactNode } from "react";
 import { create } from "zustand";
 
 interface DialogOptions {
@@ -18,6 +19,7 @@ interface DialogOptions {
   cancelText?: string;
   onConfirm?: () => void;
   onCancel?: () => void;
+  content?: ReactNode; // Added to support custom content
 }
 
 interface Dialog extends DialogOptions {
@@ -111,6 +113,19 @@ export function DialogRenderer() {
     dismiss();
   };
 
+  // If there's custom content, render it directly
+  if (currentDialog.content) {
+    return (
+      <AlertDialog
+        open={currentDialog.open}
+        onOpenChange={currentDialog.onOpenChange}
+      >
+        {currentDialog.content}
+      </AlertDialog>
+    );
+  }
+
+  // Otherwise, render the standard dialog
   return (
     <AlertDialog
       open={currentDialog.open}

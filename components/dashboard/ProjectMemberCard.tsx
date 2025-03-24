@@ -35,7 +35,7 @@ import {
 import { capitalizeFirstLetter } from "@/lib/string.util";
 import { cn } from "@/lib/utils";
 import { useAppData } from "@/stores/app.store";
-import { Tables } from "@/types/database.types";
+import { ProjectInvitationWithDetails } from "@/types/app.types";
 import {
   ChevronDown,
   ChevronUp,
@@ -72,7 +72,7 @@ const InvitationItem = ({
   invitation,
   onCancel,
 }: {
-  invitation: Tables<"project_invitations">;
+  invitation: ProjectInvitationWithDetails;
   onCancel: (id: string) => void;
 }) => {
   return (
@@ -81,12 +81,14 @@ const InvitationItem = ({
         <div className="flex items-center gap-3">
           <Avatar className="h-10 w-10 bg-gray-200 dark:bg-gray-700">
             <AvatarFallback>
-              {capitalizeFirstLetter((invitation.email || "").substring(0, 2))}
+              {capitalizeFirstLetter(
+                (invitation.invitation.email || "").substring(0, 2),
+              )}
             </AvatarFallback>
           </Avatar>
           <div>
             <div className="font-medium flex items-center gap-2">
-              {invitation.email || "Invited User"}
+              {invitation.invitation.email || "Invited User"}
               <Badge
                 variant="outline"
                 className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800"
@@ -96,7 +98,7 @@ const InvitationItem = ({
               </Badge>
             </div>
             <div className="text-xs text-muted-foreground capitalize">
-              {invitation.role || "member"}
+              {invitation.invitation.role || "member"}
             </div>
           </div>
         </div>
@@ -105,7 +107,7 @@ const InvitationItem = ({
           variant="ghost"
           size="icon"
           className="h-8 w-8"
-          onClick={() => onCancel(invitation.id)}
+          onClick={() => onCancel(invitation.invitation.id)}
         >
           <X className="h-4 w-4 text-destructive" />
         </Button>
@@ -119,7 +121,7 @@ const ProjectMembersCard = () => {
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [emailsInput, setEmailsInput] = useState("");
 
-  const { project, isAdmin, user, profile } = useAppData();
+  const { project, isAdmin, user, profile, projectInvitations } = useAppData();
   const { toggleProjectManagerRole, isPending: isTogglePending } =
     useToggleProjectManagerRole();
   const { inviteProjectMembers, isPending: isInvitePending } =
@@ -130,8 +132,7 @@ const ProjectMembersCard = () => {
     useCancelInvitation();
 
   // Fetch project invitations
-  const { data: invitations, isLoading: isInvitationsLoading } =
-    useGetProjectInvitations(project?.id);
+  const { isLoading: isInvitationsLoading } = useGetProjectInvitations();
 
   // Get project members from the project object
   const members = project?.project_members || [];
@@ -220,8 +221,8 @@ const ProjectMembersCard = () => {
             {!isOpen && (
               <div className="text-sm text-muted-foreground">
                 {members.length} team members
-                {invitations && invitations.length > 0
-                  ? `, ${invitations.length} pending invitations`
+                {projectInvitations && projectInvitations.length > 0
+                  ? `, ${projectInvitations.length} pending invitations`
                   : ""}
               </div>
             )}
@@ -341,11 +342,11 @@ const ProjectMembersCard = () => {
                   ))}
 
                   {/* Render pending invitations */}
-                  {invitations && invitations.length > 0 && (
+                  {projectInvitations && projectInvitations.length > 0 && (
                     <>
-                      {invitations.map(invitation => (
+                      {projectInvitations.map(invitation => (
                         <InvitationItem
-                          key={invitation.id}
+                          key={invitation.invitation.id}
                           invitation={invitation}
                           onCancel={handleCancelInvitation}
                         />
@@ -355,7 +356,8 @@ const ProjectMembersCard = () => {
 
                   {/* Add a placeholder if no members or invitations */}
                   {members.length === 0 &&
-                    (!invitations || invitations.length === 0) && (
+                    (!projectInvitations ||
+                      projectInvitations.length === 0) && (
                       <div className="w-full p-4 text-center text-muted-foreground">
                         No team members yet
                       </div>

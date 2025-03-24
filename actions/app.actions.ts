@@ -4,7 +4,7 @@ import getSupabaseServerActionClient from "@/clients/action-client";
 import getActionResponse from "@/lib/action.util";
 import { conditionalLog } from "@/lib/log.utils";
 import { ActionResponse } from "@/types/action.types";
-import { AppState, MilestoneWithTasks, TaskComplete } from "@/types/app.types";
+import { AppState, TaskComplete } from "@/types/app.types";
 import { Tables } from "@/types/database.types";
 
 type Profile = Tables<"profiles">;
@@ -26,122 +26,17 @@ export const getAppDataAction = async (): Promise<
 
     if (userError || !user) throw new Error("Not authenticated");
 
-    // Call the get_app_data function with auth context
-    const { data: untypedData, error } = await supabase.rpc("get_app_data");
-    const data = untypedData as any as AppStateWithoutTask | null;
-    conditionalLog(actionName, { data, error }, true);
+    // Call the enhanced get_app_data function with auth context
+    // This single function now returns all the data needed for the app store
+    const { data: appData, error } = await supabase.rpc("get_app_data");
+    conditionalLog(actionName, { appData, error }, true);
 
     if (error) throw error;
 
-    // Fetch user roles (app_role)
-    const { data: userRolesData, error: userRolesError } = await supabase
-      .from("user_roles")
-      .select("*")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    conditionalLog(actionName, { userRolesData, userRolesError }, true);
-
-    if (userRolesError) throw userRolesError;
-
-    const appRole = userRolesData?.role || null;
-
-    // Fetch project member role if there's a current project
-    let projectMemberRole = null;
-    if (data?.project?.id) {
-      const { data: memberData, error: memberError } = await supabase
-        .from("project_members")
-        .select("role")
-        .eq("project_id", data.project.id)
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      conditionalLog(actionName, { memberData, memberError }, true);
-
-      if (!memberError && memberData) {
-        projectMemberRole = memberData.role;
-      }
-    }
-
-    // Fetch project subscription if there's a current project
-    let subscription = null;
-    if (data?.project?.id) {
-      const { data: subscriptionData, error: subscriptionError } =
-        await supabase
-          .from("project_subscriptions")
-          .select("*")
-          .eq("project_id", data.project.id)
-          .maybeSingle();
-
-      conditionalLog(actionName, { subscriptionData, subscriptionError }, true);
-
-      if (!subscriptionError && subscriptionData) {
-        subscription = subscriptionData;
-      }
-    }
-
-    // Fetch current milestone if there's a current project
-    let milestone = null;
-    if (data?.project?.id && data?.project?.current_milestone_id) {
-      // First get the basic milestone data
-      const { data: milestoneData, error: milestoneError } = await supabase
-        .from("milestones")
-        .select("*")
-        .eq("id", data.project.current_milestone_id)
-        .maybeSingle();
-
-      conditionalLog(actionName, { milestoneData, milestoneError }, true);
-
-      if (!milestoneError && milestoneData) {
-        // Now get task counts for this milestone
-        const { data: taskData, error: taskCountError } = await supabase
-          .from("milestone_tasks")
-          .select("*, tasks!inner(*)")
-          .eq("milestone_id", milestoneData.id);
-
-        conditionalLog(actionName, { taskData, taskCountError }, true);
-
-        if (!taskCountError) {
-          const tasksTotal = taskData.length;
-          const tasksCompleted = taskData.filter(
-            item => item.tasks.status === "completed",
-          ).length;
-
-          milestone = {
-            ...milestoneData,
-            tasks: taskData.map(item => ({
-              id: item.tasks.id,
-              title: item.tasks.title,
-            })),
-            tasks_count: tasksTotal,
-            tasks_completed: tasksCompleted,
-            is_current: true,
-          } as MilestoneWithTasks;
-        } else {
-          // Even if we can't get task counts, at least include the milestone data
-          milestone = {
-            ...milestoneData,
-            tasks: [],
-            tasks_count: 0,
-            tasks_completed: 0,
-            is_current: true,
-          } as MilestoneWithTasks;
-        }
-      }
-    }
-
-    // Add the new data to the response
-    const enrichedData = {
-      ...data,
-      appRole,
-      projectMemberRole,
-      subscription,
-      milestone,
-      project: data?.project || data?.projects?.[0],
-    };
-
+    // Return the data directly as AppStateWithoutTask
+    // The data structure from get_app_data matches what the app store expects
     return getActionResponse({
-      data: enrichedData as any as AppStateWithoutTask,
+      data: appData as any as AppStateWithoutTask,
     });
   } catch (error) {
     conditionalLog(actionName, { error }, true);

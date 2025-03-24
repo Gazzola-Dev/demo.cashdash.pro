@@ -6,15 +6,15 @@ import {
   cancelInvitationAction,
   getProjectInvitationsAction,
   getProjectMembersAction,
+  getUserPendingInvitationsAction,
   inviteProjectMembersAction,
   removeProjectMemberAction,
   toggleProjectManagerRoleAction,
-} from "@/actions/members.actions";
+} from "@/actions/member.actions";
 import { useToast } from "@/hooks/use-toast";
 import { conditionalLog } from "@/lib/log.utils";
 import { useAppData } from "@/stores/app.store";
 import { ProjectMemberWithProfile } from "@/types/app.types";
-import { Tables } from "@/types/database.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 
@@ -37,10 +37,10 @@ export const useGetProjectMembers = (projectId?: string) => {
   });
 };
 
-// New hook to get project invitations
+// Updated hook to get project invitations
 export const useGetProjectInvitations = (projectId?: string) => {
   const hookName = "useGetProjectInvitations";
-  const { project, setInvitations } = useAppData();
+  const { project, setProjectInvitations } = useAppData();
 
   return useQuery({
     queryKey: ["projectInvitations", projectId],
@@ -50,16 +50,40 @@ export const useGetProjectInvitations = (projectId?: string) => {
       const { data, error } = await getProjectInvitationsAction(projectId);
       conditionalLog(hookName, { data, error }, false);
 
-      if (error) throw new Error(error);
+      if (error) throw new Error(error || String(error));
 
-      // Update the app store with the invitations
+      // Update the app store with the enriched invitations
       if (data) {
-        setInvitations(data);
+        setProjectInvitations(data);
       }
 
       return data;
     },
     enabled: !!projectId,
+    staleTime: 1000 * 60, // 1 minute
+  });
+};
+
+// New hook to get user's pending invitations
+export const useGetUserPendingInvitations = () => {
+  const hookName = "useGetUserPendingInvitations";
+  const { setUserInvitations } = useAppData();
+
+  return useQuery({
+    queryKey: ["userPendingInvitations"],
+    queryFn: async () => {
+      const { data, error } = await getUserPendingInvitationsAction();
+      conditionalLog(hookName, { data, error }, false);
+
+      if (error) throw new Error(error || String(error));
+
+      // Update the app store with the user's pending invitations
+      if (data) {
+        setUserInvitations(data);
+      }
+
+      return data;
+    },
     staleTime: 1000 * 60, // 1 minute
   });
 };
@@ -172,7 +196,7 @@ export const useInviteProjectMembers = () => {
   const hookName = "useInviteProjectMembers";
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { project, invitations, setInvitations } = useAppData();
+  const { project } = useAppData();
 
   const { mutate, isPending } = useMutation({
     mutationFn: async ({ emailsInput }: { emailsInput: string }) => {
@@ -225,13 +249,13 @@ export const useInviteProjectMembers = () => {
         });
       }
 
-      // Invalidate queries to ensure fresh data
-      queryClient.invalidateQueries({
-        queryKey: ["projectMembers"],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["projectInvitations"],
-      });
+      // Invalidate related queries to ensure fresh data
+      if (project?.id) {
+        queryClient.invalidateQueries({
+          queryKey: ["projectInvitations", project.id],
+        });
+      }
+
       queryClient.invalidateQueries({
         queryKey: ["appData"],
       });
@@ -359,12 +383,12 @@ export const useRemoveProjectMember = () => {
   };
 };
 
-// New hook to cancel invitation
+// Updated hook to cancel invitation with better error handling
 export const useCancelInvitation = () => {
   const hookName = "useCancelInvitation";
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { project, invitations, setInvitations } = useAppData();
+  const { project, setProjectInvitations, projectInvitations } = useAppData();
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (invitationId: string) => {
@@ -386,25 +410,13 @@ export const useCancelInvitation = () => {
       });
 
       // Save the previous state
-      const previousInvitations = queryClient.getQueryData([
-        "projectInvitations",
-        project.id,
-      ]) as Tables<"project_invitations">[] | undefined;
+      const previousInvitations = [...projectInvitations];
 
-      // Optimistically update invitations in the cache
-      if (previousInvitations) {
-        queryClient.setQueryData(
-          ["projectInvitations", project.id],
-          previousInvitations.filter(invite => invite.id !== invitationId),
-        );
-      }
-
-      // Also update the app store
-      if (invitations) {
-        setInvitations(
-          invitations.filter(invite => invite.id !== invitationId),
-        );
-      }
+      // Optimistically update invitations in the store
+      const updatedInvitations = projectInvitations.filter(
+        invite => invite.invitation.id !== invitationId,
+      );
+      setProjectInvitations(updatedInvitations);
 
       // Return the previous state
       return { previousInvitations };
@@ -420,23 +432,15 @@ export const useCancelInvitation = () => {
         queryClient.invalidateQueries({
           queryKey: ["projectInvitations", project.id],
         });
-        queryClient.invalidateQueries({
-          queryKey: ["appData"],
-        });
       }
+      queryClient.invalidateQueries({
+        queryKey: ["appData"],
+      });
     },
     onError: (error, _, context) => {
       // Restore previous state if needed
-      if (context?.previousInvitations && project?.id) {
-        queryClient.setQueryData(
-          ["projectInvitations", project.id],
-          context.previousInvitations,
-        );
-
-        // Restore app store
-        if (context.previousInvitations) {
-          setInvitations(context.previousInvitations);
-        }
+      if (context?.previousInvitations) {
+        setProjectInvitations(context.previousInvitations);
       }
 
       toast({

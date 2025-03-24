@@ -86,15 +86,6 @@ export interface MilestoneEvent {
   actor: MilestoneEventActor;
 }
 
-// Define contract invitation
-export interface ContractInvitation {
-  id: string;
-  email: string;
-  status: string;
-  role: string;
-  created_at: string;
-}
-
 // Define ContractMember interface
 export interface ContractMember {
   id: string;
@@ -108,7 +99,41 @@ export interface ContractMember {
 // Define Contract with Members
 export interface ContractWithMembers extends Contract {
   members: ContractMember[];
-  invitations?: ContractInvitation[];
+}
+
+// Project Invitation With Details for the invitation.hooks and actions
+export interface ProjectInvitationWithDetails {
+  invitation: ProjectInvitation;
+  project: Project;
+  sender_profile: {
+    id: string;
+    display_name: string | null;
+    avatar_url: string | null;
+    professional_title: string | null;
+  };
+}
+
+// Invitation Response type for invitation.actions
+export interface InvitationResponse {
+  project: Project;
+  success: boolean;
+}
+
+// DialogProps for useDialogQueue in AppProvider
+export interface DialogProps {
+  title: string;
+  description: string;
+  onConfirm: () => void;
+  content?: React.ReactNode;
+  isLoading?: boolean;
+}
+
+// InvitationModalProps for AppProvider
+export interface InvitationModalProps {
+  invitation: ProjectInvitationWithDetails;
+  onAccept: () => void;
+  onDecline: () => void;
+  isLoading: boolean;
 }
 
 // Define the main app state interface
@@ -124,7 +149,8 @@ export interface AppState {
   // Tasks data
   tasks: TaskWithAssignee[];
   task: TaskComplete | null;
-  invitations: ProjectInvitation[];
+  userInvitations: ProjectInvitationWithDetails[]; // Updated to match the actual type used in hooks
+  projectInvitations: ProjectInvitationWithDetails[]; // Updated to match the actual type used in hooks
 
   // Milestone data
   milestone: MilestoneWithTasks | null;
@@ -147,7 +173,8 @@ export interface AppState {
   setProject: (project: ProjectWithDetails | null) => void;
   setTasks: (tasks: TaskWithAssignee[]) => void;
   setTask: (task: TaskComplete | null) => void;
-  setInvitations: (invitations: ProjectInvitation[]) => void;
+  setUserInvitations: (invitations: ProjectInvitationWithDetails[]) => void; // Updated to match the actual type
+  setProjectInvitations: (invitations: ProjectInvitationWithDetails[]) => void; // Updated to match the actual type
   setSubscription: (subscription: ProjectSubscription | null) => void;
   setAppRole: (appRole: string | null) => void;
   setProjectMemberRole: (projectMemberRole: string | null) => void;
@@ -156,7 +183,7 @@ export interface AppState {
   reset: () => void;
 }
 
-// Contract Member Type (already defined above, keeping for backwards compatibility)
+// Contract Member Type
 export interface ContractMember {
   id: string;
   display_name: string | null;
@@ -164,4 +191,10 @@ export interface ContractMember {
   hasApproved?: boolean;
   avatar_url?: string | null;
   role?: string | null;
+}
+
+// Contract with Members Type
+export interface ContractWithMembers {
+  contract: Contract;
+  members: ContractMember[];
 }

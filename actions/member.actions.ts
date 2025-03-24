@@ -1,4 +1,4 @@
-// actions/members.actions.ts - Updated version
+// actions/members.actions.ts
 
 "use server";
 
@@ -6,8 +6,10 @@ import getSupabaseServerActionClient from "@/clients/action-client";
 import getActionResponse from "@/lib/action.util";
 import { conditionalLog } from "@/lib/log.utils";
 import { ActionResponse } from "@/types/action.types";
-import { ProjectMemberWithProfile } from "@/types/app.types";
-import { Tables } from "@/types/database.types";
+import {
+  ProjectInvitationWithDetails,
+  ProjectMemberWithProfile,
+} from "@/types/app.types";
 
 // Add this function to send invitation emails
 async function sendInvitationEmail(
@@ -174,15 +176,6 @@ export const inviteProjectMembersAction = async (
             },
           );
 
-          console.log({
-            data,
-            error,
-            p_project_id: projectId,
-            p_inviter_id: user.id,
-            p_email: trimmedEmail,
-            p_role: "member", // Default role
-          });
-
           if (error) throw error;
 
           // Send invitation email
@@ -276,25 +269,60 @@ export const getProjectMembersAction = async (
   }
 };
 
-// Updated function to get project invitations using the new DB function
+// Updated function to get project invitations using the enhanced DB function
 export const getProjectInvitationsAction = async (
   projectId: string,
-): Promise<ActionResponse<Tables<"project_invitations">[]>> => {
+): Promise<ActionResponse<ProjectInvitationWithDetails[]>> => {
   const actionName = "getProjectInvitationsAction";
   try {
     const supabase = await getSupabaseServerActionClient();
 
-    // Use the new function instead of directly querying the table
+    // Use the enhanced function that returns ProjectInvitationWithDetails format
     const { data, error } = await supabase.rpc("get_project_invites", {
       p_project_id: projectId,
     });
 
-    conditionalLog(actionName, { data, error }, true, null);
+    conditionalLog(actionName, { data, error }, false);
 
     if (error) throw error;
 
     return getActionResponse({
-      data: data as Tables<"project_invitations">[],
+      data: data as any as ProjectInvitationWithDetails[],
+    });
+  } catch (error) {
+    conditionalLog(actionName, { error }, true);
+    return getActionResponse({ error });
+  }
+};
+
+// Function to get user's pending invitations
+// Add a new function to get user's pending invitations
+export const getUserPendingInvitationsAction = async (): Promise<
+  ActionResponse<ProjectInvitationWithDetails[]>
+> => {
+  const actionName = "getUserPendingInvitationsAction";
+  try {
+    const supabase = await getSupabaseServerActionClient();
+
+    // Get the authenticated user
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+    if (userError || !user || !user.email)
+      throw new Error("Not authenticated or missing email");
+
+    // Use the enhanced function that returns ProjectInvitationWithDetails format
+    const { data, error } = await supabase.rpc("get_user_pending_invitations", {
+      p_email: user.email,
+    });
+
+    conditionalLog(actionName, { data, error }, false);
+
+    if (error) throw error;
+
+    return getActionResponse({
+      data: data as any as ProjectInvitationWithDetails[],
     });
   } catch (error) {
     conditionalLog(actionName, { error }, true);

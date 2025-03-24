@@ -9,7 +9,8 @@ const initialState = {
   project: null,
   tasks: [],
   task: null,
-  invitations: [],
+  userInvitations: [],
+  projectInvitations: [],
   subscription: null,
   appRole: null,
   projectMemberRole: null,
@@ -20,14 +21,14 @@ const initialState = {
 
 export const useAppStore = create<AppState>((set, get) => ({
   ...initialState,
-
   setUser: user => set({ user }),
   setProfile: profile => set({ profile }),
   setProjects: projects => set({ projects }),
   setProject: project => set({ project }),
-  setTasks: tasks => set({ tasks }),
+  setTasks: tasks => set({ tasks: tasks ?? [] }),
   setTask: task => set({ task }),
-  setInvitations: invitations => set({ invitations }),
+  setUserInvitations: userInvitations => set({ userInvitations }),
+  setProjectInvitations: projectInvitations => set({ projectInvitations }),
   setSubscription: subscription => set({ subscription }),
   setAppRole: appRole => set({ appRole }),
   setProjectMemberRole: projectMemberRole => set({ projectMemberRole }),
@@ -39,7 +40,6 @@ export const useAppStore = create<AppState>((set, get) => ({
 // Hook for accessing store data
 export const useAppData = () => {
   const store = useAppStore();
-
   return {
     // Core data
     user: store.user,
@@ -48,14 +48,14 @@ export const useAppData = () => {
     project: store.project,
     tasks: store.tasks,
     task: store.task,
-    invitations: store.invitations,
+    userInvitations: store.userInvitations,
+    projectInvitations: store.projectInvitations,
     subscription: store.subscription,
     appRole: store.appRole,
     projectMemberRole: store.projectMemberRole,
     milestone: store.milestone,
     contract: store.contract,
     isAdmin: store.appRole === "admin",
-
     // Actions
     setUser: store.setUser,
     setProfile: store.setProfile,
@@ -63,7 +63,8 @@ export const useAppData = () => {
     setProject: store.setProject,
     setTasks: store.setTasks,
     setTask: store.setTask,
-    setInvitations: store.setInvitations,
+    setUserInvitations: store.setUserInvitations,
+    setProjectInvitations: store.setProjectInvitations,
     setSubscription: store.setSubscription,
     setAppRole: store.setAppRole,
     setProjectMemberRole: store.setProjectMemberRole,

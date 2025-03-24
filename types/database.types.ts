@@ -1522,6 +1522,12 @@ export type Database = {
         }
         Returns: Json
       }
+      get_user_pending_invitations: {
+        Args: {
+          p_email: string
+        }
+        Returns: Json[]
+      }
       get_user_projects_data:
         | {
             Args: Record<PropertyKey, never>

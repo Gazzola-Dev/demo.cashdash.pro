@@ -32,7 +32,8 @@ export const useGetAppData = (
     setProjects,
     setProject,
     setTasks,
-    setInvitations,
+    setUserInvitations,
+    setProjectInvitations,
     setSubscription,
     setAppRole,
     setProjectMemberRole,
@@ -52,7 +53,8 @@ export const useGetAppData = (
         setProjects(data.projects);
         setProject(data.project);
         setTasks(data.tasks);
-        setInvitations(data.invitations);
+        setProjectInvitations(data.projectInvitations);
+        setUserInvitations(data.userInvitations);
 
         // Update new data
         setSubscription(data.subscription);

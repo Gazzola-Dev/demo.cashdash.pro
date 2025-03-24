@@ -64,7 +64,7 @@ export const ProjectSwitcherSkeleton = () => {
             <div className="grid flex-1 text-left text-sm leading-tight ml-2">
               <div
                 className={cn(
-                  "h-5 w-28 bg-gray-200 dark:bg-gray-700 rounded animate-pulse",
+                  "h-5 w-28 bg-gray-200 dark:bg-gray-700 rounded",
                   user ? "animate-pulse" : "opacity-0",
                 )}
               ></div>
