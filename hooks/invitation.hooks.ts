@@ -22,7 +22,7 @@ export const useGetUserPendingInvitations = () => {
 
       const { data, error } = await getUserPendingInvitationsAction(email);
 
-      conditionalLog(hookName, { data, error }, false);
+      conditionalLog(hookName, { data, error }, false, null);
 
       if (error) throw new Error(error);
       return data || [];
@@ -46,14 +46,14 @@ export const useHandleInvitationResponse = () => {
       invitationId: string;
       accept: boolean;
     }) => {
-      conditionalLog(hookName, { invitationId, accept }, false);
+      conditionalLog(hookName, { invitationId, accept }, false, null);
 
       const { data, error } = await handleInvitationResponseAction(
         invitationId,
         accept,
       );
 
-      conditionalLog(hookName, { data, error }, false);
+      conditionalLog(hookName, { data, error }, false, null);
 
       if (error) throw new Error(error);
       return data;

@@ -56,7 +56,7 @@ export const handleInvitationResponseAction = async (
       p_accept: accept,
     });
 
-    conditionalLog(actionName, { data, error }, true, null);
+    conditionalLog(actionName, { data, error }, true);
 
     if (error) throw error;
 
