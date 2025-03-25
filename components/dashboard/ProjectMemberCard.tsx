@@ -258,7 +258,7 @@ const ProjectMembersCard = () => {
                               {isUserPM(member.role) && (
                                 <TooltipProvider>
                                   <Tooltip>
-                                    <TooltipTrigger asChild>
+                                    <TooltipTrigger>
                                       <Badge
                                         variant="outline"
                                         className="h-5 flex items-center gap-1"

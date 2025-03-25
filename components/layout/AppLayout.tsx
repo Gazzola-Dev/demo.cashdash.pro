@@ -50,6 +50,7 @@ import useSupabase from "@/hooks/useSupabase";
 import { cn } from "@/lib/utils";
 import { useAppData } from "@/stores/app.store";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { format, parseISO } from "date-fns";
 import {
   Dot,
   Gauge,
@@ -241,7 +242,10 @@ function AppSidebar() {
                                 <div className="space-x-0.5 text-xs text-blue-700 dark:text-blue-300 p-1 rounded-lg pb-[0.45rem]"></div>
                                 {milestone?.due_date && (
                                   <div className="text-sm text-blue-900 dark:text-blue-100 pr-1 pl-2 rounded-bl-lg border-b border-blue-600 dark:border-blue-400">
-                                    {milestone?.due_date}
+                                    {format(
+                                      parseISO(milestone.due_date),
+                                      "d-MMM-yy",
+                                    )}
                                   </div>
                                 )}
                               </div>
@@ -250,7 +254,9 @@ function AppSidebar() {
                         </SidebarMenuItem>
                       </TooltipTrigger>
                       <TooltipContent side="right">
-                        Add/edit/switch the active Milestone for this Project
+                        View the current Milestone, due date:{" "}
+                        {!!milestone?.due_date &&
+                          format(parseISO(milestone?.due_date), "d-MMM-yy")}
                       </TooltipContent>
                     </Tooltip>
 
