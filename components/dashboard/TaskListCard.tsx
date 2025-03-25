@@ -319,10 +319,11 @@ const TaskListCard = () => {
                                   <div className="text-center">
                                     <span className="capitalize text-sm">
                                       <span className="text-base">
-                                        {task.ordinal_priority}{" "}
+                                        {task.ordinal_priority || 1}{" "}
                                       </span>
                                       <span className="text-xs text-gray-600 dark:text-gray-300 lowercase">
-                                        {task.ordinal_priority === 1
+                                        {!task.ordinal_priority ||
+                                        task.ordinal_priority === 1
                                           ? "st"
                                           : task.ordinal_priority === 2
                                             ? "nd"

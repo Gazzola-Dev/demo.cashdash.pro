@@ -288,19 +288,19 @@ const TaskList = () => {
                           )}
                         >
                           <span className="text-sm text-black font-medium dark:text-gray-100 rounded">
-                            {task.ordinal_priority}
+                            {task.ordinal_priority || 1}
                           </span>
-                          {open && (
-                            <span className="text-xs text-gray-600 dark:text-gray-300 lowercase mb-px">
-                              {task.ordinal_priority === 1
-                                ? "st"
-                                : task.ordinal_priority === 2
-                                  ? "nd"
-                                  : task.ordinal_priority === 3
-                                    ? "rd"
-                                    : "th"}
-                            </span>
-                          )}
+
+                          <span className="text-xs text-gray-600 dark:text-gray-300 lowercase mb-px">
+                            {!task.ordinal_priority ||
+                            task.ordinal_priority === 1
+                              ? "st"
+                              : task.ordinal_priority === 2
+                                ? "nd"
+                                : task.ordinal_priority === 3
+                                  ? "rd"
+                                  : "th"}
+                          </span>
                         </div>
                       </TooltipTrigger>
                       <TooltipContent>

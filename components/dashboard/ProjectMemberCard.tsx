@@ -25,16 +25,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  useCancelInvitation,
-  useGetProjectInvitations,
-  useInviteProjectMembers,
-  useRemoveProjectMember,
-  useToggleProjectManagerRole,
-} from "@/hooks/member.hooks";
+import { useMembersManagement } from "@/hooks/member.hooks";
 import { capitalizeFirstLetter } from "@/lib/string.util";
 import { cn } from "@/lib/utils";
-import { useAppData } from "@/stores/app.store";
 import { ProjectInvitationWithDetails } from "@/types/app.types";
 import {
   ChevronDown,
@@ -46,7 +39,6 @@ import {
   UserPlus,
   X,
 } from "lucide-react";
-import { useState } from "react";
 
 // Loading Skeleton Component
 const ProjectMembersCardSkeleton = () => {
@@ -116,63 +108,35 @@ const InvitationItem = ({
   );
 };
 
+// Updated ProjectMembersCard component
 const ProjectMembersCard = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
-  const [emailsInput, setEmailsInput] = useState("");
-
-  const { project, isAdmin, user, profile, projectInvitations } = useAppData();
-  const { toggleProjectManagerRole, isPending: isTogglePending } =
-    useToggleProjectManagerRole();
-  const { inviteProjectMembers, isPending: isInvitePending } =
-    useInviteProjectMembers();
-  const { removeProjectMember, isPending: isRemovePending } =
-    useRemoveProjectMember();
-  const { cancelInvitation, isPending: isCancelPending } =
-    useCancelInvitation();
-
-  // Fetch project invitations
-  const { isLoading: isInvitationsLoading } = useGetProjectInvitations();
-
-  // Get project members from the project object
-  const members = project?.project_members || [];
-
-  // Loading state determination
-  const isLoading = !user || !profile || !project || isInvitationsLoading;
-
-  const handleTogglePMRole = (
-    memberId: string,
-    userId: string,
-    isCurrentlyManager: boolean,
-  ) => {
-    if (!project || !isAdmin) return;
-
-    // Only admins can toggle PM role
-    // Don't allow changing your own role
-    if (userId === user?.id) return;
-
-    toggleProjectManagerRole(project.id, userId, !isCurrentlyManager);
-  };
-
-  const handleInviteMembers = () => {
-    inviteProjectMembers(emailsInput);
-    setEmailsInput("");
-    setIsInviteDialogOpen(false);
-  };
-
-  const handleRemoveMember = (memberId: string) => {
-    if (!isAdmin) return;
-    removeProjectMember(memberId);
-  };
-
-  const handleCancelInvitation = (invitationId: string) => {
-    if (!isAdmin) return;
-    cancelInvitation(invitationId);
-  };
-
-  const isUserPM = (role: string): boolean => {
-    return ["owner", "admin"].includes(role);
-  };
+  const {
+    isOpen,
+    setIsOpen,
+    isInviteDialogOpen,
+    setIsInviteDialogOpen,
+    isConfirmDialogOpen,
+    setIsConfirmDialogOpen,
+    confirmAction,
+    emailsInput,
+    setEmailsInput,
+    isAdmin,
+    user,
+    projectInvitations,
+    isTogglePending,
+    isRemovePending,
+    isLoading,
+    members,
+    handleTogglePMRole,
+    handleInviteMembers,
+    confirmRemoveMember,
+    confirmCancelInvitation,
+    handleConfirmAction,
+    handleCancelConfirmAction,
+    isUserPM,
+    isInvitePending,
+    isCancelPending,
+  } = useMembersManagement();
 
   if (isLoading) {
     return <ProjectMembersCardSkeleton />;
@@ -322,7 +286,11 @@ const ProjectMembersCard = () => {
                                       size="icon"
                                       className="h-8 w-8 ml-1"
                                       onClick={() =>
-                                        handleRemoveMember(member.id)
+                                        confirmRemoveMember(
+                                          member.id,
+                                          member.profile?.display_name ||
+                                            "this member",
+                                        )
                                       }
                                       disabled={isRemovePending}
                                     >
@@ -348,7 +316,12 @@ const ProjectMembersCard = () => {
                         <InvitationItem
                           key={invitation.invitation.id}
                           invitation={invitation}
-                          onCancel={handleCancelInvitation}
+                          onCancel={id =>
+                            confirmCancelInvitation(
+                              id,
+                              invitation.invitation.email || "this invitation",
+                            )
+                          }
                         />
                       ))}
                     </>
@@ -406,6 +379,42 @@ e.g. user@example.com, another@example.com"
               disabled={isInvitePending || !emailsInput.trim()}
             >
               {isInvitePending ? "Sending..." : "Send Invites"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmation Dialog for Remove Member/Cancel Invitation */}
+      <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {confirmAction?.type === "member"
+                ? "Remove Member"
+                : "Cancel Invitation"}
+            </DialogTitle>
+            <DialogDescription>
+              {confirmAction?.type === "member"
+                ? `Are you sure you want to remove ${confirmAction?.name || "this member"} from the project?`
+                : `Are you sure you want to cancel the invitation for ${confirmAction?.name || "this email"}?`}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={handleCancelConfirmAction}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmAction}
+              disabled={isRemovePending || isCancelPending}
+            >
+              {confirmAction?.type === "member"
+                ? isRemovePending
+                  ? "Removing..."
+                  : "Remove"
+                : isCancelPending
+                  ? "Canceling..."
+                  : "Cancel Invitation"}
             </Button>
           </DialogFooter>
         </DialogContent>

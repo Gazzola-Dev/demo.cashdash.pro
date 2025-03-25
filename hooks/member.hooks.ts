@@ -16,7 +16,7 @@ import { conditionalLog } from "@/lib/log.utils";
 import { useAppData } from "@/stores/app.store";
 import { ProjectMemberWithProfile } from "@/types/app.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 
 export const useGetProjectMembers = (projectId?: string) => {
   const hookName = "useGetProjectMembers";
@@ -461,5 +461,125 @@ export const useCancelInvitation = () => {
   return {
     cancelInvitation,
     isPending,
+  };
+};
+
+export const useMembersManagement = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<{
+    type: "member" | "invitation";
+    id: string;
+    name?: string;
+  } | null>(null);
+  const [emailsInput, setEmailsInput] = useState("");
+  const { project, isAdmin, user, profile, projectInvitations } = useAppData();
+  const { toggleProjectManagerRole, isPending: isTogglePending } =
+    useToggleProjectManagerRole();
+  const { inviteProjectMembers, isPending: isInvitePending } =
+    useInviteProjectMembers();
+  const { removeProjectMember, isPending: isRemovePending } =
+    useRemoveProjectMember();
+  const { cancelInvitation, isPending: isCancelPending } =
+    useCancelInvitation();
+  // Fetch project invitations
+  const { isLoading: isInvitationsLoading } = useGetProjectInvitations();
+  // Get project members from the project object
+  const members = project?.project_members || [];
+  // Loading state determination
+  const isLoading = !user || !profile || !project || isInvitationsLoading;
+
+  const handleTogglePMRole = (
+    memberId: string,
+    userId: string,
+    isCurrentlyManager: boolean,
+  ): void => {
+    if (!project || !isAdmin) return;
+    // Only admins can toggle PM role
+    // Don't allow changing your own role
+    if (userId === user?.id) return;
+    toggleProjectManagerRole(project.id, userId, !isCurrentlyManager);
+  };
+
+  const handleInviteMembers = (): void => {
+    inviteProjectMembers(emailsInput);
+    setEmailsInput("");
+    setIsInviteDialogOpen(false);
+  };
+
+  const confirmRemoveMember = (memberId: string, displayName: string): void => {
+    if (!isAdmin) return;
+    setConfirmAction({
+      type: "member",
+      id: memberId,
+      name: displayName,
+    });
+    setIsConfirmDialogOpen(true);
+  };
+
+  const confirmCancelInvitation = (
+    invitationId: string,
+    email: string,
+  ): void => {
+    if (!isAdmin) return;
+    setConfirmAction({
+      type: "invitation",
+      id: invitationId,
+      name: email,
+    });
+    setIsConfirmDialogOpen(true);
+  };
+
+  const handleConfirmAction = (): void => {
+    if (!confirmAction) return;
+
+    if (confirmAction.type === "member") {
+      removeProjectMember(confirmAction.id);
+    } else if (confirmAction.type === "invitation") {
+      cancelInvitation(confirmAction.id);
+    }
+
+    setIsConfirmDialogOpen(false);
+    setConfirmAction(null);
+  };
+
+  const handleCancelConfirmAction = (): void => {
+    setIsConfirmDialogOpen(false);
+    setConfirmAction(null);
+  };
+
+  const isUserPM = (role: string): boolean => {
+    return ["owner", "admin"].includes(role);
+  };
+
+  return {
+    isOpen,
+    setIsOpen,
+    isInviteDialogOpen,
+    setIsInviteDialogOpen,
+    isConfirmDialogOpen,
+    setIsConfirmDialogOpen,
+    confirmAction,
+    emailsInput,
+    setEmailsInput,
+    project,
+    isAdmin,
+    user,
+    profile,
+    projectInvitations,
+    isTogglePending,
+    isInvitePending,
+    isRemovePending,
+    isCancelPending,
+    isLoading,
+    members,
+    handleTogglePMRole,
+    handleInviteMembers,
+    confirmRemoveMember,
+    confirmCancelInvitation,
+    handleConfirmAction,
+    handleCancelConfirmAction,
+    isUserPM,
   };
 };
