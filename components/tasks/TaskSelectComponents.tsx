@@ -6,6 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import useProjectRole from "@/hooks/member.hooks";
 import { cn } from "@/lib/utils";
 import { Tables } from "@/types/database.types";
 import {
@@ -35,19 +36,28 @@ interface AssigneeSelectProps {
       avatar_url: string | null;
     } | null;
   }[];
+  disabled?: boolean;
 }
 
 export const AssigneeSelect = ({
   value,
   onValueChange,
   members,
+  disabled,
 }: AssigneeSelectProps) => {
+  const { canEdit } = useProjectRole();
+  const isDisabled = disabled || !canEdit;
+
   const handleValueChange = (newValue: string) => {
     onValueChange(newValue === "unassigned" ? null : newValue);
   };
 
   return (
-    <Select value={value || "unassigned"} onValueChange={handleValueChange}>
+    <Select
+      value={value || "unassigned"}
+      onValueChange={handleValueChange}
+      disabled={isDisabled}
+    >
       <SelectTrigger className="w-48">
         <SelectValue>
           {(() => {
@@ -105,16 +115,21 @@ export const AssigneeSelect = ({
 interface PrioritySelectProps {
   value: TaskPriority;
   onValueChange: (value: TaskPriority) => void;
+  disabled?: boolean;
 }
 
 export const PrioritySelect = ({
   value,
   onValueChange,
+  disabled,
 }: PrioritySelectProps) => {
+  const { canEdit } = useProjectRole();
+  const isDisabled = disabled || !canEdit;
+
   const priorities: TaskPriority[] = ["low", "medium", "high", "urgent"];
 
   return (
-    <Select value={value} onValueChange={onValueChange}>
+    <Select value={value} onValueChange={onValueChange} disabled={isDisabled}>
       <SelectTrigger className="w-32">
         <SelectValue>
           <div className="flex items-center gap-2">
@@ -159,9 +174,17 @@ export const PriorityIcon = ({ priority }: { priority: string }) => {
 interface StatusSelectProps {
   value: TaskStatus;
   onValueChange: (value: TaskStatus) => void;
+  disabled?: boolean;
 }
 
-export const StatusSelect = ({ value, onValueChange }: StatusSelectProps) => {
+export const StatusSelect = ({
+  value,
+  onValueChange,
+  disabled,
+}: StatusSelectProps) => {
+  const { canEdit } = useProjectRole();
+  const isDisabled = disabled || !canEdit;
+
   const statuses: TaskStatus[] = [
     "backlog",
     "todo",
@@ -172,7 +195,7 @@ export const StatusSelect = ({ value, onValueChange }: StatusSelectProps) => {
   ];
 
   return (
-    <Select value={value} onValueChange={onValueChange}>
+    <Select value={value} onValueChange={onValueChange} disabled={isDisabled}>
       <SelectTrigger className="w-32">
         <SelectValue>
           <div className="flex items-center gap-2">

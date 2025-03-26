@@ -1,5 +1,6 @@
 "use client";
 import { Input } from "@/components/ui/input";
+import useProjectRole from "@/hooks/member.hooks";
 import { useUpdateTask } from "@/hooks/task.hooks";
 import { cn } from "@/lib/utils";
 import { useAppData } from "@/stores/app.store";
@@ -18,6 +19,7 @@ const TaskHeaderSkeleton = () => {
 
 export function TaskHeader() {
   const { task, user, profile, tasks, project } = useAppData();
+  const { isProjectManager, canEdit } = useProjectRole();
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(task?.title || "");
 
@@ -37,7 +39,7 @@ export function TaskHeader() {
   const { updateTask, isPending } = useUpdateTask();
 
   const handleSave = () => {
-    if (task && editedTitle.trim() !== task.title) {
+    if (task && editedTitle.trim() !== task.title && canEdit) {
       updateTask(task.id, { title: editedTitle.trim() });
     }
     setIsEditing(false);
@@ -57,8 +59,14 @@ export function TaskHeader() {
     handleSave();
   };
 
+  const handleTitleClick = () => {
+    if (canEdit) {
+      setIsEditing(true);
+    }
+  };
+
   return (
-    <div className="mb-6 flex items-start justify-between gap-4w-full  w-full">
+    <div className="mb-6 flex items-start justify-between gap-4 w-full">
       {isLoading ? (
         <TaskHeaderSkeleton />
       ) : (
@@ -76,10 +84,11 @@ export function TaskHeader() {
           ) : (
             <h1
               className={cn(
-                "text-2xl font-semibold cursor-text",
+                "text-2xl font-semibold",
+                canEdit && "cursor-text",
                 "bg-gray-50/70 dark:bg-gray-900 rounded py-1 px-2",
               )}
-              onClick={() => setIsEditing(true)}
+              onClick={handleTitleClick}
             >
               {task?.title || ""}
             </h1>

@@ -1,6 +1,7 @@
 "use client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import useProjectRole from "@/hooks/member.hooks";
 import { useUpdateTask } from "@/hooks/task.hooks";
 import { cn } from "@/lib/utils";
 import { useAppData } from "@/stores/app.store";
@@ -23,6 +24,7 @@ const TaskDescriptionSkeleton = () => {
 
 export function TaskDescription() {
   const { task, user, profile, tasks, project } = useAppData();
+  const { isProjectManager, canEdit } = useProjectRole();
   const { updateTask, isPending } = useUpdateTask();
   const [isEditing, setIsEditing] = useState(false);
   const [editedDescription, setEditedDescription] = useState(
@@ -43,7 +45,7 @@ export function TaskDescription() {
   }, [task?.description]);
 
   const handleSave = () => {
-    if (task && editedDescription.trim() !== task.description) {
+    if (task && editedDescription.trim() !== task.description && canEdit) {
       updateTask(task.id, { description: editedDescription.trim() });
     }
     setIsEditing(false);
@@ -60,6 +62,12 @@ export function TaskDescription() {
 
   const handleBlur = () => {
     handleSave();
+  };
+
+  const handleDescriptionClick = () => {
+    if (canEdit) {
+      setIsEditing(true);
+    }
   };
 
   return (
@@ -84,10 +92,11 @@ export function TaskDescription() {
         ) : (
           <div
             className={cn(
-              "prose dark:prose-invert whitespace-pre-line cursor-text",
+              "prose dark:prose-invert whitespace-pre-line",
+              canEdit && "cursor-text",
               "bg-gray-50/70 dark:bg-gray-900 rounded py-2 px-2",
             )}
-            onClick={() => setIsEditing(true)}
+            onClick={handleDescriptionClick}
           >
             {task?.description || "No description provided"}
           </div>

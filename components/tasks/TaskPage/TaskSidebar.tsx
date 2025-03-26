@@ -5,6 +5,7 @@ import {
   StatusSelect,
 } from "@/components/tasks/TaskSelectComponents";
 import { Card, CardContent } from "@/components/ui/card";
+import useProjectRole from "@/hooks/member.hooks";
 import { useUpdateTask, useUpdateTasksOrder } from "@/hooks/task.hooks";
 import { cn } from "@/lib/utils";
 import { useAppData } from "@/stores/app.store";
@@ -108,6 +109,7 @@ const PriorityControl = ({
 
 export function TaskSidebar() {
   const { project, task, tasks, user, profile, setTasks } = useAppData();
+  const { isProjectManager, canEdit } = useProjectRole();
   const members = project?.project_members || [];
   const { updateTask, isPending } = useUpdateTask();
   const { updateTasksOrder } = useUpdateTasksOrder();
@@ -119,17 +121,17 @@ export function TaskSidebar() {
     !task;
 
   const handleStatusChange = (value: TaskStatus) => {
-    if (!task) return;
+    if (!task || !canEdit) return;
     updateTask(task.id, { status: value });
   };
 
   const handleAssigneeChange = (value: string | null) => {
-    if (!task) return;
+    if (!task || !canEdit) return;
     updateTask(task.id, { assignee: value });
   };
 
   const handlePriorityChange = (value: number) => {
-    if (!task) return;
+    if (!task || !canEdit) return;
 
     // Make sure the value is within bounds
     const sanitizedValue = Math.max(1, Math.min(tasks.length, value));
@@ -200,7 +202,7 @@ export function TaskSidebar() {
                 value={task?.ordinal_priority || 1}
                 onChange={handlePriorityChange}
                 maxValue={tasks.length}
-                disabled={isPending}
+                disabled={isPending || !canEdit}
               />
               <p className="text-xs text-muted-foreground mt-1">
                 {isPending ? "Updating..." : `${tasks.length} tasks total`}
