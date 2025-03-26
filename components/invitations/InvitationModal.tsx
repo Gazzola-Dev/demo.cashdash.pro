@@ -26,7 +26,7 @@ export function InvitationModal({
   isLoading,
 }: InvitationModalProps) {
   const project = invitation.project;
-  const inviter = invitation.inviter;
+  const inviter = invitation.sender_profile;
 
   const invitedTimeAgo = formatDistanceToNow(
     new Date(invitation.invitation.created_at),
@@ -79,7 +79,7 @@ export function InvitationModal({
               </AvatarFallback>
             </Avatar>
             <span className="text-sm font-medium">
-              {inviter?.display_name || inviter?.email || "A team member"}
+              {inviter?.display_name || "A team member"}
             </span>
             <span className="text-xs text-muted-foreground ml-auto">
               {invitedTimeAgo}
