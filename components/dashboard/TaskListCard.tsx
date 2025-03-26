@@ -38,11 +38,9 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
-  ExternalLink,
   Menu,
   Plus,
   Search,
-  ShieldEllipsis,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -118,7 +116,6 @@ const TaskListCardSkeleton = () => {
 const TaskListCard = () => {
   const {
     project,
-    isAdmin,
     searchQuery,
     setSearchQuery,
     ordinalSearch,
@@ -153,35 +150,11 @@ const TaskListCard = () => {
 
   return (
     <div className="relative h-full flex-shrink-0">
-      {!canEdit && !isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center z-10">
-          <Card className="w-56 bg-white/70 dark:bg-black/70">
-            <CardHeader className="flex items-center justify-between text-gray-700 dark:text-gray-300 gap-2 pb-5">
-              <CardTitle className="text-lg">Admin Required</CardTitle>
-              <ShieldEllipsis className="size-8" />
-            </CardHeader>
-            <CardContent className="flex justify-center ">
-              <Link
-                rel="noopener noreferrer"
-                target="_blank"
-                href="https://demo.cashdash.pro"
-              >
-                <Button variant="outline">
-                  View demo
-                  <ExternalLink className="size-4 ml-2" />
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
       {isLoading ? (
         <TaskListCardSkeleton />
       ) : (
         <Card
           className={cn(
-            !canEdit && "blur",
             "flex flex-col",
             "h-full max-h-[calc(100vh-100px)] md:max-h-[40rem]",
           )}

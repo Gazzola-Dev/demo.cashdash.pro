@@ -142,6 +142,10 @@ const ProjectMembersCard = () => {
     return <ProjectMembersCardSkeleton />;
   }
 
+  const pendingInvitations = projectInvitations?.filter(
+    inv => inv.invitation.status === "pending",
+  );
+
   return (
     <>
       <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
@@ -185,8 +189,8 @@ const ProjectMembersCard = () => {
             {!isOpen && (
               <div className="text-sm text-muted-foreground">
                 {members.length} team members
-                {projectInvitations && projectInvitations.length > 0
-                  ? `, ${projectInvitations.length} pending invitations`
+                {!!pendingInvitations?.length
+                  ? `, ${pendingInvitations.length} pending invitations`
                   : ""}
               </div>
             )}
@@ -310,9 +314,9 @@ const ProjectMembersCard = () => {
                   ))}
 
                   {/* Render pending invitations */}
-                  {projectInvitations && projectInvitations.length > 0 && (
+                  {!!pendingInvitations?.length && (
                     <>
-                      {projectInvitations.map(invitation => (
+                      {pendingInvitations.map(invitation => (
                         <InvitationItem
                           key={invitation.invitation.id}
                           invitation={invitation}
@@ -328,13 +332,11 @@ const ProjectMembersCard = () => {
                   )}
 
                   {/* Add a placeholder if no members or invitations */}
-                  {members.length === 0 &&
-                    (!projectInvitations ||
-                      projectInvitations.length === 0) && (
-                      <div className="w-full p-4 text-center text-muted-foreground">
-                        No team members yet
-                      </div>
-                    )}
+                  {members.length === 0 && !pendingInvitations?.length && (
+                    <div className="w-full p-4 text-center text-muted-foreground">
+                      No team members yet
+                    </div>
+                  )}
                 </div>
               </div>
             </CollapsibleContent>
