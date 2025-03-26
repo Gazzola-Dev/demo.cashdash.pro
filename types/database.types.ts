@@ -1713,7 +1713,7 @@ export type Database = {
       }
       update_task_data: {
         Args: {
-          task_slug: string
+          task_id: string
           task_updates: Json
         }
         Returns: Json

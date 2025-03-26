@@ -17,7 +17,7 @@ export const conditionalLog = (
             ? JSON.stringify(value, null, 0).replace(/[{}\[\]]/g, "")
             : String(value);
 
-        if (!isVerbose || sliceCount !== undefined) {
+        if (!isVerbose && sliceCount !== undefined) {
           valueStr = valueStr.slice(0, sliceCount || 50);
         }
 

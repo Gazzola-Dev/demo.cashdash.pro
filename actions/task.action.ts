@@ -9,39 +9,37 @@ import { Tables } from "@/types/database.types";
 
 type Task = Tables<"tasks">;
 
+/**
+ * Updates a task and its related data (subtasks, etc.)
+ *
+ * @param taskId - The ID of the task to update
+ * @param updates - Object containing the fields to update
+ * @returns ActionResponse containing the updated task data or error
+ */
 export const updateTaskAction = async (
   taskId: string,
   updates: Partial<Task>,
 ): Promise<ActionResponse<Task>> => {
   const actionName = "updateTaskAction";
-
   try {
     const supabase = await getSupabaseServerActionClient();
 
-    // Find the current task to get its slug
-    const { data: task, error: taskError } = await supabase
-      .from("tasks")
-      .select("slug")
-      .eq("id", taskId)
-      .single();
-
-    if (taskError) throw taskError;
-
-    const taskSlug = task.slug;
-
-    // Use the existing RPC function to update the task
+    // Use the database function to update the task
     const { data, error } = await supabase.rpc("update_task_data", {
-      task_slug: taskSlug,
+      task_id: taskId,
       task_updates: updates,
     });
 
     conditionalLog(actionName, { data, error }, true);
 
-    if (error) throw error;
+    if (error) {
+      throw error;
+    }
+
     return getActionResponse({ data: data as Task });
   } catch (error) {
     conditionalLog(actionName, { error }, true);
-    return getActionResponse({ error });
+    return getActionResponse({ error: error as Error });
   }
 };
 
