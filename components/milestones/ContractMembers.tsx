@@ -5,68 +5,33 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import {
+  useContractMembers,
   useToggleContractMember,
   useUpdateContractMemberApproval,
 } from "@/hooks/contract.hooks";
-import { useAppData } from "@/stores/app.store";
-import { CheckCircle, XCircle } from "lucide-react";
-import { useCallback } from "react";
+import { AlertCircle, CheckCircle, XCircle } from "lucide-react";
 
 export const ContractMembers = () => {
-  // Get data from the app store
-  const { contract, user, project } = useAppData();
   const { toggleContractMember, isPending: isTogglePending } =
     useToggleContractMember();
   const { updateContractMemberApproval, isPending: isApprovalPending } =
     useUpdateContractMemberApproval();
 
-  // All project members that could be part of the contract
-  const projectMembers = project?.project_members || [];
-  // Current contract members
-  const contractMembers = contract?.members || [];
-
-  // Get initials for avatar fallback
-  const getInitials = (name: string) => {
-    if (!name) return "??";
-    return name
-      .split(" ")
-      .map(part => part[0])
-      .join("")
-      .toUpperCase();
-  };
-
-  // Check if a member is the current user
-  const isCurrentUser = (memberId: string) => {
-    return memberId === user?.id;
-  };
-
-  // Check if a project member is already part of the contract
-  const isContractMember = (memberId: string) => {
-    return contractMembers.some(member => member.id === memberId);
-  };
-
-  // Find a contract member's approval status
-  const getMemberApprovalStatus = (memberId: string) => {
-    const member = contractMembers.find(member => member.id === memberId);
-    return member?.hasApproved || false;
-  };
-
-  // Handle toggling member inclusion in contract
-  const handleToggleMember = useCallback(
-    (memberId: string, checked: boolean) => {
-      if (!contract?.id) return;
-      toggleContractMember(contract.id, memberId, checked);
-    },
-    [contract?.id, toggleContractMember],
-  );
-
-  // Handle toggling approval status for current user
-  const handleToggleApproval = useCallback(
-    (memberId: string, approved: boolean) => {
-      if (!contract?.id) return;
-      updateContractMemberApproval(contract.id, memberId, approved);
-    },
-    [contract?.id, updateContractMemberApproval],
+  const {
+    contract,
+    projectMembers,
+    getInitials,
+    isCurrentUser,
+    isContractMember,
+    getMemberApprovalStatus,
+    handleToggleMember,
+    handleToggleApproval,
+    isProjectManager,
+  } = useContractMembers(
+    toggleContractMember,
+    isTogglePending,
+    updateContractMemberApproval,
+    isApprovalPending,
   );
 
   if (!contract) {
@@ -82,7 +47,15 @@ export const ContractMembers = () => {
 
   return (
     <div className="space-y-4">
-      <h3 className="text-sm font-medium">Contract Members</h3>
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-medium">Contract Members</h3>
+        {!isProjectManager && (
+          <div className="flex items-center text-xs text-amber-600 dark:text-amber-400">
+            <AlertCircle className="h-4 w-4 mr-1" />
+            <span>Only Project Managers can modify members</span>
+          </div>
+        )}
+      </div>
 
       {projectMembers.length === 0 ? (
         <div className="text-sm text-muted-foreground italic">
@@ -108,7 +81,7 @@ export const ContractMembers = () => {
                     onCheckedChange={checked =>
                       handleToggleMember(memberId, !!checked)
                     }
-                    disabled={isTogglePending}
+                    disabled={isTogglePending || !isProjectManager}
                   />
                   <Avatar>
                     <AvatarImage src={memberProfile?.avatar_url ?? ""} />
@@ -160,6 +133,14 @@ export const ContractMembers = () => {
             );
           })}
         </ul>
+      )}
+
+      {!isProjectManager && projectMembers.length && (
+        <div className="text-xs text-muted-foreground mt-2">
+          Note: While you can see the contract members, only project managers
+          can add or remove members. However, you can still toggle your own
+          approval status.
+        </div>
       )}
     </div>
   );

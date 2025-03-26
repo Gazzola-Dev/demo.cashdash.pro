@@ -132,6 +132,7 @@ function AppSidebar() {
       confirmText: "Sign Out",
       cancelText: "Cancel",
       onConfirm: async () => {
+        supabase?.auth.signOut();
         router.refresh();
       },
     });

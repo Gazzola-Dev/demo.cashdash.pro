@@ -9,13 +9,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import { useContractRole, useContractTasks } from "@/hooks/contract.hooks";
 import { useCreateTask, useUpdateTask } from "@/hooks/task.hooks";
 import { useToast } from "@/hooks/use-toast";
-import { useAppData } from "@/stores/app.store";
+import { cn } from "@/lib/utils";
 import { Tables } from "@/types/database.types";
-import { PlusCircle } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { KeyboardEvent, useState } from "react";
+import { LockIcon, PlusCircle } from "lucide-react";
 
 type Task = Tables<"tasks">;
 
@@ -27,91 +26,43 @@ export const ContractTasks: React.FC<ContractTasksProps> = ({ tasks }) => {
   const { toast } = useToast();
   const { updateTask } = useUpdateTask();
   const { createTask, isPending: isCreating } = useCreateTask();
-  const { milestone, project } = useAppData();
-  const router = useRouter();
+  const { isProjectManager, canEdit } = useContractRole();
 
-  // State for task being edited
-  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
-  const [editingField, setEditingField] = useState<string | null>(null);
-  const [editedTitle, setEditedTitle] = useState<string>("");
-  const [editedDescription, setEditedDescription] = useState<string>("");
-
-  // Handle edit start
-  const handleStartEdit = (taskId: string, field: string, value: string) => {
-    setEditingTaskId(taskId);
-    setEditingField(field);
-
-    if (field === "title") {
-      setEditedTitle(value);
-    } else if (field === "description") {
-      setEditedDescription(value || "");
-    }
-  };
-
-  // Handle saving changes with optimistic update
-  const handleSave = (taskId: string, field: string) => {
-    const updates: Partial<Task> = {};
-
-    if (field === "title" && editedTitle.trim()) {
-      updates.title = editedTitle.trim();
-    } else if (field === "description") {
-      updates.description = editedDescription.trim();
-    }
-
-    if (Object.keys(updates).length > 0) {
-      // Call API to update - the hook handles optimistic updates
-      updateTask(taskId, updates);
-    }
-
-    // Reset editing state
-    setEditingTaskId(null);
-    setEditingField(null);
-  };
-
-  // Handle key events
-  const handleKeyDown = (
-    e: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
-    taskId: string,
-    field: string,
-  ) => {
-    if (e.key === "Enter" && field === "title") {
-      e.preventDefault();
-      handleSave(taskId, field);
-    } else if (e.key === "Escape") {
-      setEditingTaskId(null);
-      setEditingField(null);
-    }
-  };
-
-  // Create new task
-  const handleCreateTask = () => {
-    if (!project) {
-      toast({
-        title: "Error",
-        description: "Project or milestone not found",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Call the createTask function from the hook
-    createTask();
-  };
+  const {
+    editingTaskId,
+    editingField,
+    editedTitle,
+    setEditedTitle,
+    editedDescription,
+    setEditedDescription,
+    handleStartEdit,
+    handleSave,
+    handleKeyDown,
+    handleCreateTask,
+  } = useContractTasks(tasks, updateTask, createTask, isCreating);
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-medium">Contract Tasks</h3>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleCreateTask}
-          className="flex items-center gap-1"
-          disabled={isCreating}
-        >
-          <PlusCircle className="h-4 w-4" />
-          <span>{isCreating ? "Creating..." : "Add Task"}</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          {!canEdit && (
+            <div className="flex items-center text-xs text-amber-600 dark:text-amber-400">
+              <LockIcon className="h-4 w-4 mr-1" />
+              <span>Only project managers can edit</span>
+            </div>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCreateTask}
+            className="flex items-center gap-1"
+            disabled={isCreating || !canEdit}
+          >
+            <PlusCircle className="h-4 w-4" />
+            <span>{isCreating ? "Creating..." : "Add Task"}</span>
+          </Button>
+        </div>
       </div>
 
       <Separator className="my-2" />
@@ -144,10 +95,15 @@ export const ContractTasks: React.FC<ContractTasksProps> = ({ tasks }) => {
                     </div>
                   ) : (
                     <div
-                      className="flex-1 text-left flex items-center gap-2"
+                      className={cn(
+                        "flex-1 text-left flex items-center gap-2",
+                        canEdit ? "cursor-text" : "",
+                      )}
                       onClick={e => {
-                        e.stopPropagation();
-                        handleStartEdit(task.id!, "title", task.title ?? "");
+                        if (canEdit) {
+                          e.stopPropagation();
+                          handleStartEdit(task.id!, "title", task.title ?? "");
+                        }
                       }}
                     >
                       <span>{task.title}</span>
@@ -179,14 +135,19 @@ export const ContractTasks: React.FC<ContractTasksProps> = ({ tasks }) => {
                       </div>
                     ) : (
                       <div
-                        className="cursor-text bg-gray-50/70 dark:bg-gray-900 rounded py-2 px-3 min-h-[60px] text-sm"
-                        onClick={() =>
-                          handleStartEdit(
-                            task.id!,
-                            "description",
-                            task.description || "",
-                          )
-                        }
+                        className={cn(
+                          "bg-gray-50/70 dark:bg-gray-900 rounded py-2 px-3 min-h-[60px] text-sm",
+                          canEdit ? "cursor-text" : "",
+                        )}
+                        onClick={() => {
+                          if (canEdit) {
+                            handleStartEdit(
+                              task.id!,
+                              "description",
+                              task.description || "",
+                            );
+                          }
+                        }}
                       >
                         {task.description ? (
                           <p className="whitespace-pre-wrap">
@@ -194,7 +155,9 @@ export const ContractTasks: React.FC<ContractTasksProps> = ({ tasks }) => {
                           </p>
                         ) : (
                           <p className="text-gray-500 italic">
-                            No description provided. Click to add one.
+                            {canEdit
+                              ? "No description provided. Click to add one."
+                              : "No description provided."}
                           </p>
                         )}
                       </div>

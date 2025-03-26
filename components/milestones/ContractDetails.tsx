@@ -8,172 +8,44 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useUpdateContract } from "@/hooks/contract.hooks";
+import {
+  useContractDetailsForm,
+  useContractRole,
+  useUpdateContract,
+} from "@/hooks/contract.hooks";
 import { formatCurrency, formatDate } from "@/lib/contract.util";
+import { cn } from "@/lib/utils";
 import { useAppData } from "@/stores/app.store";
 import { Tables } from "@/types/database.types";
-import { AlertCircle, CalendarIcon, DollarSignIcon } from "lucide-react";
-import { KeyboardEvent, useEffect, useState } from "react";
+import {
+  AlertCircle,
+  CalendarIcon,
+  DollarSignIcon,
+  LockIcon,
+} from "lucide-react";
 
 type Contract = Tables<"contracts">;
 
 export const ContractDetails = () => {
-  const { contract, isAdmin } = useAppData();
+  const { contract } = useAppData();
   const { updateContract, isPending } = useUpdateContract();
-  const [editingField, setEditingField] = useState<string | null>(null);
+  const { isProjectManager, canEdit } = useContractRole();
 
-  const [formData, setFormData] = useState({
-    title: contract?.title || "",
-    description: contract?.description || "",
-    total_amount_cents: contract?.total_amount_cents || 0,
-    client_name: contract?.client_name || "",
-    client_company: contract?.client_company || "",
-    start_date: contract?.start_date
-      ? new Date(contract.start_date).toISOString().split("T")[0]
-      : "",
-  });
-
-  // Update form data when contract changes
-  useEffect(() => {
-    if (contract) {
-      setFormData({
-        title: contract.title || "",
-        description: contract.description || "",
-        total_amount_cents: contract.total_amount_cents || 0,
-        client_name: contract.client_name || "",
-        client_company: contract.client_company || "",
-        start_date: contract.start_date
-          ? new Date(contract.start_date).toISOString().split("T")[0]
-          : "",
-      });
-    }
-  }, [contract]);
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === "total_amount_cents" ? parseInt(value) * 100 : value,
-    }));
-  };
-
-  const handleSaveField = (fieldName: string) => {
-    if (!contract || !isAdmin) return;
-
-    // Only update if the field has changed
-    let updates: Partial<Contract> = {};
-    let hasChanged = false;
-
-    switch (fieldName) {
-      case "title":
-        if (formData.title !== contract.title) {
-          updates.title = formData.title;
-          hasChanged = true;
-        }
-        break;
-      case "description":
-        if (formData.description !== contract.description) {
-          updates.description = formData.description;
-          hasChanged = true;
-        }
-        break;
-      case "total_amount_cents":
-        if (formData.total_amount_cents !== contract.total_amount_cents) {
-          updates.total_amount_cents = formData.total_amount_cents;
-          hasChanged = true;
-        }
-        break;
-      case "client_name":
-        if (formData.client_name !== contract.client_name) {
-          updates.client_name = formData.client_name;
-          hasChanged = true;
-        }
-        break;
-      case "client_company":
-        if (formData.client_company !== contract.client_company) {
-          updates.client_company = formData.client_company;
-          hasChanged = true;
-        }
-        break;
-      case "start_date":
-        if (formData.start_date) {
-          const currentDate = contract.start_date
-            ? new Date(contract.start_date).toISOString().split("T")[0]
-            : "";
-
-          if (formData.start_date !== currentDate) {
-            updates.start_date = new Date(formData.start_date).toISOString();
-            hasChanged = true;
-          }
-        }
-        break;
-    }
-
-    if (hasChanged && contract.id) {
-      // Call the API to update the contract
-      updateContract(contract.id, updates);
-    }
-
-    setEditingField(null);
-  };
-
-  const handleKeyDown = (
-    e: KeyboardEvent<HTMLInputElement>,
-    fieldName: string,
-  ) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleSaveField(fieldName);
-    } else if (e.key === "Escape") {
-      setEditingField(null);
-      // Reset form data to current contract values
-      if (contract) {
-        switch (fieldName) {
-          case "title":
-            setFormData(prev => ({ ...prev, title: contract.title || "" }));
-            break;
-          case "description":
-            setFormData(prev => ({
-              ...prev,
-              description: contract.description || "",
-            }));
-            break;
-          case "total_amount_cents":
-            setFormData(prev => ({
-              ...prev,
-              total_amount_cents: contract.total_amount_cents || 0,
-            }));
-            break;
-          case "client_name":
-            setFormData(prev => ({
-              ...prev,
-              client_name: contract.client_name || "",
-            }));
-            break;
-          case "client_company":
-            setFormData(prev => ({
-              ...prev,
-              client_company: contract.client_company || "",
-            }));
-            break;
-          case "start_date":
-            setFormData(prev => ({
-              ...prev,
-              start_date: contract.start_date
-                ? new Date(contract.start_date).toISOString().split("T")[0]
-                : "",
-            }));
-            break;
-        }
-      }
-    }
-  };
-
-  const handleBlur = (fieldName: string) => {
-    handleSaveField(fieldName);
-  };
+  const {
+    editingField,
+    setEditingField,
+    formData,
+    handleChange,
+    handleSaveField,
+    handleKeyDown,
+    handleBlur,
+  } = useContractDetailsForm(
+    contract,
+    isProjectManager,
+    isProjectManager,
+    updateContract,
+    isPending,
+  );
 
   if (!contract) {
     return (
@@ -202,8 +74,11 @@ export const ContractDetails = () => {
           />
         ) : (
           <div
-            className="font-medium text-lg cursor-text bg-gray-50/70 dark:bg-gray-900 rounded py-1 px-2"
-            onClick={() => isAdmin && setEditingField("title")}
+            className={cn(
+              "font-medium text-lg rounded py-1 px-2",
+              canEdit ? "cursor-text bg-gray-50/70 dark:bg-gray-900" : "",
+            )}
+            onClick={() => canEdit && setEditingField("title")}
           >
             {contract.title}
           </div>
@@ -226,8 +101,11 @@ export const ContractDetails = () => {
             />
           ) : (
             <span
-              className="font-semibold text-foreground cursor-text bg-gray-50/70 dark:bg-gray-900 rounded py-1 px-2"
-              onClick={() => isAdmin && setEditingField("total_amount_cents")}
+              className={cn(
+                "font-semibold text-foreground rounded py-1 px-2",
+                canEdit ? "cursor-text bg-gray-50/70 dark:bg-gray-900" : "",
+              )}
+              onClick={() => canEdit && setEditingField("total_amount_cents")}
             >
               {formatCurrency(contract.total_amount_cents / 100).slice(1)}
             </span>
@@ -238,7 +116,15 @@ export const ContractDetails = () => {
       <Separator />
 
       <div className="space-y-4">
-        <h3 className="text-sm font-medium">Contract Details</h3>
+        <div className="flex justify-between items-center">
+          <h3 className="text-sm font-medium">Contract Details</h3>
+          {!canEdit && (
+            <div className="flex items-center text-xs text-amber-600 dark:text-amber-400">
+              <LockIcon className="h-4 w-4 mr-1" />
+              <span>Only project managers can edit</span>
+            </div>
+          )}
+        </div>
 
         <div className="flex flex-col space-y-4">
           <div className="space-y-2">
@@ -259,8 +145,11 @@ export const ContractDetails = () => {
               />
             ) : (
               <p
-                className="text-sm cursor-text bg-gray-50/70 dark:bg-gray-900 rounded py-1 px-2"
-                onClick={() => isAdmin && setEditingField("client_name")}
+                className={cn(
+                  "text-sm rounded py-1 px-2",
+                  canEdit ? "cursor-text bg-gray-50/70 dark:bg-gray-900" : "",
+                )}
+                onClick={() => canEdit && setEditingField("client_name")}
               >
                 {contract.client_name}
               </p>
@@ -285,8 +174,11 @@ export const ContractDetails = () => {
               />
             ) : (
               <p
-                className="text-sm cursor-text bg-gray-50/70 dark:bg-gray-900 rounded py-1 px-2"
-                onClick={() => isAdmin && setEditingField("client_company")}
+                className={cn(
+                  "text-sm rounded py-1 px-2",
+                  canEdit ? "cursor-text bg-gray-50/70 dark:bg-gray-900" : "",
+                )}
+                onClick={() => canEdit && setEditingField("client_company")}
               >
                 {contract.client_company || (
                   <span className="text-gray-500 italic">
@@ -315,8 +207,11 @@ export const ContractDetails = () => {
               />
             ) : (
               <p
-                className="text-sm cursor-text bg-gray-50/70 dark:bg-gray-900 rounded py-1 px-2"
-                onClick={() => isAdmin && setEditingField("description")}
+                className={cn(
+                  "text-sm rounded py-1 px-2",
+                  canEdit ? "cursor-text bg-gray-50/70 dark:bg-gray-900" : "",
+                )}
+                onClick={() => canEdit && setEditingField("description")}
               >
                 {contract.description || (
                   <span className="text-gray-500 italic">
@@ -350,8 +245,13 @@ export const ContractDetails = () => {
                   <div className="flex items-center">
                     <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
                     <span
-                      className="text-sm cursor-text bg-gray-50/70 dark:bg-gray-900 rounded py-1 px-2"
-                      onClick={() => isAdmin && setEditingField("start_date")}
+                      className={cn(
+                        "text-sm rounded py-1 px-2",
+                        canEdit
+                          ? "cursor-text bg-gray-50/70 dark:bg-gray-900"
+                          : "",
+                      )}
+                      onClick={() => canEdit && setEditingField("start_date")}
                     >
                       {contract.start_date ? (
                         formatDate(new Date(contract.start_date))

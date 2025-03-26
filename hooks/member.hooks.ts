@@ -583,3 +583,35 @@ export const useMembersManagement = () => {
     isUserPM,
   };
 };
+
+export const useProjectRole = () => {
+  const { project, user, isAdmin } = useAppData();
+
+  // Check if the current user is a project manager (admin, owner, or has admin role)
+  const isProjectManager = (() => {
+    // Admin users always have project manager privileges
+    if (isAdmin) return true;
+
+    // If no user or no project, return false
+    if (!user || !project) return false;
+
+    // Check if the user is a member of the project with the appropriate role
+    const userMember = project.project_members?.find(
+      member => member.user_id === user.id,
+    );
+
+    // Return true if the user has a role of "admin" or "owner"
+    return userMember ? ["admin", "owner"].includes(userMember.role) : false;
+  })();
+
+  // Check if user can edit (either admin or project manager)
+  const canEdit = isAdmin || isProjectManager;
+
+  return {
+    isProjectManager,
+    isAdmin,
+    canEdit,
+  };
+};
+
+export default useProjectRole;

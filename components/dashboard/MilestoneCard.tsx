@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import useProjectRole from "@/hooks/member.hooks";
 import {
   useCreateMilestone,
   useDeleteMilestone,
@@ -85,6 +86,7 @@ function MilestoneCard() {
     user,
     profile,
   } = useAppData();
+  const { canEdit } = useProjectRole();
   const [isOpen, setIsOpen] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);
   const { data: milestones, refetch: refetchMilestones } =
@@ -137,7 +139,7 @@ function MilestoneCard() {
   };
 
   const handleStatusChange = (value: string) => {
-    if (!currentMilestone || !isAdmin) return;
+    if (!currentMilestone || !canEdit) return;
 
     // Ensure value is cast to the correct type
     const typedValue = value as "draft" | "active" | "completed" | "archived";
@@ -166,7 +168,7 @@ function MilestoneCard() {
   };
 
   const handleSaveField = (fieldName: string) => {
-    if (!currentMilestone || !isAdmin) return;
+    if (!currentMilestone || !canEdit) return;
 
     // Only update if the field has changed
     let updates: Record<string, any> = {};
@@ -246,18 +248,18 @@ function MilestoneCard() {
   };
 
   const handleMilestoneChange = (milestoneId: string) => {
-    if (!isAdmin) return;
+    if (!canEdit) return;
     setProjectCurrentMilestone(milestoneId);
   };
 
   const handleCreateMilestone = () => {
-    if (!isAdmin) return;
+    if (!canEdit) return;
     setIsDialogOpen(false);
     createMilestone();
   };
 
   const handleDeleteMilestone = () => {
-    if (!isAdmin) return;
+    if (!canEdit) return;
     setIsDeleteDialogOpen(false);
     if (currentMilestone) {
       deleteMilestone(currentMilestone.id);
@@ -323,7 +325,7 @@ function MilestoneCard() {
               <CardTitle>Milestone</CardTitle>
             </div>
             <div className="flex items-center gap-2">
-              {isAdmin && isOpen && (
+              {canEdit && isOpen && (
                 <>
                   <Button
                     variant="outline"
@@ -368,7 +370,7 @@ function MilestoneCard() {
           </CardHeader>
 
           {/* Milestone selector for admins */}
-          {isAdmin && (
+          {canEdit && (
             <CardContent className="pt-4 mb-4 pb-2">
               <Select
                 value={currentMilestone?.id || ""}
@@ -406,7 +408,7 @@ function MilestoneCard() {
                       >
                         Milestone Name
                       </Label>
-                      {isAdmin && editingField === "title" ? (
+                      {canEdit && editingField === "title" ? (
                         <Input
                           id="title"
                           name="title"
@@ -420,8 +422,8 @@ function MilestoneCard() {
                         />
                       ) : (
                         <p
-                          className="text-sm cursor-text bg-gray-50/70 dark:bg-gray-900 rounded py-1 px-2"
-                          onClick={() => isAdmin && setEditingField("title")}
+                          className={`text-sm ${canEdit ? "cursor-text" : ""} bg-gray-50/70 dark:bg-gray-900 rounded py-1 px-2`}
+                          onClick={() => canEdit && setEditingField("title")}
                         >
                           {currentMilestone.title || "Untitled Milestone"}
                         </p>
@@ -438,7 +440,7 @@ function MilestoneCard() {
                       <Select
                         value={formData.status}
                         onValueChange={handleStatusChange}
-                        disabled={!isAdmin || isPending}
+                        disabled={!canEdit || isPending}
                       >
                         <SelectTrigger className="h-8">
                           <SelectValue>
@@ -483,7 +485,7 @@ function MilestoneCard() {
                       >
                         Description
                       </Label>
-                      {isAdmin && editingField === "description" ? (
+                      {canEdit && editingField === "description" ? (
                         <Textarea
                           id="description"
                           name="description"
@@ -498,9 +500,9 @@ function MilestoneCard() {
                         />
                       ) : (
                         <p
-                          className="text-sm cursor-text bg-gray-50/70 dark:bg-gray-900 rounded py-1 px-2"
+                          className={`text-sm ${canEdit ? "cursor-text" : ""} bg-gray-50/70 dark:bg-gray-900 rounded py-1 px-2`}
                           onClick={() =>
-                            isAdmin && setEditingField("description")
+                            canEdit && setEditingField("description")
                           }
                         >
                           {currentMilestone.description || (
@@ -519,7 +521,7 @@ function MilestoneCard() {
                       >
                         Due Date
                       </Label>
-                      {isAdmin && editingField === "dueDate" ? (
+                      {canEdit && editingField === "dueDate" ? (
                         <Input
                           id="dueDate"
                           name="dueDate"
@@ -533,8 +535,8 @@ function MilestoneCard() {
                         />
                       ) : (
                         <p
-                          className="text-sm cursor-text bg-gray-50/70 dark:bg-gray-900 rounded py-1 px-2"
-                          onClick={() => isAdmin && setEditingField("dueDate")}
+                          className={`text-sm ${canEdit ? "cursor-text" : ""} bg-gray-50/70 dark:bg-gray-900 rounded py-1 px-2`}
+                          onClick={() => canEdit && setEditingField("dueDate")}
                         >
                           {currentMilestone.due_date !== null ? (
                             format(
@@ -579,7 +581,7 @@ function MilestoneCard() {
                     <Progress value={progress} className="h-2" />
                   </div>
                 </div>
-                {isOpen && isAdmin && daysRemaining !== null && (
+                {isOpen && daysRemaining !== null && (
                   <div className="space-y-2">
                     <Label className="text-sm font-bold text-gray-500 dark:text-gray-400">
                       Time Remaining

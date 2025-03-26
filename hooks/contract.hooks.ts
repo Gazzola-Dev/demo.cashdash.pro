@@ -15,7 +15,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { useCallback, useState } from "react";
+import { KeyboardEvent, useCallback, useEffect, useState } from "react";
 
 type Contract = Tables<"contracts">;
 
@@ -422,3 +422,468 @@ export const useUpdateContractMemberApproval = () => {
     isPending,
   };
 };
+
+export function useContractDetailsForm(
+  contract: Contract | null | undefined,
+  isAdmin: boolean,
+  isProjectManager: boolean,
+  updateContract: (contractId: string, updates: Partial<Contract>) => void,
+  isPending: boolean,
+) {
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const canEdit = isAdmin || isProjectManager;
+
+  const [formData, setFormData] = useState({
+    title: contract?.title || "",
+    description: contract?.description || "",
+    total_amount_cents: contract?.total_amount_cents || 0,
+    client_name: contract?.client_name || "",
+    client_company: contract?.client_company || "",
+    start_date: contract?.start_date
+      ? new Date(contract.start_date).toISOString().split("T")[0]
+      : "",
+  });
+
+  // Update form data when contract changes
+  useEffect(() => {
+    if (contract) {
+      setFormData({
+        title: contract.title || "",
+        description: contract.description || "",
+        total_amount_cents: contract.total_amount_cents || 0,
+        client_name: contract.client_name || "",
+        client_company: contract.client_company || "",
+        start_date: contract.start_date
+          ? new Date(contract.start_date).toISOString().split("T")[0]
+          : "",
+      });
+    }
+  }, [contract]);
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === "total_amount_cents" ? parseInt(value) * 100 : value,
+    }));
+  };
+
+  const handleSaveField = (fieldName: string) => {
+    if (!contract || !canEdit) return;
+
+    // Only update if the field has changed
+    let updates: Partial<Contract> = {};
+    let hasChanged = false;
+
+    switch (fieldName) {
+      case "title":
+        if (formData.title !== contract.title) {
+          updates.title = formData.title;
+          hasChanged = true;
+        }
+        break;
+      case "description":
+        if (formData.description !== contract.description) {
+          updates.description = formData.description;
+          hasChanged = true;
+        }
+        break;
+      case "total_amount_cents":
+        if (formData.total_amount_cents !== contract.total_amount_cents) {
+          updates.total_amount_cents = formData.total_amount_cents;
+          hasChanged = true;
+        }
+        break;
+      case "client_name":
+        if (formData.client_name !== contract.client_name) {
+          updates.client_name = formData.client_name;
+          hasChanged = true;
+        }
+        break;
+      case "client_company":
+        if (formData.client_company !== contract.client_company) {
+          updates.client_company = formData.client_company;
+          hasChanged = true;
+        }
+        break;
+      case "start_date":
+        if (formData.start_date) {
+          const currentDate = contract.start_date
+            ? new Date(contract.start_date).toISOString().split("T")[0]
+            : "";
+
+          if (formData.start_date !== currentDate) {
+            updates.start_date = new Date(formData.start_date).toISOString();
+            hasChanged = true;
+          }
+        }
+        break;
+    }
+
+    if (hasChanged && contract.id) {
+      // Call the API to update the contract
+      updateContract(contract.id, updates);
+    }
+
+    setEditingField(null);
+  };
+
+  const handleKeyDown = (
+    e: KeyboardEvent<HTMLInputElement>,
+    fieldName: string,
+  ) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSaveField(fieldName);
+    } else if (e.key === "Escape") {
+      setEditingField(null);
+      // Reset form data to current contract values
+      if (contract) {
+        switch (fieldName) {
+          case "title":
+            setFormData(prev => ({ ...prev, title: contract.title || "" }));
+            break;
+          case "description":
+            setFormData(prev => ({
+              ...prev,
+              description: contract.description || "",
+            }));
+            break;
+          case "total_amount_cents":
+            setFormData(prev => ({
+              ...prev,
+              total_amount_cents: contract.total_amount_cents || 0,
+            }));
+            break;
+          case "client_name":
+            setFormData(prev => ({
+              ...prev,
+              client_name: contract.client_name || "",
+            }));
+            break;
+          case "client_company":
+            setFormData(prev => ({
+              ...prev,
+              client_company: contract.client_company || "",
+            }));
+            break;
+          case "start_date":
+            setFormData(prev => ({
+              ...prev,
+              start_date: contract.start_date
+                ? new Date(contract.start_date).toISOString().split("T")[0]
+                : "",
+            }));
+            break;
+        }
+      }
+    }
+  };
+
+  const handleBlur = (fieldName: string) => {
+    handleSaveField(fieldName);
+  };
+
+  return {
+    editingField,
+    setEditingField,
+    formData,
+    handleChange,
+    handleSaveField,
+    handleKeyDown,
+    handleBlur,
+    canEdit,
+    isPending,
+  };
+}
+
+export function useContractRole() {
+  const { contract, user, isAdmin } = useAppData();
+
+  // Check if user is a project manager or admin in the contract
+  const isProjectManager =
+    isAdmin ||
+    (user &&
+      contract?.members?.some(
+        member =>
+          member.id === user.id &&
+          (member.role === "project manager" || member.role === "admin"),
+      )) ||
+    false;
+
+  // User can edit if they are an admin or project manager
+  const canEdit = isAdmin || isProjectManager;
+
+  return {
+    isProjectManager,
+    canEdit,
+  };
+}
+
+interface ContractInfo {
+  id: string;
+  title: string;
+  price: number;
+  project_id: string;
+  startDate: Date;
+  tasks: {
+    id: string;
+    ordinal_id: number;
+    title: string;
+    description: string | null;
+  }[];
+  members: ContractMember[];
+}
+
+export function useContractPayment(
+  allMembers: ContractMember[],
+  isProjectManager: boolean,
+  allPMsApproved: boolean,
+) {
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isPaid, setIsPaid] = useState(false);
+  const [paymentDate, setPaymentDate] = useState<Date | null>(null);
+  const [showForm, setShowForm] = useState(false);
+
+  // Form state
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardExpiry, setCardExpiry] = useState("");
+  const [cardCvc, setCardCvc] = useState("");
+  const [cardName, setCardName] = useState("");
+
+  // Check if all project managers have approved
+  const projectManagers = allMembers.filter(
+    member => member.role === "project manager" || member.role === "admin",
+  );
+
+  const getPendingPMNames = () => {
+    const pendingPMs = projectManagers.filter(pm => !pm.hasApproved);
+    return pendingPMs.map(pm => pm.display_name || "Unnamed User").join(", ");
+  };
+
+  const handleShowPaymentForm = () => {
+    // Only allow project managers to show the payment form
+    if (isProjectManager) {
+      setShowForm(true);
+    }
+  };
+
+  const handleProcessPayment = () => {
+    // Only allow project managers to process payment
+    if (!isProjectManager) return;
+
+    setIsProcessing(true);
+
+    // Simulate payment processing
+    setTimeout(() => {
+      setIsProcessing(false);
+      setIsPaid(true);
+      setPaymentDate(new Date());
+      setShowForm(false);
+    }, 2000);
+  };
+
+  const canInitiatePayment = isProjectManager && allPMsApproved;
+
+  return {
+    isProcessing,
+    isPaid,
+    paymentDate,
+    showForm,
+    cardNumber,
+    setCardNumber,
+    cardExpiry,
+    setCardExpiry,
+    cardCvc,
+    setCardCvc,
+    cardName,
+    setCardName,
+    getPendingPMNames,
+    handleShowPaymentForm,
+    handleProcessPayment,
+    canInitiatePayment,
+  };
+}
+
+export function useContractMembers(
+  toggleContractMember: (
+    contractId: string,
+    memberId: string,
+    isIncluded: boolean,
+  ) => void,
+  isTogglePending: boolean,
+  updateContractMemberApproval: (
+    contractId: string,
+    memberId: string,
+    approved: boolean,
+  ) => void,
+  isApprovalPending: boolean,
+) {
+  // Get data from the app store
+  const { contract, user, project } = useAppData();
+  const { isProjectManager, canEdit } = useContractRole();
+
+  // All project members that could be part of the contract
+  const projectMembers = project?.project_members || [];
+  // Current contract members
+  const contractMembers = contract?.members || [];
+
+  // Get initials for avatar fallback
+  const getInitials = (name: string) => {
+    if (!name) return "??";
+    return name
+      .split(" ")
+      .map(part => part[0])
+      .join("")
+      .toUpperCase();
+  };
+
+  // Check if a member is the current user
+  const isCurrentUser = (memberId: string) => {
+    return memberId === user?.id;
+  };
+
+  // Check if a project member is already part of the contract
+  const isContractMember = (memberId: string) => {
+    return contractMembers.some(member => member.id === memberId);
+  };
+
+  // Find a contract member's approval status
+  const getMemberApprovalStatus = (memberId: string) => {
+    const member = contractMembers.find(member => member.id === memberId);
+    return member?.hasApproved || false;
+  };
+
+  // Handle toggling member inclusion in contract
+  const handleToggleMember = useCallback(
+    (memberId: string, checked: boolean) => {
+      // Only allow project managers to toggle members
+      if (!contract?.id || !isProjectManager) return;
+      toggleContractMember(contract.id, memberId, checked);
+    },
+    [contract?.id, toggleContractMember, isProjectManager],
+  );
+
+  // Handle toggling approval status for current user
+  const handleToggleApproval = useCallback(
+    (memberId: string, approved: boolean) => {
+      if (!contract?.id) return;
+      updateContractMemberApproval(contract.id, memberId, approved);
+    },
+    [contract?.id, updateContractMemberApproval],
+  );
+
+  return {
+    contract,
+    projectMembers,
+    contractMembers,
+    getInitials,
+    isCurrentUser,
+    isContractMember,
+    getMemberApprovalStatus,
+    handleToggleMember,
+    handleToggleApproval,
+    isProjectManager,
+    canEdit,
+    isTogglePending,
+    isApprovalPending,
+  };
+}
+
+type Task = Tables<"tasks">;
+
+export function useContractTasks(
+  tasks: Partial<Task>[],
+  updateTask: (taskId: string, updates: Partial<Task>) => void,
+  createTask: () => void,
+  isCreating: boolean,
+) {
+  const { project } = useAppData();
+  const { isProjectManager, canEdit } = useContractRole();
+
+  // State for task being edited
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const [editedTitle, setEditedTitle] = useState<string>("");
+  const [editedDescription, setEditedDescription] = useState<string>("");
+
+  // Handle edit start
+  const handleStartEdit = (taskId: string, field: string, value: string) => {
+    // Only allow editing if the user is a project manager
+    if (!canEdit) return;
+
+    setEditingTaskId(taskId);
+    setEditingField(field);
+
+    if (field === "title") {
+      setEditedTitle(value);
+    } else if (field === "description") {
+      setEditedDescription(value || "");
+    }
+  };
+
+  // Handle saving changes with optimistic update
+  const handleSave = (taskId: string, field: string) => {
+    if (!canEdit) return;
+
+    const updates: Partial<Task> = {};
+
+    if (field === "title" && editedTitle.trim()) {
+      updates.title = editedTitle.trim();
+    } else if (field === "description") {
+      updates.description = editedDescription.trim();
+    }
+
+    if (Object.keys(updates).length > 0) {
+      // Call API to update - the hook handles optimistic updates
+      updateTask(taskId, updates);
+    }
+
+    // Reset editing state
+    setEditingTaskId(null);
+    setEditingField(null);
+  };
+
+  // Handle key events
+  const handleKeyDown = (
+    e: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
+    taskId: string,
+    field: string,
+  ) => {
+    if (e.key === "Enter" && field === "title") {
+      e.preventDefault();
+      handleSave(taskId, field);
+    } else if (e.key === "Escape") {
+      setEditingTaskId(null);
+      setEditingField(null);
+    }
+  };
+
+  // Create new task
+  const handleCreateTask = () => {
+    if (!project || !isProjectManager) {
+      return;
+    }
+
+    // Call the createTask function from the hook
+    createTask();
+  };
+
+  return {
+    editingTaskId,
+    editingField,
+    editedTitle,
+    setEditedTitle,
+    editedDescription,
+    setEditedDescription,
+    handleStartEdit,
+    handleSave,
+    handleKeyDown,
+    handleCreateTask,
+    isCreating,
+    canEdit,
+    isProjectManager,
+  };
+}

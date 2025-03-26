@@ -3,10 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { useContractPayment, useContractRole } from "@/hooks/contract.hooks";
 import { formatCurrency, formatDate } from "@/lib/contract.util";
 import { ContractMember } from "@/types/app.types";
 import { CheckCircle, CreditCard, LoaderCircle, LockIcon } from "lucide-react";
-import { useState } from "react";
 
 interface ContractInfo {
   id: string;
@@ -38,46 +38,26 @@ export const ContractPayment: React.FC<ContractPaymentProps> = ({
   expanded,
   allPMsApproved,
 }) => {
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [isPaid, setIsPaid] = useState(false);
-  const [paymentDate, setPaymentDate] = useState<Date | null>(null);
-  const [showForm, setShowForm] = useState(false);
+  const { isProjectManager } = useContractRole();
 
-  // Form state
-  const [cardNumber, setCardNumber] = useState("");
-  const [cardExpiry, setCardExpiry] = useState("");
-  const [cardCvc, setCardCvc] = useState("");
-  const [cardName, setCardName] = useState("");
-
-  // Check if all project managers have approved
-  const projectManagers = allMembers.filter(
-    member => member.role === "project manager" || member.role === "admin",
-  );
-  const approvedPMs = projectManagers.filter(pm => pm.hasApproved);
-
-  // Use the provided prop directly to determine if all PMs have approved
-  // This ensures we're using the most up-to-date approval state
-
-  const getPendingPMNames = () => {
-    const pendingPMs = projectManagers.filter(pm => !pm.hasApproved);
-    return pendingPMs.map(pm => pm.display_name || "Unnamed User").join(", ");
-  };
-
-  const handleShowPaymentForm = () => {
-    setShowForm(true);
-  };
-
-  const handleProcessPayment = () => {
-    setIsProcessing(true);
-
-    // Simulate payment processing
-    setTimeout(() => {
-      setIsProcessing(false);
-      setIsPaid(true);
-      setPaymentDate(new Date());
-      setShowForm(false);
-    }, 2000);
-  };
+  const {
+    isProcessing,
+    isPaid,
+    paymentDate,
+    showForm,
+    cardNumber,
+    setCardNumber,
+    cardExpiry,
+    setCardExpiry,
+    cardCvc,
+    setCardCvc,
+    cardName,
+    setCardName,
+    getPendingPMNames,
+    handleShowPaymentForm,
+    handleProcessPayment,
+    canInitiatePayment,
+  } = useContractPayment(allMembers, isProjectManager, allPMsApproved);
 
   // Only show component if the card is expanded
   if (!expanded) {
@@ -154,6 +134,7 @@ export const ContractPayment: React.FC<ContractPaymentProps> = ({
                   placeholder="John Smith"
                   value={cardName}
                   onChange={e => setCardName(e.target.value)}
+                  disabled={!isProjectManager}
                 />
               </div>
 
@@ -165,6 +146,7 @@ export const ContractPayment: React.FC<ContractPaymentProps> = ({
                     placeholder="4242 4242 4242 4242"
                     value={cardNumber}
                     onChange={e => setCardNumber(e.target.value)}
+                    disabled={!isProjectManager}
                   />
                   <CreditCard className="absolute right-3 top-2.5 h-5 w-5 text-muted-foreground" />
                 </div>
@@ -178,6 +160,7 @@ export const ContractPayment: React.FC<ContractPaymentProps> = ({
                     placeholder="MM/YY"
                     value={cardExpiry}
                     onChange={e => setCardExpiry(e.target.value)}
+                    disabled={!isProjectManager}
                   />
                 </div>
                 <div>
@@ -187,6 +170,7 @@ export const ContractPayment: React.FC<ContractPaymentProps> = ({
                     placeholder="123"
                     value={cardCvc}
                     onChange={e => setCardCvc(e.target.value)}
+                    disabled={!isProjectManager}
                   />
                 </div>
               </div>
@@ -195,6 +179,7 @@ export const ContractPayment: React.FC<ContractPaymentProps> = ({
                 className="w-full"
                 onClick={handleProcessPayment}
                 disabled={
+                  !isProjectManager ||
                   isProcessing ||
                   !cardNumber ||
                   !cardExpiry ||
@@ -219,10 +204,21 @@ export const ContractPayment: React.FC<ContractPaymentProps> = ({
           </div>
         ) : (
           <div className="flex flex-col space-y-4">
-            <Button onClick={handleShowPaymentForm} className="w-full">
+            <Button
+              onClick={handleShowPaymentForm}
+              className="w-full"
+              disabled={!canInitiatePayment}
+            >
               <CreditCard className="h-4 w-4 mr-2" />
-              Proceed to Payment
+              {isProjectManager
+                ? "Proceed to Payment"
+                : "Payment (Project Manager Only)"}
             </Button>
+            {!isProjectManager && (
+              <p className="text-xs text-center text-muted-foreground">
+                Only project managers can process payments for contracts.
+              </p>
+            )}
           </div>
         )}
       </div>

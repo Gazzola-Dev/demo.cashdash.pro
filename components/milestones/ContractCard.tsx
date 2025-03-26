@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useGetContractByMilestone } from "@/hooks/contract.hooks";
+import useProjectRole from "@/hooks/member.hooks";
 import { formatCurrency } from "@/lib/contract.util";
 import { useAppData } from "@/stores/app.store";
 import { ChevronDown, ChevronUp } from "lucide-react";
@@ -32,6 +33,9 @@ export const ContractCard = () => {
   // Get data from the app store
   const { milestone, contract: appContract, tasks } = useAppData();
 
+  // Get user role and permissions
+  const { isProjectManager, canEdit } = useProjectRole();
+
   // Initialize the fetch but don't use the returned data directly
   const {
     isLoading,
@@ -43,6 +47,9 @@ export const ContractCard = () => {
   const contractMembers = contract?.members || [];
 
   const handleConfirmApproval = () => {
+    // Check if user has edit permissions
+    if (!canEdit) return;
+
     setIsApproved(!isApproved);
     setIsApprovalDialogOpen(false);
 
@@ -162,9 +169,10 @@ export const ContractCard = () => {
         </Card>
       </Collapsible>
 
+      {/* Only show dialog if user can edit */}
       <Dialog
-        open={isApprovalDialogOpen}
-        onOpenChange={setIsApprovalDialogOpen}
+        open={isApprovalDialogOpen && canEdit}
+        onOpenChange={open => canEdit && setIsApprovalDialogOpen(open)}
       >
         <DialogContent>
           <DialogHeader>

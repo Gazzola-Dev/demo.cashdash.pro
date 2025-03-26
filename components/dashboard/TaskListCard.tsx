@@ -22,6 +22,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import configuration from "@/configuration";
+import useProjectRole from "@/hooks/member.hooks";
 import { useTaskListCard } from "@/hooks/useTaskListCard";
 import { capitalizeFirstLetter } from "@/lib/string.util";
 import { cn } from "@/lib/utils";
@@ -142,6 +143,7 @@ const TaskListCard = () => {
     tasks,
   } = useTaskListCard();
   const { user, profile } = useAppData();
+  const { canEdit } = useProjectRole();
 
   // Loading state determination
   const isLoading =
@@ -151,7 +153,7 @@ const TaskListCard = () => {
 
   return (
     <div className="relative h-full flex-shrink-0">
-      {!isAdmin && !isLoading && (
+      {!canEdit && !isLoading && (
         <div className="absolute inset-0 flex items-center justify-center z-10">
           <Card className="w-56 bg-white/70 dark:bg-black/70">
             <CardHeader className="flex items-center justify-between text-gray-700 dark:text-gray-300 gap-2 pb-5">
@@ -179,7 +181,7 @@ const TaskListCard = () => {
       ) : (
         <Card
           className={cn(
-            !isAdmin && "blur",
+            !canEdit && "blur",
             "flex flex-col",
             "h-full max-h-[calc(100vh-100px)] md:max-h-[40rem]",
           )}
@@ -187,7 +189,7 @@ const TaskListCard = () => {
           <CardHeader className="pb-3">
             <div className="flex flex-row items-center justify-between">
               <CardTitle>Tasks ({limitedTasks.length})</CardTitle>
-              <Button size="sm" onClick={createNewTask}>
+              <Button size="sm" onClick={createNewTask} disabled={!canEdit}>
                 <Plus className="h-4 w-4 mr-2" />
                 New Task
               </Button>
@@ -200,6 +202,7 @@ const TaskListCard = () => {
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   className="pl-8 min-w-[150px]"
+                  disabled={!canEdit}
                 />
               </div>
               <Input
@@ -207,15 +210,17 @@ const TaskListCard = () => {
                 value={ordinalSearch}
                 onChange={e => setOrdinalSearch(e.target.value)}
                 className="w-24"
+                disabled={!canEdit}
               />
               <Popover
                 open={isAssigneePopoverOpen}
                 onOpenChange={setIsAssigneePopoverOpen}
               >
-                <PopoverTrigger asChild>
+                <PopoverTrigger asChild disabled={!canEdit}>
                   <Button
                     variant="outline"
                     className="w-[150px] justify-between"
+                    disabled={!canEdit}
                   >
                     <span className="truncate">
                       {getSelectedAssigneesDisplayText()}
@@ -253,8 +258,14 @@ const TaskListCard = () => {
               <div className="grid grid-cols-[30px_60px_50px_120px_1fr_120px] bg-muted px-2 py-2 text-xs font-medium">
                 <div></div>
                 <button
-                  onClick={handlePriorityHeaderClick}
-                  className="text-center hover:underline cursor-pointer flex items-center justify-center"
+                  onClick={canEdit ? handlePriorityHeaderClick : undefined}
+                  className={cn(
+                    "text-center flex items-center justify-center",
+                    canEdit
+                      ? "hover:underline cursor-pointer"
+                      : "cursor-default",
+                  )}
+                  disabled={!canEdit}
                 >
                   Priority
                   {prioritySortAscending ? (
@@ -264,14 +275,26 @@ const TaskListCard = () => {
                   )}
                 </button>
                 <button
-                  onClick={handleIdHeaderClick}
-                  className="text-center hover:underline cursor-pointer"
+                  onClick={canEdit ? handleIdHeaderClick : undefined}
+                  className={cn(
+                    "text-center",
+                    canEdit
+                      ? "hover:underline cursor-pointer"
+                      : "cursor-default",
+                  )}
+                  disabled={!canEdit}
                 >
                   {getIdHeaderText()}
                 </button>
                 <button
-                  onClick={handleStatusHeaderClick}
-                  className="hover:underline cursor-pointer flex items-center"
+                  onClick={canEdit ? handleStatusHeaderClick : undefined}
+                  className={cn(
+                    "flex items-center",
+                    canEdit
+                      ? "hover:underline cursor-pointer"
+                      : "cursor-default",
+                  )}
+                  disabled={!canEdit}
                 >
                   {selectedStatus
                     ? capitalizeFirstLetter(selectedStatus.replace("_", " "))
@@ -286,7 +309,7 @@ const TaskListCard = () => {
                 className="overflow-y-auto"
                 style={{ maxHeight: "calc(100% - 32px)" }}
               >
-                <DragDropContext onDragEnd={handleDragEnd}>
+                <DragDropContext onDragEnd={canEdit ? handleDragEnd : () => {}}>
                   <Droppable droppableId="tasks">
                     {(provided: DroppableProvided) => (
                       <div
@@ -306,6 +329,7 @@ const TaskListCard = () => {
                               key={task.id}
                               draggableId={task.id}
                               index={index}
+                              isDragDisabled={!canEdit}
                             >
                               {(provided: DraggableProvided) => (
                                 <div
@@ -314,7 +338,14 @@ const TaskListCard = () => {
                                   className="grid grid-cols-[30px_60px_50px_120px_1fr_120px] items-center px-2 py-2"
                                 >
                                   <div {...provided.dragHandleProps}>
-                                    <Menu className="size-4 text-gray-500 hover:text-black dark:hover:text-white cursor-grab" />
+                                    <Menu
+                                      className={cn(
+                                        "size-4 text-gray-500",
+                                        canEdit
+                                          ? "hover:text-black dark:hover:text-white cursor-grab"
+                                          : "cursor-default",
+                                      )}
+                                    />
                                   </div>
                                   <div className="text-center">
                                     <span className="capitalize text-sm">
@@ -347,6 +378,7 @@ const TaskListCard = () => {
                                       onValueChange={value =>
                                         handleStatusChange(task.id, value)
                                       }
+                                      disabled={!canEdit}
                                     >
                                       <SelectTrigger className="w-[110px]">
                                         <SelectValue>
@@ -411,6 +443,7 @@ const TaskListCard = () => {
                                           value === "unassigned" ? null : value,
                                         )
                                       }
+                                      disabled={!canEdit}
                                     >
                                       <SelectTrigger className="w-[110px]">
                                         <SelectValue>

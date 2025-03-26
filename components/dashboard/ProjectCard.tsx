@@ -21,6 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useUpdateProject } from "@/hooks/app.hooks";
+import useProjectRole from "@/hooks/member.hooks";
 import { useCreateProject, useDeleteProject } from "@/hooks/project.hooks";
 import { cn } from "@/lib/utils";
 import { useAppData } from "@/stores/app.store";
@@ -52,6 +53,7 @@ const ProjectCardSkeleton = () => {
 
 const ProjectCard = () => {
   const { project, isAdmin, user, profile } = useAppData();
+  const { isProjectManager, canEdit } = useProjectRole();
   const router = useRouter();
 
   // Loading state determination
@@ -104,10 +106,7 @@ const ProjectCard = () => {
   const handleSaveField = (fieldName: string) => {
     if (
       !project ||
-      (!isAdmin &&
-        !isProjectManager &&
-        fieldName !== "description" &&
-        fieldName !== "name")
+      (!canEdit && fieldName !== "description" && fieldName !== "name")
     )
       return;
 
@@ -226,8 +225,6 @@ const ProjectCard = () => {
     handleSaveField(fieldName);
   };
 
-  const isProjectManager = false;
-
   if (isLoading) {
     return (
       <div className="h-full w-full md:w-1/2">
@@ -309,7 +306,7 @@ const ProjectCard = () => {
             >
               Project Name
             </label>
-            {(isProjectManager || isAdmin) && editingField === "name" ? (
+            {canEdit && editingField === "name" ? (
               <Input
                 id="name"
                 name="name"
@@ -325,11 +322,9 @@ const ProjectCard = () => {
               <p
                 className={cn(
                   "text-sm bg-gray-50/50 dark:bg-gray-900 rounded py-1 px-2",
-                  isAdmin && "cursor-text",
+                  canEdit && "cursor-text",
                 )}
-                onClick={() =>
-                  (isAdmin || isProjectManager) && setEditingField("name")
-                }
+                onClick={() => canEdit && setEditingField("name")}
               >
                 {project?.name}
               </p>
@@ -345,8 +340,7 @@ const ProjectCard = () => {
                 >
                   Description
                 </label>
-                {(isProjectManager || isAdmin) &&
-                editingField === "description" ? (
+                {canEdit && editingField === "description" ? (
                   <Textarea
                     id="description"
                     name="description"
@@ -363,12 +357,9 @@ const ProjectCard = () => {
                   <p
                     className={cn(
                       "text-sm bg-gray-50/50 dark:bg-gray-900 rounded py-1 px-2",
-                      (isAdmin || isProjectManager) && "cursor-text",
+                      canEdit && "cursor-text",
                     )}
-                    onClick={() =>
-                      (isAdmin || isProjectManager) &&
-                      setEditingField("description")
-                    }
+                    onClick={() => canEdit && setEditingField("description")}
                   >
                     {project?.description || (
                       <span className="text-gray-500 italic">
