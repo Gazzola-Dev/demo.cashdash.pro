@@ -1,5 +1,3 @@
-// hooks/member.hooks.ts
-
 "use client";
 
 import {
@@ -10,6 +8,7 @@ import {
   inviteProjectMembersAction,
   removeProjectMemberAction,
   toggleProjectManagerRoleAction,
+  updateProjectMemberAction,
 } from "@/actions/member.actions";
 import { useToast } from "@/hooks/use-toast";
 import { conditionalLog } from "@/lib/log.utils";
@@ -88,13 +87,122 @@ export const useGetUserPendingInvitations = () => {
   });
 };
 
+// New hook that uses the updateProjectMemberAction
+export const useUpdateProjectMember = () => {
+  const hookName = "useUpdateProjectMember";
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { project, setProject } = useAppData();
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: async ({
+      memberId,
+      role,
+    }: {
+      memberId: string;
+      role: string;
+    }) => {
+      conditionalLog(hookName, { memberId, role }, false);
+
+      // Make the API call
+      const { data, error } = await updateProjectMemberAction({
+        memberId: memberId,
+        role: role,
+      });
+
+      conditionalLog(hookName, { data, error }, false);
+
+      if (error) throw new Error(error);
+      return data;
+    },
+    onMutate: async ({ memberId, role }) => {
+      if (!project?.id) return {};
+
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({
+        queryKey: ["projectMembers", project.id],
+      });
+
+      // Save the previous state
+      const previousMembers = queryClient.getQueryData([
+        "projectMembers",
+        project.id,
+      ]) as ProjectMemberWithProfile[] | undefined;
+
+      // Optimistically update project_members in the project object
+      if (project) {
+        const updatedMembers = project.project_members.map(member =>
+          member.id === memberId ? { ...member, role: role } : member,
+        );
+
+        setProject({
+          ...project,
+          project_members: updatedMembers,
+        });
+      }
+
+      // Return the previous state
+      return { previousMembers };
+    },
+    onSuccess: (data, { role }) => {
+      toast({
+        title: "Role updated",
+        description: `Project member role has been updated to ${role}.`,
+      });
+
+      // Refetch project members to ensure fresh data
+      if (project?.id) {
+        queryClient.invalidateQueries({
+          queryKey: ["projectMembers", project.id],
+        });
+      }
+
+      // Also invalidate the app data to update the project members list
+      queryClient.invalidateQueries({
+        queryKey: ["appData"],
+      });
+    },
+    onError: (error, { memberId }, context) => {
+      // Restore previous state if needed
+      if (context?.previousMembers && project?.id) {
+        queryClient.setQueryData(
+          ["projectMembers", project.id],
+          context.previousMembers,
+        );
+      }
+
+      toast({
+        title: "Failed to update role",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateProjectMember = useCallback(
+    (memberId: string, role: string) => {
+      mutate({ memberId, role });
+    },
+    [mutate],
+  );
+
+  return {
+    updateProjectMember,
+    isPending,
+  };
+};
+
 export const useToggleProjectManagerRole = () => {
   const hookName = "useToggleProjectManagerRole";
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { project, setProject } = useAppData();
 
-  const { mutate, isPending } = useMutation({
+  // Use the new hook internally
+  const { updateProjectMember, isPending: isUpdatePending } =
+    useUpdateProjectMember();
+
+  const { mutate, isPending: isLegacyPending } = useMutation({
     mutationFn: async ({
       projectId,
       userId,
@@ -181,10 +289,22 @@ export const useToggleProjectManagerRole = () => {
 
   const toggleProjectManagerRole = useCallback(
     (projectId: string, userId: string, isManager: boolean) => {
-      mutate({ projectId, userId, isManager });
+      // Find the member by userId
+      const member = project?.project_members.find(m => m.user_id === userId);
+
+      if (member) {
+        // Use the new updateProjectMember function with the memberId
+        updateProjectMember(member.id, isManager ? "pm" : "member");
+      } else {
+        // Fall back to the legacy implementation if member not found
+        mutate({ projectId, userId, isManager });
+      }
     },
-    [mutate],
+    [mutate, updateProjectMember, project?.project_members],
   );
+
+  // Combine isPending states from both approaches
+  const isPending = isUpdatePending || isLegacyPending;
 
   return {
     toggleProjectManagerRole,
@@ -475,6 +595,8 @@ export const useMembersManagement = () => {
   } | null>(null);
   const [emailsInput, setEmailsInput] = useState("");
   const { project, isAdmin, user, profile, projectInvitations } = useAppData();
+  const { updateProjectMember, isPending: isUpdatePending } =
+    useUpdateProjectMember();
   const { toggleProjectManagerRole, isPending: isTogglePending } =
     useToggleProjectManagerRole();
   const { inviteProjectMembers, isPending: isInvitePending } =
@@ -484,7 +606,9 @@ export const useMembersManagement = () => {
   const { cancelInvitation, isPending: isCancelPending } =
     useCancelInvitation();
   // Fetch project invitations
-  const { isLoading: isInvitationsLoading } = useGetProjectInvitations();
+  const { isLoading: isInvitationsLoading } = useGetProjectInvitations(
+    project?.id,
+  );
   // Get project members from the project object
   const members = project?.project_members || [];
   // Loading state determination
@@ -496,10 +620,16 @@ export const useMembersManagement = () => {
     isCurrentlyManager: boolean,
   ): void => {
     if (!project || !isAdmin) return;
+
     // Only admins can toggle PM role
     // Don't allow changing your own role
     if (userId === user?.id) return;
-    toggleProjectManagerRole(project.id, userId, !isCurrentlyManager);
+
+    // Use the new updateProjectMember directly
+    updateProjectMember(memberId, isCurrentlyManager ? "member" : "pm");
+
+    // Alternatively, use the legacy toggle function which now internally uses updateProjectMember
+    // toggleProjectManagerRole(project.id, userId, !isCurrentlyManager);
   };
 
   const handleInviteMembers = (): void => {
@@ -550,7 +680,7 @@ export const useMembersManagement = () => {
   };
 
   const isUserPM = (role: string): boolean => {
-    return ["owner", "admin"].includes(role);
+    return ["owner", "admin", "pm"].includes(role);
   };
 
   return {
@@ -569,6 +699,7 @@ export const useMembersManagement = () => {
     profile,
     projectInvitations,
     isTogglePending,
+    isUpdatePending,
     isInvitePending,
     isRemovePending,
     isCancelPending,
@@ -587,7 +718,7 @@ export const useMembersManagement = () => {
 export const useProjectRole = () => {
   const { project, user, isAdmin } = useAppData();
 
-  // Check if the current user is a project manager (admin, owner, or has admin role)
+  // Check if the current user is a project manager (admin, owner, or has pm role)
   const isProjectManager = (() => {
     // Admin users always have project manager privileges
     if (isAdmin) return true;
@@ -600,8 +731,10 @@ export const useProjectRole = () => {
       member => member.user_id === user.id,
     );
 
-    // Return true if the user has a role of "admin" or "owner"
-    return userMember ? ["admin", "owner"].includes(userMember.role) : false;
+    // Return true if the user has a role of "admin", "owner", or "pm"
+    return userMember
+      ? ["admin", "owner", "pm"].includes(userMember.role)
+      : false;
   })();
 
   // Check if user can edit (either admin or project manager)
@@ -615,3 +748,4 @@ export const useProjectRole = () => {
 };
 
 export default useProjectRole;
+1;

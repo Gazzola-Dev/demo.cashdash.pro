@@ -25,9 +25,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useMembersManagement } from "@/hooks/member.hooks";
+import {
+  useMembersManagement,
+  useProjectRole,
+  useUpdateProjectMember,
+} from "@/hooks/member.hooks";
 import { capitalizeFirstLetter } from "@/lib/string.util";
-import { cn } from "@/lib/utils";
 import { ProjectInvitationWithDetails } from "@/types/app.types";
 import {
   ChevronDown,
@@ -110,6 +113,10 @@ const InvitationItem = ({
 
 // Updated ProjectMembersCard component
 const ProjectMembersCard = () => {
+  // Use our new hook directly to get the updateProjectMember function
+  const { updateProjectMember, isPending: isUpdateMemberPending } =
+    useUpdateProjectMember();
+
   const {
     isOpen,
     setIsOpen,
@@ -138,13 +145,32 @@ const ProjectMembersCard = () => {
     isCancelPending,
   } = useMembersManagement();
 
+  // Use the projectRole hook to determine if the current user is a project manager
+  const { isProjectManager } = useProjectRole();
+
   if (isLoading) {
     return <ProjectMembersCardSkeleton />;
   }
 
   const pendingInvitations = projectInvitations?.filter(
-    inv => inv.invitation.status === "pending",
+    inv => inv.invitation?.status === "pending",
   );
+
+  // Function to handle role toggle directly with updateProjectMember
+  const handleRoleToggle = (
+    memberId: string,
+    userId: string,
+    currentRole: string,
+  ) => {
+    // Don't allow changing your own role
+    if (userId === user?.id) return;
+
+    // Toggle between 'pm' and 'member' roles
+    const newRole = isUserPM(currentRole) ? "member" : "pm";
+
+    // Call updateProjectMember directly
+    updateProjectMember(memberId, newRole);
+  };
 
   return (
     <>
@@ -249,37 +275,40 @@ const ProjectMembersCard = () => {
                           </div>
                         </div>
 
-                        {isAdmin && (
+                        {/* Show PM controls if user is admin or a project manager */}
+                        {(isAdmin || isProjectManager) && (
                           <div className="flex items-center gap-2">
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <span className="text-xs text-muted-foreground mr-1">
-                                    PM
-                                  </span>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  Toggle Project Manager role
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                            <Switch
-                              checked={isUserPM(member.role)}
-                              onCheckedChange={() =>
-                                handleTogglePMRole(
-                                  member.id,
-                                  member.user_id,
-                                  isUserPM(member.role),
-                                )
-                              }
-                              disabled={
-                                isTogglePending || user?.id === member.user_id // Can't change your own role
-                              }
-                              className={cn(
-                                user?.id === member.user_id &&
-                                  "opacity-50 cursor-not-allowed",
-                              )}
-                            />
+                            {/* Only show PM toggle if not the current user */}
+                            {user?.id !== member.user_id && (
+                              <>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className="text-xs text-muted-foreground mr-1">
+                                        PM
+                                      </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      Toggle Project Manager role
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                                <Switch
+                                  className="bg-blue-800"
+                                  checked={isUserPM(member.role)}
+                                  onCheckedChange={() =>
+                                    handleRoleToggle(
+                                      member.id,
+                                      member.user_id,
+                                      member.role,
+                                    )
+                                  }
+                                  disabled={
+                                    isUpdateMemberPending || isTogglePending
+                                  }
+                                />
+                              </>
+                            )}
 
                             {user?.id !== member.user_id && (
                               <TooltipProvider>

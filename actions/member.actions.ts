@@ -11,6 +11,36 @@ import {
   ProjectMemberWithProfile,
 } from "@/types/app.types";
 
+interface UpdateProjectMemberParams {
+  memberId: string;
+  role: string;
+}
+
+interface ProjectMemberWithDetails {
+  member: {
+    id: string;
+    project_id: string;
+    user_id: string;
+    role: string;
+    created_at: string;
+    updated_at?: string;
+  };
+  profile: {
+    id: string;
+    display_name: string;
+    avatar_url: string | null;
+    email: string;
+    professional_title: string | null;
+    [key: string]: any;
+  };
+  project: {
+    id: string;
+    name: string;
+    slug: string;
+    [key: string]: any;
+  };
+}
+
 // Add this function to send invitation emails
 async function sendInvitationEmail(
   email: string,
@@ -356,6 +386,41 @@ export const cancelInvitationAction = async (
 
     if (error) throw error;
     return getActionResponse({ data: true });
+  } catch (error) {
+    conditionalLog(actionName, { error }, true);
+    return getActionResponse({ error });
+  }
+};
+
+export const updateProjectMemberAction = async (
+  params: UpdateProjectMemberParams,
+): Promise<ActionResponse<ProjectMemberWithDetails>> => {
+  const actionName = "updateProjectMemberAction";
+  try {
+    const supabase = await getSupabaseServerActionClient();
+
+    // Get the current user ID
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error("Not authenticated");
+    }
+
+    // Call the database function
+    const { data, error } = await supabase.rpc("update_project_member", {
+      p_member_id: params.memberId,
+      p_user_id: user.id,
+      p_role: params.role,
+    });
+
+    conditionalLog(actionName, { data, error }, false);
+
+    if (error) throw error;
+
+    return getActionResponse({
+      data: data as any as ProjectMemberWithDetails,
+    });
   } catch (error) {
     conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });
