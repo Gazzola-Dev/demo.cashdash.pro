@@ -145,11 +145,10 @@ export const AppProvider = ({ children }: AppProviderProps) => {
   const handleSignIn = useCallback(
     (session: Session | null) => {
       if (session?.user) {
-        setUser(session.user);
         refetchAppData();
       }
     },
-    [setUser, refetchAppData],
+    [refetchAppData],
   );
 
   const handleSignOut = useCallback(() => {

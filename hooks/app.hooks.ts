@@ -60,6 +60,7 @@ export const useGetAppData = (
         setSubscription(data.subscription);
         setAppRole(data.appRole);
         setProjectMemberRole(data.projectMemberRole);
+        setUser(data.user);
 
         // Update current milestone with clear logging
         if (data.milestone) {
