@@ -218,24 +218,59 @@ export const StatusSelect = ({
   );
 };
 
-export const StatusIcon = ({ status }: { status: string }) => {
+export const StatusIcon = ({
+  status,
+  className,
+}: {
+  status: string;
+  className?: string;
+}) => {
   switch (status) {
     case "in_review":
       return (
-        <GitPullRequest className="h-4 w-4 text-purple-500 dark:text-purple-400" />
+        <GitPullRequest
+          className={cn(
+            "h-4 w-4 text-purple-500 dark:text-purple-400",
+            className,
+          )}
+        />
       );
     case "in_progress":
-      return <Timer className="h-4 w-4 text-yellow-500 dark:text-yellow-400" />;
+      return (
+        <Timer
+          className={cn(
+            "h-4 w-4 text-yellow-500 dark:text-yellow-400",
+            className,
+          )}
+        />
+      );
     case "todo":
-      return <ListTodo className="h-4 w-4 text-blue-500 dark:text-blue-400" />;
+      return (
+        <ListTodo
+          className={cn("h-4 w-4 text-blue-500 dark:text-blue-400", className)}
+        />
+      );
     case "backlog":
-      return <Layers3 className="h-4 w-4 text-gray-500 dark:text-gray-400" />;
+      return (
+        <Layers3
+          className={cn("h-4 w-4 text-gray-500 dark:text-gray-400", className)}
+        />
+      );
     case "completed":
       return (
-        <CheckCircle2 className="h-4 w-4 text-green-500 dark:text-green-400" />
+        <CheckCircle2
+          className={cn(
+            "h-4 w-4 text-green-500 dark:text-green-400",
+            className,
+          )}
+        />
       );
     case "draft":
-      return <FileEdit className="h-4 w-4 text-gray-500 dark:text-gray-400" />;
+      return (
+        <FileEdit
+          className={cn("h-4 w-4 text-gray-500 dark:text-gray-400", className)}
+        />
+      );
     default:
       return null;
   }

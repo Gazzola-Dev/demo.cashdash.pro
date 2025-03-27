@@ -7,6 +7,7 @@ import RouteBreadcrumb from "@/components/layout/RouteBreadCrumb";
 import { SidebarButton } from "@/components/layout/SidebarComponents";
 import TaskList from "@/components/layout/TaskList";
 import ThemeSwitcher from "@/components/layout/ThemeSwitcher";
+import { StatusIcon } from "@/components/tasks/TaskSelectComponents";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -54,7 +55,6 @@ import { format, parseISO } from "date-fns";
 import {
   Dot,
   Gauge,
-  ListTodo,
   LoaderCircle,
   LogOut,
   MailOpen,
@@ -321,7 +321,10 @@ function AppSidebar() {
                             >
                               <div className="flex w-full items-center justify-between gap-2">
                                 <div className="flex items-center gap-2">
-                                  <ListTodo className="size-4" />
+                                  <StatusIcon
+                                    status={task.status}
+                                    className="text-current"
+                                  />
                                   <span>Task</span>
                                 </div>
                                 <div className="flex items-center gap-2 font-medium">
