@@ -1,68 +1,71 @@
-// components/milestones/ContractPayment.tsx
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { useContractPayment, useContractRole } from "@/hooks/contract.hooks";
-import { formatCurrency, formatDate } from "@/lib/contract.util";
-import { ContractMember } from "@/types/app.types";
+import { useContractMembers, useContractRole } from "@/hooks/contract.hooks";
+import { formatCurrency } from "@/lib/contract.util";
 import { CheckCircle, CreditCard, LoaderCircle, LockIcon } from "lucide-react";
+import { useState } from "react";
 
-interface ContractInfo {
-  id: string;
-  title: string;
-  price: number;
-  project_id: string;
-  startDate: Date;
-  tasks: {
-    id: string;
-    ordinal_id: number;
-    title: string;
-    description: string | null;
-  }[];
-  members: ContractMember[];
-}
-
-interface ContractPaymentProps {
-  contract: ContractInfo;
-  currentUser: ContractMember;
-  allMembers: ContractMember[];
-  expanded: boolean; // Control visibility based on parent component state
-  allPMsApproved: boolean; // New prop to directly indicate if all PMs have approved
-}
-
-export const ContractPayment: React.FC<ContractPaymentProps> = ({
-  contract,
-  currentUser,
-  allMembers,
-  expanded,
-  allPMsApproved,
-}) => {
+export const ContractPayment = () => {
   const { isProjectManager } = useContractRole();
+  const { contract } = useContractMembers();
 
-  const {
-    isProcessing,
-    isPaid,
-    paymentDate,
-    showForm,
-    cardNumber,
-    setCardNumber,
-    cardExpiry,
-    setCardExpiry,
-    cardCvc,
-    setCardCvc,
-    cardName,
-    setCardName,
-    getPendingPMNames,
-    handleShowPaymentForm,
-    handleProcessPayment,
-    canInitiatePayment,
-  } = useContractPayment(allMembers, isProjectManager, allPMsApproved);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isPaid, setIsPaid] = useState(false);
+  const [paymentDate, setPaymentDate] = useState<Date | null>(null);
+  // Form state
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardExpiry, setCardExpiry] = useState("");
+  const [cardCvc, setCardCvc] = useState("");
+  const [cardName, setCardName] = useState("");
 
-  // Only show component if the card is expanded
-  if (!expanded) {
+  if (!contract) {
     return null;
   }
+
+  // Check if all members have approved
+  const allMembersApproved =
+    contract.members?.every(member => member.hasApproved) || false;
+
+  // Get names of members who haven't approved
+  const getPendingMemberNames = () => {
+    const pendingMembers =
+      contract.members?.filter(member => !member.hasApproved) || [];
+    return pendingMembers
+      .map(member => member.display_name || "Unnamed User")
+      .join(", ");
+  };
+
+  // No handleShowPaymentForm function needed
+
+  const handleProcessPayment = () => {
+    if (!isProjectManager) return;
+
+    setIsProcessing(true);
+
+    // Simulate payment processing
+    setTimeout(() => {
+      setIsProcessing(false);
+      setIsPaid(true);
+      setPaymentDate(new Date());
+    }, 2000);
+  };
+
+  const totalAmount = contract?.total_amount_cents
+    ? contract.total_amount_cents / 100
+    : 0;
+
+  // Format date helper
+  const formatDate = (date: Date) => {
+    return new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }).format(date);
+  };
 
   // If already paid, show payment summary
   if (isPaid && paymentDate) {
@@ -78,17 +81,11 @@ export const ContractPayment: React.FC<ContractPaymentProps> = ({
         <div className="space-y-2">
           <div className="flex justify-between">
             <span className="text-sm">Amount:</span>
-            <span className="font-semibold">
-              {formatCurrency(contract.price)}
-            </span>
+            <span className="font-semibold">{formatCurrency(totalAmount)}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-sm">Date:</span>
             <span>{formatDate(paymentDate)}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-sm">Paid by:</span>
-            <span>{currentUser.display_name || currentUser.email}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-sm">Status:</span>
@@ -106,7 +103,7 @@ export const ContractPayment: React.FC<ContractPaymentProps> = ({
       <div className="mb-4">
         <Separator className="my-4" />
 
-        {!allPMsApproved ? (
+        {!allMembersApproved ? (
           <div className="rounded-md border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 p-4">
             <div className="flex items-center gap-2 mb-2">
               <LockIcon className="h-5 w-5 text-amber-600 dark:text-amber-400" />
@@ -115,14 +112,14 @@ export const ContractPayment: React.FC<ContractPaymentProps> = ({
               </h4>
             </div>
             <p className="text-sm text-amber-700 dark:text-amber-400">
-              All project managers must approve this contract before payment can
+              All contract members must approve this contract before payment can
               be processed.
             </p>
             <p className="text-sm mt-2 font-medium text-amber-800 dark:text-amber-300">
-              Waiting for approval from: {getPendingPMNames()}
+              Waiting for approval from: {getPendingMemberNames()}
             </p>
           </div>
-        ) : showForm ? (
+        ) : allMembersApproved && isProjectManager ? (
           <div className="border rounded-md p-4 space-y-4">
             <div className="text-sm font-medium mb-2">Payment Details</div>
 
@@ -193,7 +190,7 @@ export const ContractPayment: React.FC<ContractPaymentProps> = ({
                     Processing...
                   </div>
                 ) : (
-                  <>Pay {formatCurrency(contract.price)}</>
+                  <>Pay {formatCurrency(totalAmount)}</>
                 )}
               </Button>
 
@@ -204,21 +201,17 @@ export const ContractPayment: React.FC<ContractPaymentProps> = ({
           </div>
         ) : (
           <div className="flex flex-col space-y-4">
-            <Button
-              onClick={handleShowPaymentForm}
-              className="w-full"
-              disabled={!canInitiatePayment}
-            >
-              <CreditCard className="h-4 w-4 mr-2" />
-              {isProjectManager
-                ? "Proceed to Payment"
-                : "Payment (Project Manager Only)"}
-            </Button>
-            {!isProjectManager && (
-              <p className="text-xs text-center text-muted-foreground">
-                Only project managers can process payments for contracts.
+            <div className="rounded-md border border-slate-200 p-4 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/50">
+              <div className="flex items-center gap-2 mb-2">
+                <CreditCard className="h-5 w-5 text-slate-600 dark:text-slate-400" />
+                <h4 className="font-medium">Payment Options</h4>
+              </div>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                {isProjectManager
+                  ? "All members have approved, but you haven't initiated payment."
+                  : "Only project managers can process payments for contracts."}
               </p>
-            )}
+            </div>
           </div>
         )}
       </div>

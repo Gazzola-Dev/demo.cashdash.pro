@@ -663,11 +663,10 @@ interface ContractInfo {
   members: ContractMember[];
 }
 
-export function useContractPayment(
-  allMembers: ContractMember[],
-  isProjectManager: boolean,
-  allPMsApproved: boolean,
-) {
+export function useContractPayment() {
+  const { isProjectManager } = useContractRole();
+  const { contract } = useContractMembers();
+
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPaid, setIsPaid] = useState(false);
   const [paymentDate, setPaymentDate] = useState<Date | null>(null);
@@ -679,25 +678,26 @@ export function useContractPayment(
   const [cardCvc, setCardCvc] = useState("");
   const [cardName, setCardName] = useState("");
 
-  // Check if all project managers have approved
-  const projectManagers = allMembers.filter(
-    member => member.role === "project manager" || member.role === "admin",
-  );
+  // Check if all members have approved
+  const allMembersApproved =
+    contract?.members?.every(member => member.hasApproved) || false;
 
-  const getPendingPMNames = () => {
-    const pendingPMs = projectManagers.filter(pm => !pm.hasApproved);
-    return pendingPMs.map(pm => pm.display_name || "Unnamed User").join(", ");
+  // Get names of members who haven't approved
+  const getPendingMemberNames = () => {
+    const pendingMembers =
+      contract?.members?.filter(member => !member.hasApproved) || [];
+    return pendingMembers
+      .map(member => member.display_name || "Unnamed User")
+      .join(", ");
   };
 
   const handleShowPaymentForm = () => {
-    // Only allow project managers to show the payment form
-    if (isProjectManager) {
+    if (isProjectManager && allMembersApproved) {
       setShowForm(true);
     }
   };
 
   const handleProcessPayment = () => {
-    // Only allow project managers to process payment
     if (!isProjectManager) return;
 
     setIsProcessing(true);
@@ -711,9 +711,9 @@ export function useContractPayment(
     }, 2000);
   };
 
-  const canInitiatePayment = isProjectManager && allPMsApproved;
-
   return {
+    contract,
+    isProjectManager,
     isProcessing,
     isPaid,
     paymentDate,
@@ -726,10 +726,10 @@ export function useContractPayment(
     setCardCvc,
     cardName,
     setCardName,
-    getPendingPMNames,
+    allMembersApproved,
+    getPendingMemberNames,
     handleShowPaymentForm,
     handleProcessPayment,
-    canInitiatePayment,
   };
 }
 
