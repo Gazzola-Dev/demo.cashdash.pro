@@ -5,16 +5,29 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { useContractRole, useContractTasks } from "@/hooks/contract.hooks";
-import { useCreateTask, useUpdateTask } from "@/hooks/task.hooks";
+import {
+  useCreateTask,
+  useDeleteTask,
+  useUpdateTask,
+} from "@/hooks/task.hooks";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Tables } from "@/types/database.types";
-import { LockIcon, PlusCircle } from "lucide-react";
+import { LockIcon, PlusCircle, Trash2 } from "lucide-react";
+import { useState } from "react";
 
 type Task = Tables<"tasks">;
 
@@ -22,11 +35,64 @@ interface ContractTasksProps {
   tasks: Partial<Task>[];
 }
 
+function DeleteTaskDialog({
+  open,
+  onOpenChange,
+  taskId,
+  taskTitle,
+  onConfirmDelete,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  taskId: string;
+  taskTitle: string;
+  onConfirmDelete: (taskId: string) => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Delete Task</DialogTitle>
+          <DialogDescription className="space-y-4">
+            <p>
+              Are you sure you want to permanently delete this task? This action
+              cannot be undone.
+            </p>
+            <p>
+              <strong>Task:</strong> {taskTitle}
+            </p>
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={() => {
+              onConfirmDelete(taskId);
+              onOpenChange(false);
+            }}
+          >
+            Delete Task
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export const ContractTasks: React.FC<ContractTasksProps> = ({ tasks }) => {
   const { toast } = useToast();
   const { updateTask } = useUpdateTask();
   const { createTask, isPending: isCreating } = useCreateTask();
+  const { mutate: deleteTask, isPending: isDeleting } = useDeleteTask();
   const { isProjectManager, canEdit } = useContractRole();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
 
   const {
     editingTaskId,
@@ -40,6 +106,20 @@ export const ContractTasks: React.FC<ContractTasksProps> = ({ tasks }) => {
     handleKeyDown,
     handleCreateTask,
   } = useContractTasks(tasks, updateTask, createTask, isCreating);
+
+  const handleDeleteTask = (
+    taskId: string,
+    taskTitle: string,
+    e: React.MouseEvent,
+  ) => {
+    e.stopPropagation(); // Prevent the accordion from toggling
+    setTaskToDelete({ id: taskId, title: taskTitle });
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteTask = (taskId: string) => {
+    deleteTask(taskId);
+  };
 
   return (
     <div className="space-y-4">
@@ -80,34 +160,57 @@ export const ContractTasks: React.FC<ContractTasksProps> = ({ tasks }) => {
               className="border rounded-md px-4 py-1"
             >
               <AccordionTrigger className="hover:no-underline py-2">
-                <div className="flex items-center text-sm">
-                  <span className="font-mono mr-2">{task.ordinal_id}</span>
-                  {editingTaskId === task.id && editingField === "title" ? (
-                    <div className="flex-1">
-                      <Input
-                        value={editedTitle}
-                        onChange={e => setEditedTitle(e.target.value)}
-                        onBlur={() => handleSave(task.id!, "title")}
-                        onKeyDown={e => handleKeyDown(e, task.id!, "title")}
-                        className="h-8"
-                        autoFocus
-                      />
-                    </div>
-                  ) : (
-                    <div
-                      className={cn(
-                        "flex-1 text-left flex items-center gap-2",
-                        canEdit ? "cursor-text" : "",
-                      )}
-                      onClick={e => {
-                        if (canEdit) {
-                          e.stopPropagation();
-                          handleStartEdit(task.id!, "title", task.title ?? "");
-                        }
-                      }}
+                <div className="flex items-center text-sm justify-between w-full pr-2">
+                  <div className="flex items-center">
+                    <span className="font-mono mr-2">{task.ordinal_id}</span>
+                    {editingTaskId === task.id && editingField === "title" ? (
+                      <div className="flex-1">
+                        <Input
+                          value={editedTitle}
+                          onChange={e => setEditedTitle(e.target.value)}
+                          onBlur={() => handleSave(task.id!, "title")}
+                          onKeyDown={e => handleKeyDown(e, task.id!, "title")}
+                          className="h-8"
+                          autoFocus
+                        />
+                      </div>
+                    ) : (
+                      <div
+                        className={cn(
+                          "flex-1 text-left flex items-center gap-2",
+                          canEdit ? "cursor-text" : "",
+                        )}
+                        onClick={e => {
+                          if (canEdit) {
+                            e.stopPropagation();
+                            handleStartEdit(
+                              task.id!,
+                              "title",
+                              task.title ?? "",
+                            );
+                          }
+                        }}
+                      >
+                        <span>{task.title}</span>
+                      </div>
+                    )}
+                  </div>
+                  {canEdit && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={e =>
+                        handleDeleteTask(
+                          task.id!,
+                          task.title ?? "Untitled Task",
+                          e,
+                        )
+                      }
+                      className="h-6 w-6 opacity-70 hover:opacity-100 ml-2"
+                      disabled={isDeleting}
                     >
-                      <span>{task.title}</span>
-                    </div>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
                   )}
                 </div>
               </AccordionTrigger>
@@ -176,6 +279,16 @@ export const ContractTasks: React.FC<ContractTasksProps> = ({ tasks }) => {
             </AccordionItem>
           ))}
         </Accordion>
+      )}
+
+      {taskToDelete && (
+        <DeleteTaskDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          taskId={taskToDelete.id}
+          taskTitle={taskToDelete.title}
+          onConfirmDelete={confirmDeleteTask}
+        />
       )}
     </div>
   );

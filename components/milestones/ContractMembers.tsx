@@ -135,7 +135,7 @@ export const ContractMembers = () => {
                   return (
                     <li
                       key={memberId}
-                      className="flex items-center justify-between p-3 rounded-md border"
+                      className="flex items-center justify-between p-3 rounded-md border px-6"
                     >
                       <div className="flex items-center gap-3">
                         <Checkbox
@@ -157,25 +157,28 @@ export const ContractMembers = () => {
                             {memberProfile?.display_name || "Unnamed User"}
                           </div>
                           <div className="text-xs text-muted-foreground flex items-center space-x-2">
-                            <span>{member.role}</span>
-                            {isIncluded && (
-                              <Badge
-                                variant="outline"
-                                className={`capitalize ${
-                                  hasApproved
-                                    ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
-                                    : "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
-                                }`}
-                              >
-                                {hasApproved ? "Approved" : "Pending Approval"}
-                              </Badge>
-                            )}
+                            <span>
+                              {member.role === "pm"
+                                ? "Project Manager"
+                                : member.role[0].toUpperCase() +
+                                  member.role.slice(1)}
+                            </span>
                           </div>
                         </div>
                       </div>
 
                       {isIncluded && (
-                        <div className="flex items-center">
+                        <div className="flex items-center gap-3">
+                          <Badge
+                            variant="outline"
+                            className={`capitalize ${
+                              hasApproved
+                                ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
+                                : "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
+                            }`}
+                          >
+                            {hasApproved ? "Approved" : "Pending Approval"}
+                          </Badge>
                           <Switch
                             className="bg-blue-800"
                             checked={hasApproved}

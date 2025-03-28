@@ -1392,6 +1392,13 @@ export type Database = {
         }
         Returns: undefined
       }
+      delete_task: {
+        Args: {
+          p_task_id: string
+          p_user_id: string
+        }
+        Returns: boolean
+      }
       direct_set_project_milestone: {
         Args: {
           p_project_id: string

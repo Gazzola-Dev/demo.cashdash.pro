@@ -2,6 +2,7 @@
 
 import {
   createTaskAction,
+  deleteTaskAction,
   updateTaskAction,
   updateTasksOrderAction,
 } from "@/actions/task.action";
@@ -403,3 +404,62 @@ export function useTaskPage() {
     isPriorityUpdating: updateTaskPriorityMutation.isPending,
   };
 }
+
+export const useDeleteTask = () => {
+  const hookName = "useDeleteTask";
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const router = useRouter();
+  const { tasks, setTasks, task: currentTask, setTask } = useAppData();
+  const [prevState, setPrevState] = useState<TaskWithAssignee[]>([]);
+
+  return useMutation({
+    mutationFn: async (taskId: string) => {
+      // Store current state for potential rollback
+      setPrevState([...tasks]);
+
+      // Optimistically update the tasks array in the UI by removing the task
+      const updatedTasks = tasks.filter(task => task.id !== taskId);
+      setTasks(updatedTasks);
+
+      // If the current task is the one being deleted, clear it
+      if (currentTask && currentTask.id === taskId) {
+        setTask(null);
+      }
+
+      // Make the actual API call
+      const { data, error } = await deleteTaskAction(taskId);
+      conditionalLog(hookName, { data, error }, false);
+
+      if (error) throw new Error(error);
+      return data;
+    },
+    onSuccess: () => {
+      // Invalidate relevant queries to ensure data consistency
+      queryClient.invalidateQueries({ queryKey: ["appData"] });
+
+      // If we're on a task page and that task was deleted, navigate back to the project
+      const pathname = window.location.pathname;
+      if (currentTask && pathname.includes(`/tasks/${currentTask.slug}`)) {
+        router.push(pathname.split("/tasks/")[0]);
+      }
+
+      toast({
+        title: "Task deleted",
+        description: "Task has been successfully deleted.",
+      });
+    },
+    onError: error => {
+      // Restore previous state on error
+      if (prevState.length > 0) {
+        setTasks(prevState);
+      }
+
+      toast({
+        title: "Failed to delete task",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+};

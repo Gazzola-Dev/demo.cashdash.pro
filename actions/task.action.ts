@@ -128,3 +128,42 @@ export const createTaskAction = async (
     return getActionResponse({ error });
   }
 };
+
+/**
+ * Deletes a task and its related data with proper RLS enforcement
+ *
+ * The following security rules are enforced by the database function:
+ * - Global admins can delete any task
+ * - Project managers can delete tasks in draft milestones or tasks not in milestones
+ * - Task assignees can delete their own tasks if not in active milestones
+ *
+ * @param taskId - The ID of the task to delete
+ * @returns ActionResponse indicating success or error
+ */
+export const deleteTaskAction = async (
+  taskId: string,
+): Promise<ActionResponse<boolean>> => {
+  const actionName = "deleteTaskAction";
+  try {
+    const supabase = await getSupabaseServerActionClient();
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (!userData?.user || userError) throw new Error("Not authenticated");
+
+    // Use the database function to delete the task with RLS enforcement
+    const { data, error } = await supabase.rpc("delete_task", {
+      p_task_id: taskId,
+      p_user_id: userData?.user?.id,
+    });
+
+    conditionalLog(actionName, { data, error }, true);
+
+    if (error) {
+      throw error;
+    }
+
+    return getActionResponse({ data: true });
+  } catch (error) {
+    conditionalLog(actionName, { error }, true);
+    return getActionResponse({ error: error as Error });
+  }
+};

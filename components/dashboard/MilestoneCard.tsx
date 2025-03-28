@@ -454,7 +454,10 @@ function MilestoneCard() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="draft">
-                            <div className="flex items-center gap-2">Draft</div>
+                            <div className="flex items-center gap-2">
+                              <PlayCircle className="h-4 w-4 text-gray-500" />
+                              Draft
+                            </div>
                           </SelectItem>
                           <SelectItem value="active">
                             <div className="flex items-center gap-2">
