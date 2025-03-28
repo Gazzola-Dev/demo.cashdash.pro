@@ -6,6 +6,7 @@ import {
   useCreatePaymentIntent,
 } from "@/hooks/billing.hooks";
 import { useToast } from "@/hooks/use-toast";
+import { useAppData } from "@/stores/app.store";
 import {
   Elements,
   PaymentElement,
@@ -13,9 +14,7 @@ import {
   useStripe,
 } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
-import { ChevronLeft } from "lucide-react";
 import { useEffect, useState } from "react";
-import { BillingTier } from "./BillingModal";
 
 // Initialize Stripe with publishable key
 const stripePromise = loadStripe(
@@ -23,17 +22,16 @@ const stripePromise = loadStripe(
 );
 
 interface StripeComponentProps {
-  tier: BillingTier;
   clientSecret: string;
-  onBack: () => void;
 }
 
-const StripeCheckoutForm = ({ tier, onBack }: StripeComponentProps) => {
+const StripeCheckoutForm = ({ clientSecret }: StripeComponentProps) => {
   const { toast } = useToast();
   const elements = useElements();
   const stripe = useStripe();
   const [loading, setLoading] = useState(false);
   const confirmPaymentMutation = useConfirmPayment();
+  const { contract } = useAppData();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,7 +67,6 @@ const StripeCheckoutForm = ({ tier, onBack }: StripeComponentProps) => {
         });
 
         // Close the modal after successful payment
-        onBack();
       }
     } catch (error: any) {
       toast({
@@ -85,45 +82,36 @@ const StripeCheckoutForm = ({ tier, onBack }: StripeComponentProps) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
-        <h3 className="text-xl font-bold">Subscribe to {tier.name} Plan</h3>
-        <p className="text-muted-foreground">
-          You&apos;ll be charged ${tier.price} per month until you cancel.
-        </p>
-
         <div className="rounded-md border p-4">
           <PaymentElement />
         </div>
       </div>
 
-      <div className="flex justify-between">
-        <Button variant="outline" onClick={onBack} type="button">
-          <ChevronLeft className="h-4 w-4 mr-2" />
-          Back
-        </Button>
+      <div className="flex justify-end">
         <Button type="submit" disabled={!stripe || loading}>
-          {loading ? "Processing..." : `Pay $${tier.price}`}
+          {loading
+            ? "Processing..."
+            : `Pay $${(contract?.total_amount_cents ?? 0) / 100}`}
         </Button>
       </div>
     </form>
   );
 };
 
-interface StripePaymentFormProps {
-  tier: BillingTier;
-  onBack: () => void;
-}
-
-export const StripePaymentForm = ({ tier, onBack }: StripePaymentFormProps) => {
+export const StripePaymentForm = () => {
   const { mutateAsync, isPending } = useCreatePaymentIntent();
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [isFetched, setIsFetched] = useState(false);
 
+  const { contract } = useAppData();
   useEffect(() => {
     if (isFetched) return;
     setIsFetched(true);
     const fetchPaymentIntent = async () => {
       try {
-        const response = await mutateAsync(tier);
+        const total = contract?.total_amount_cents;
+        if (!total) throw new Error("Invalid total amount");
+        const response = await mutateAsync(total);
         if (response?.clientSecret) {
           setClientSecret(response.clientSecret);
         }
@@ -133,18 +121,11 @@ export const StripePaymentForm = ({ tier, onBack }: StripePaymentFormProps) => {
     };
 
     fetchPaymentIntent();
-  }, [mutateAsync, tier, isFetched]);
+  }, [mutateAsync, isFetched, contract]);
 
   if (isPending || !clientSecret) {
     return (
       <div className="flex flex-col space-y-4">
-        <div className="flex justify-between items-center">
-          <h3 className="text-xl font-semibold">Loading payment form...</h3>
-          <Button variant="outline" onClick={onBack}>
-            <ChevronLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-        </div>
         <div className="space-y-4">
           <div className="h-12 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-md"></div>
           <div className="h-32 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-md"></div>
@@ -164,11 +145,7 @@ export const StripePaymentForm = ({ tier, onBack }: StripePaymentFormProps) => {
         },
       }}
     >
-      <StripeCheckoutForm
-        tier={tier}
-        clientSecret={clientSecret}
-        onBack={onBack}
-      />
+      <StripeCheckoutForm clientSecret={clientSecret} />
     </Elements>
   );
 };

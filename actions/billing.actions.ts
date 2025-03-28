@@ -1,7 +1,6 @@
 "use server";
 
 import getSupabaseServerActionClient from "@/clients/action-client";
-import { BillingTier } from "@/components/layout/BillingModal";
 import getActionResponse from "@/lib/action.util";
 import { conditionalLog } from "@/lib/log.utils";
 import { ActionResponse } from "@/types/action.types";
@@ -10,7 +9,7 @@ import Stripe from "stripe";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "");
 
 export const createPaymentIntentAction = async (
-  tier: BillingTier,
+  totalAmountCents: number,
 ): Promise<ActionResponse<{ clientSecret: string }>> => {
   const actionName = "createPaymentIntentAction";
 
@@ -24,23 +23,17 @@ export const createPaymentIntentAction = async (
 
     if (userError || !user) throw new Error("Not authenticated");
 
-    conditionalLog(actionName, { tier }, true);
+    conditionalLog(actionName, { totalAmountCents }, true);
 
     // Calculate amount in cents
-    const amountInCents = Math.round(tier.price * 100);
 
     // Create a PaymentIntent with the order amount and currency
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: amountInCents,
-      currency: "usd",
-      description: `${tier.name} tier subscription`,
-      automatic_payment_methods: {
-        enabled: true,
-      },
+      amount: totalAmountCents,
+      currency: "aud",
+      description: `${totalAmountCents / 100} contract payment`,
       metadata: {
         userId: user.id,
-        tierName: tier.name,
-        tierPrice: tier.price.toString(),
       },
     });
 

@@ -1,12 +1,10 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import StripePaymentForm from "@/components/layout/StripePaymentForm";
 import { Separator } from "@/components/ui/separator";
 import { useContractMembers, useContractRole } from "@/hooks/contract.hooks";
 import { formatCurrency } from "@/lib/contract.util";
-import { CheckCircle, CreditCard, LoaderCircle, LockIcon } from "lucide-react";
+import { CheckCircle, CreditCard, LockIcon } from "lucide-react";
 import { useState } from "react";
 
 export const ContractPayment = () => {
@@ -121,83 +119,7 @@ export const ContractPayment = () => {
           </div>
         ) : allMembersApproved && isProjectManager ? (
           <div className="border rounded-md p-4 space-y-4">
-            <div className="text-sm font-medium mb-2">Payment Details</div>
-
-            <div className="space-y-3">
-              <div>
-                <Label htmlFor="cardName">Cardholder Name</Label>
-                <Input
-                  id="cardName"
-                  placeholder="John Smith"
-                  value={cardName}
-                  onChange={e => setCardName(e.target.value)}
-                  disabled={!isProjectManager}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="cardNumber">Card Number</Label>
-                <div className="relative">
-                  <Input
-                    id="cardNumber"
-                    placeholder="4242 4242 4242 4242"
-                    value={cardNumber}
-                    onChange={e => setCardNumber(e.target.value)}
-                    disabled={!isProjectManager}
-                  />
-                  <CreditCard className="absolute right-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="expiry">Expiry Date</Label>
-                  <Input
-                    id="expiry"
-                    placeholder="MM/YY"
-                    value={cardExpiry}
-                    onChange={e => setCardExpiry(e.target.value)}
-                    disabled={!isProjectManager}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="cvc">CVC</Label>
-                  <Input
-                    id="cvc"
-                    placeholder="123"
-                    value={cardCvc}
-                    onChange={e => setCardCvc(e.target.value)}
-                    disabled={!isProjectManager}
-                  />
-                </div>
-              </div>
-
-              <Button
-                className="w-full"
-                onClick={handleProcessPayment}
-                disabled={
-                  !isProjectManager ||
-                  isProcessing ||
-                  !cardNumber ||
-                  !cardExpiry ||
-                  !cardCvc ||
-                  !cardName
-                }
-              >
-                {isProcessing ? (
-                  <div className="flex items-center">
-                    <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
-                  </div>
-                ) : (
-                  <>Pay {formatCurrency(totalAmount)}</>
-                )}
-              </Button>
-
-              <p className="text-xs text-center text-muted-foreground mt-2">
-                Your payment information is secure and encrypted.
-              </p>
-            </div>
+            <StripePaymentForm />
           </div>
         ) : (
           <div className="flex flex-col space-y-4">
