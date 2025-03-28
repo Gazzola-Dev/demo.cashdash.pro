@@ -768,6 +768,7 @@ export type Database = {
           id: string
           project_id: string
           role: string
+          updated_at: string
           user_id: string
         }
         Insert: {
@@ -775,6 +776,7 @@ export type Database = {
           id?: string
           project_id: string
           role: string
+          updated_at?: string
           user_id: string
         }
         Update: {
@@ -782,6 +784,7 @@ export type Database = {
           id?: string
           project_id?: string
           role?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: [
@@ -1227,9 +1230,9 @@ export type Database = {
         Args: {
           p_contract_id: string
           p_user_id: string
-          p_role?: string
+          p_role: string
         }
-        Returns: Json
+        Returns: undefined
       }
       authorize: {
         Args: {
@@ -1568,6 +1571,12 @@ export type Database = {
         }
         Returns: Json
       }
+      is_global_admin: {
+        Args: {
+          user_id: string
+        }
+        Returns: boolean
+      }
       list_milestone_events: {
         Args: {
           p_milestone_id: string
@@ -1636,7 +1645,7 @@ export type Database = {
           p_contract_id: string
           p_user_id: string
         }
-        Returns: Json
+        Returns: undefined
       }
       set_project_current_milestone: {
         Args: {

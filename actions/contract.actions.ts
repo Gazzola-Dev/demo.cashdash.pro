@@ -4,7 +4,7 @@ import getSupabaseServerActionClient from "@/clients/action-client";
 import getActionResponse from "@/lib/action.util";
 import { conditionalLog } from "@/lib/log.utils";
 import { ActionResponse } from "@/types/action.types";
-import { ContractMember, ContractWithMembers } from "@/types/app.types";
+import { ContractWithMembers } from "@/types/app.types";
 import { Tables } from "@/types/database.types";
 
 type Contract = Tables<"contracts">;
@@ -34,6 +34,35 @@ export const updateContractAction = async (
   }
 };
 
+export const getContractByIdAction = async (
+  contractId: string,
+): Promise<ActionResponse<ContractWithMembers | null>> => {
+  const actionName = "getContractByIdAction";
+
+  try {
+    const supabase = await getSupabaseServerActionClient();
+
+    // Use the database function to get contract with members
+    const { data, error } = await supabase.rpc("get_contract_by_id", {
+      p_contract_id: contractId,
+    });
+
+    conditionalLog(actionName, { data, error }, true);
+
+    if (error) throw error;
+
+    // If no data returned, return null
+    if (!data) {
+      return getActionResponse({ data: null });
+    }
+
+    return getActionResponse({ data: data as any as ContractWithMembers });
+  } catch (error) {
+    conditionalLog(actionName, { error }, true);
+    return getActionResponse({ error });
+  }
+};
+
 export const getContractByMilestoneAction = async (
   milestoneId: string,
 ): Promise<ActionResponse<ContractWithMembers | null>> => {
@@ -43,7 +72,6 @@ export const getContractByMilestoneAction = async (
     const supabase = await getSupabaseServerActionClient();
 
     // Use the database function to get contract with members
-
     const { data, error } = await supabase.rpc("get_contract_by_milestone", {
       p_milestone_id: milestoneId,
     });
@@ -57,17 +85,7 @@ export const getContractByMilestoneAction = async (
       return getActionResponse({ data: null });
     }
 
-    const typedData = data as any as {
-      contract: Contract;
-      members: ContractMember[];
-    };
-
-    return getActionResponse({
-      data: {
-        ...typedData.contract,
-        members: typedData.members,
-      } as ContractWithMembers,
-    });
+    return getActionResponse({ data: data as any as ContractWithMembers });
   } catch (error) {
     conditionalLog(actionName, { error }, true);
     return getActionResponse({ error });
@@ -92,7 +110,7 @@ export const toggleContractMemberAction = async (
       ({ data, error } = await supabase.rpc("add_contract_member", {
         p_contract_id: contractId,
         p_user_id: userId,
-        p_role: "member", // Default role
+        p_role: "developer", // Default role
       }));
     } else {
       // Remove user from contract members
@@ -114,16 +132,8 @@ export const toggleContractMemberAction = async (
 
     if (getError) throw getError;
 
-    const typedData = updatedContract as any as {
-      contract: Contract;
-      members: ContractMember[];
-    };
-
     return getActionResponse({
-      data: {
-        ...typedData.contract,
-        members: typedData.members,
-      } as ContractWithMembers,
+      data: updatedContract as any as ContractWithMembers,
     });
   } catch (error) {
     conditionalLog(actionName, { error }, true, null);
@@ -163,16 +173,8 @@ export const updateContractMemberApprovalAction = async (
 
     if (getError) throw getError;
 
-    const typedData = updatedContract as any as {
-      contract: Contract;
-      members: ContractMember[];
-    };
-
     return getActionResponse({
-      data: {
-        ...typedData.contract,
-        members: typedData.members,
-      } as ContractWithMembers,
+      data: updatedContract as any as ContractWithMembers,
     });
   } catch (error) {
     conditionalLog(actionName, { error }, true);

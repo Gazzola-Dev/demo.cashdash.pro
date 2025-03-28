@@ -144,9 +144,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
   // Handle auth state changes
   const handleSignIn = useCallback(
     (session: Session | null) => {
-      if (session?.user) {
-        refetchAppData();
-      }
+      refetchAppData();
     },
     [refetchAppData],
   );

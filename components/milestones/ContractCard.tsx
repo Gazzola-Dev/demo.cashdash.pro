@@ -31,19 +31,14 @@ export const ContractCard = () => {
   const [allPMsApproved, setAllPMsApproved] = useState(false);
 
   // Get data from the app store
-  const { milestone, contract: appContract, tasks } = useAppData();
+  const { milestone, contract, tasks } = useAppData();
 
   // Get user role and permissions
   const { isProjectManager, canEdit } = useProjectRole();
 
   // Initialize the fetch but don't use the returned data directly
-  const {
-    isLoading,
-    error,
-    data: queryContract,
-  } = useGetContractByMilestone(milestone?.id);
+  const { isLoading, error } = useGetContractByMilestone(milestone?.id);
 
-  const contract = appContract || queryContract;
   const contractMembers = contract?.members || [];
 
   const handleConfirmApproval = () => {

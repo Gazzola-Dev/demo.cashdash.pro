@@ -1,4 +1,5 @@
 import {
+  getContractByIdAction,
   getContractByMilestoneAction,
   toggleContractMemberAction,
   updateContractAction,
@@ -22,6 +23,31 @@ type Contract = Tables<"contracts">;
 interface QueryConfig<TData>
   extends Omit<UseQueryOptions<TData, Error>, "queryKey" | "queryFn"> {}
 
+export const useGetContractById = (
+  contractId?: string,
+  config?: QueryConfig<ContractWithMembers | null>,
+) => {
+  const { setContract } = useAppData();
+  const hookName = "useGetContractById";
+
+  return useQuery({
+    queryKey: ["contract", contractId],
+    queryFn: async () => {
+      if (!contractId) return null;
+
+      const { data, error } = await getContractByIdAction(contractId);
+      conditionalLog(hookName, { data, error }, false);
+      setContract(data);
+
+      if (error) throw new Error(error);
+      return data;
+    },
+    enabled: !!contractId,
+    staleTime: 1000 * 60, // 1 minute
+    ...config,
+  });
+};
+
 export const useGetContractByMilestone = (
   milestoneId?: string,
   config?: QueryConfig<ContractWithMembers | null>,
@@ -30,7 +56,7 @@ export const useGetContractByMilestone = (
   const hookName = "useGetContractByMilestone";
 
   return useQuery({
-    queryKey: ["contract", milestoneId],
+    queryKey: ["contract", "milestone", milestoneId],
     queryFn: async () => {
       if (!milestoneId) return null;
 
@@ -114,13 +140,7 @@ export const useUpdateContract = () => {
 
       // Update the contract in the app store with the response from the server
       if (data) {
-        const updatedContract = {
-          ...contract,
-          ...data,
-          members: data.members || [],
-        };
-
-        setContract(updatedContract);
+        setContract(data);
       }
 
       // Invalidate relevant queries to ensure fresh data
@@ -177,6 +197,7 @@ export const useToggleContractMember = () => {
   const hookName = "useToggleContractMember";
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [prevState, setPrevState] = useState<ContractWithMembers | null>(null);
   const { contract, setContract, project } = useAppData();
 
   const { mutate, isPending } = useMutation({
@@ -212,7 +233,12 @@ export const useToggleContractMember = () => {
       const previousContract = queryClient.getQueryData([
         "contract",
         contractId,
-      ]) as ContractWithMembers | null;
+      ]);
+
+      // Store for potential rollback
+      if (previousContract) {
+        setPrevState(previousContract as ContractWithMembers);
+      }
 
       // Optimistically update the contract in app store
       if (contract && contract.id === contractId) {
@@ -229,9 +255,9 @@ export const useToggleContractMember = () => {
             id: userId,
             hasApproved: false,
             display_name: userProfile?.display_name || null,
-            email: userProfile?.email || "unknown@example.com", // Fallback value
+            email: userProfile?.email || "unknown@example.com",
             avatar_url: userProfile?.avatar_url || null,
-            role: "member", // Default role
+            role: "developer", // Default role
           };
 
           updatedMembers = [...(contract.members || []), newMember];
@@ -262,11 +288,8 @@ export const useToggleContractMember = () => {
       });
 
       // Update with server response
-      if (data && contract) {
-        setContract({
-          ...contract,
-          members: data.members || [],
-        });
+      if (data) {
+        setContract(data);
       }
 
       // Invalidate queries to ensure fresh data
@@ -284,7 +307,7 @@ export const useToggleContractMember = () => {
 
         // Also restore app store state
         if (context.previousContract) {
-          setContract(context.previousContract);
+          setContract(context.previousContract as ContractWithMembers);
         }
       }
 
@@ -313,6 +336,7 @@ export const useUpdateContractMemberApproval = () => {
   const hookName = "useUpdateContractMemberApproval";
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [prevState, setPrevState] = useState<ContractWithMembers | null>(null);
   const { contract, setContract } = useAppData();
 
   const { mutate, isPending } = useMutation({
@@ -348,7 +372,12 @@ export const useUpdateContractMemberApproval = () => {
       const previousContract = queryClient.getQueryData([
         "contract",
         contractId,
-      ]) as ContractWithMembers | null;
+      ]);
+
+      // Store for potential rollback
+      if (previousContract) {
+        setPrevState(previousContract as ContractWithMembers);
+      }
 
       // Optimistically update the contract in app store
       if (contract && contract.id === contractId) {
@@ -376,11 +405,8 @@ export const useUpdateContractMemberApproval = () => {
       });
 
       // Update with server response
-      if (data && contract) {
-        setContract({
-          ...contract,
-          members: data.members || [],
-        });
+      if (data) {
+        setContract(data);
       }
 
       // Invalidate queries to ensure fresh data
@@ -398,7 +424,7 @@ export const useUpdateContractMemberApproval = () => {
 
         // Also restore app store state
         if (context.previousContract) {
-          setContract(context.previousContract);
+          setContract(context.previousContract as ContractWithMembers);
         }
       }
 
@@ -609,7 +635,7 @@ export function useContractRole() {
       contract?.members?.some(
         member =>
           member.id === user.id &&
-          (member.role === "project manager" || member.role === "admin"),
+          (member.role === "project_manager" || member.role === "admin"),
       )) ||
     false;
 
@@ -707,30 +733,21 @@ export function useContractPayment(
   };
 }
 
-export function useContractMembers(
-  toggleContractMember: (
-    contractId: string,
-    memberId: string,
-    isIncluded: boolean,
-  ) => void,
-  isTogglePending: boolean,
-  updateContractMemberApproval: (
-    contractId: string,
-    memberId: string,
-    approved: boolean,
-  ) => void,
-  isApprovalPending: boolean,
-) {
+export function useContractMembers() {
   // Get data from the app store
   const { contract, user, project } = useAppData();
-  const { isProjectManager, canEdit } = useContractRole();
+  const { toggleContractMember, isPending: isTogglePending } =
+    useToggleContractMember();
+  const { updateContractMemberApproval, isPending: isApprovalPending } =
+    useUpdateContractMemberApproval();
+
+  // Check if user has project manager role
+  const { isProjectManager } = useContractRole();
 
   // All project members that could be part of the contract
   const projectMembers = project?.project_members || [];
-  // Current contract members
-  const contractMembers = contract?.members || [];
 
-  // Get initials for avatar fallback
+  // Helper to get initials for avatar fallback
   const getInitials = (name: string) => {
     if (!name) return "??";
     return name
@@ -747,12 +764,12 @@ export function useContractMembers(
 
   // Check if a project member is already part of the contract
   const isContractMember = (memberId: string) => {
-    return contractMembers.some(member => member.id === memberId);
+    return contract?.members?.some(member => member.id === memberId) || false;
   };
 
   // Find a contract member's approval status
   const getMemberApprovalStatus = (memberId: string) => {
-    const member = contractMembers.find(member => member.id === memberId);
+    const member = contract?.members?.find(member => member.id === memberId);
     return member?.hasApproved || false;
   };
 
@@ -766,19 +783,19 @@ export function useContractMembers(
     [contract?.id, toggleContractMember, isProjectManager],
   );
 
-  // Handle toggling approval status for current user
+  // Handle toggling approval status - now any user can toggle their own approval
   const handleToggleApproval = useCallback(
     (memberId: string, approved: boolean) => {
-      if (!contract?.id) return;
+      // Only allow users to toggle their own approval status
+      if (!contract?.id || (memberId !== user?.id && !isProjectManager)) return;
       updateContractMemberApproval(contract.id, memberId, approved);
     },
-    [contract?.id, updateContractMemberApproval],
+    [contract?.id, updateContractMemberApproval, user?.id, isProjectManager],
   );
 
   return {
     contract,
     projectMembers,
-    contractMembers,
     getInitials,
     isCurrentUser,
     isContractMember,
@@ -786,7 +803,6 @@ export function useContractMembers(
     handleToggleMember,
     handleToggleApproval,
     isProjectManager,
-    canEdit,
     isTogglePending,
     isApprovalPending,
   };

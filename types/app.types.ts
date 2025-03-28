@@ -86,14 +86,14 @@ export interface MilestoneEvent {
   actor: MilestoneEventActor;
 }
 
-// Define ContractMember interface
+// Update the ContractMember interface (remove the duplicate at the bottom of the file)
 export interface ContractMember {
   id: string;
   display_name: string | null;
   email: string;
-  avatar_url?: string | null;
-  role?: string | null;
-  hasApproved?: boolean;
+  avatar_url: string | null;
+  role: string;
+  hasApproved: boolean;
 }
 
 // Define Contract with Members
@@ -181,20 +181,4 @@ export interface AppState {
   setMilestone: (milestone: MilestoneWithTasks | null) => void;
   setContract: (contract: ContractWithMembers | null) => void;
   reset: () => void;
-}
-
-// Contract Member Type
-export interface ContractMember {
-  id: string;
-  display_name: string | null;
-  email: string;
-  hasApproved?: boolean;
-  avatar_url?: string | null;
-  role?: string | null;
-}
-
-// Contract with Members Type
-export interface ContractWithMembers {
-  contract: Contract;
-  members: ContractMember[];
 }
