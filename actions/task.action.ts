@@ -1,5 +1,4 @@
 "use server";
-
 import getSupabaseServerActionClient from "@/clients/action-client";
 import getActionResponse from "@/lib/action.util";
 import { conditionalLog } from "@/lib/log.utils";
@@ -10,7 +9,13 @@ import { Tables } from "@/types/database.types";
 type Task = Tables<"tasks">;
 
 /**
- * Updates a task and its related data (subtasks, etc.)
+ * Updates a task and its related data with proper RLS enforcement
+ *
+ * The following security rules are enforced by the database function:
+ * - Global admins can perform any update on any task
+ * - Project managers can make any update to tasks in draft milestones
+ * - Project managers can update status, assignee, or priority of tasks in active milestones
+ * - Task assignees can update only the status of tasks assigned to them
  *
  * @param taskId - The ID of the task to update
  * @param updates - Object containing the fields to update
@@ -24,7 +29,7 @@ export const updateTaskAction = async (
   try {
     const supabase = await getSupabaseServerActionClient();
 
-    // Use the database function to update the task
+    // Use the database function to update the task with RLS enforcement
     const { data, error } = await supabase.rpc("update_task_data", {
       task_id: taskId,
       task_updates: updates,
@@ -36,6 +41,7 @@ export const updateTaskAction = async (
       throw error;
     }
 
+    // The RPC function returns JSON data
     return getActionResponse({ data: data as Task });
   } catch (error) {
     conditionalLog(actionName, { error }, true);
@@ -43,39 +49,37 @@ export const updateTaskAction = async (
   }
 };
 
+/**
+ * Updates the ordinal priority of multiple tasks to change their order
+ *
+ * Security rules enforced by the database function:
+ * - Only global admins and project managers can reorder tasks
+ * - For active milestones, additional verification ensures appropriate permissions
+ *
+ * @param taskIds - Array of task IDs to update
+ * @param priorities - Array of corresponding ordinal priority values
+ * @returns ActionResponse indicating success or error
+ */
 export const updateTasksOrderAction = async (
   taskIds: string[],
   priorities: number[],
 ): Promise<ActionResponse<boolean>> => {
   const actionName = "updateTasksOrderAction";
-
   try {
     const supabase = await getSupabaseServerActionClient();
 
-    // Create an array of updates to run in parallel
-    const updates = taskIds.map((taskId, index) => {
-      return supabase
-        .from("tasks")
-        .update({ ordinal_priority: priorities[index] })
-        .eq("id", taskId);
+    // Use the database function to update task priorities with RLS enforcement
+    const { data, error } = await supabase.rpc("update_tasks_order", {
+      p_task_ids: taskIds,
+      p_priorities: priorities,
     });
 
-    // Execute all updates in parallel
-    const results = await Promise.all(updates);
+    conditionalLog(actionName, { data, error }, true);
 
-    // Check if any update had an error
-    const hasError = results.some(result => result.error);
-
-    if (hasError) {
-      const errors = results
-        .filter(result => result.error)
-        .map(result => result.error);
-      throw new Error(
-        `Error updating task priorities: ${JSON.stringify(errors)}`,
-      );
+    if (error) {
+      throw error;
     }
 
-    conditionalLog(actionName, { success: true }, true);
     return getActionResponse({ data: true });
   } catch (error) {
     conditionalLog(actionName, { error }, true);
@@ -83,16 +87,26 @@ export const updateTasksOrderAction = async (
   }
 };
 
+/**
+ * Creates a new task with RLS enforcement
+ *
+ * Security rules enforced by the database function:
+ * - Only global admins and project managers can create tasks
+ * - Project managers can only associate tasks with draft milestones
+ *
+ * @param projectId - The ID of the project to create the task in
+ * @param milestoneId - Optional ID of the milestone to associate with the task
+ * @returns ActionResponse containing the created task data or error
+ */
 export const createTaskAction = async (
   projectId: string,
   milestoneId?: string | null,
 ): Promise<ActionResponse<TaskWithAssignee>> => {
   const actionName = "createTaskAction";
-
   try {
     const supabase = await getSupabaseServerActionClient();
 
-    // Call the new create_task database function with the project and milestone IDs
+    // Call the create_task database function with the project and milestone IDs
     const { data, error } = await supabase.rpc("create_task", {
       p_project_id: projectId,
       p_milestone_id: milestoneId || undefined,
@@ -104,8 +118,7 @@ export const createTaskAction = async (
 
     // Cast the response to the required type for the app state
     const taskWithAssignee: TaskWithAssignee = {
-      // @ts-ignore: allow type casting
-      ...data,
+      ...(data as Task),
       assignee_profile: null, // Add the required properties for TaskWithAssignee
     };
 

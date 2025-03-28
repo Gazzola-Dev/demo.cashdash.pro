@@ -34,14 +34,7 @@ import {
   Droppable,
   DroppableProvided,
 } from "@hello-pangea/dnd";
-import {
-  Check,
-  ChevronDown,
-  ChevronUp,
-  Menu,
-  Plus,
-  Search,
-} from "lucide-react";
+import { Check, ChevronDown, ChevronUp, Menu, Search } from "lucide-react";
 import Link from "next/link";
 
 // Loading Skeleton Component
@@ -156,16 +149,12 @@ const TaskListCard = () => {
         <Card
           className={cn(
             "flex flex-col",
-            "h-full max-h-[calc(100vh-100px)] md:max-h-[40rem]",
+            "h-full max-h-[calc(100vh-100px)] md:max-h-[40rem] pb-3",
           )}
         >
           <CardHeader className="pb-3">
-            <div className="flex flex-row items-center justify-between">
+            <div className="flex flex-row items-center justify-between pb-2">
               <CardTitle>Tasks ({limitedTasks.length})</CardTitle>
-              <Button size="sm" onClick={createNewTask} disabled={!canEdit}>
-                <Plus className="h-4 w-4 mr-2" />
-                New Task
-              </Button>
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
               <div className="flex-1 relative">
@@ -308,7 +297,7 @@ const TaskListCard = () => {
                                 <div
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
-                                  className="grid grid-cols-[30px_60px_50px_120px_1fr_120px] items-center px-2 py-2"
+                                  className="grid grid-cols-[30px_60px_50px_120px_1fr_120px] items-center px-2 pl-3.5 py-2"
                                 >
                                   <div {...provided.dragHandleProps}>
                                     <Menu

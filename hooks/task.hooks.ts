@@ -268,10 +268,6 @@ export const useCreateTask = () => {
     },
     onSuccess: (data, _, context) => {
       if (data) {
-        // Navigate to the task page
-        const taskUrl = `/${project?.slug}/${data.ordinal_id}`;
-        router.push(taskUrl);
-
         // Update the tasks list by replacing the temporary task with the real one
         if (context?.tempId) {
           setTasks(

@@ -1240,6 +1240,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      can_user_update_task: {
+        Args: {
+          p_user_id: string
+          p_task_id: string
+          p_updates: Json
+        }
+        Returns: boolean
+      }
       check_profile_exists: {
         Args: {
           p_email: string
@@ -1577,6 +1585,44 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_milestone_active: {
+        Args: {
+          p_milestone_id: string
+        }
+        Returns: boolean
+      }
+      is_milestone_draft: {
+        Args: {
+          p_milestone_id: string
+        }
+        Returns: boolean
+      }
+      is_task_assigned_to_user: {
+        Args: {
+          p_task_id: string
+          p_user_id: string
+        }
+        Returns: boolean
+      }
+      is_task_in_current_milestone: {
+        Args: {
+          task_id: string
+        }
+        Returns: boolean
+      }
+      is_user_global_admin: {
+        Args: {
+          p_user_id: string
+        }
+        Returns: boolean
+      }
+      is_user_project_manager: {
+        Args: {
+          p_user_id: string
+          p_project_id: string
+        }
+        Returns: boolean
+      }
       list_milestone_events: {
         Args: {
           p_milestone_id: string
@@ -1742,6 +1788,13 @@ export type Database = {
           p_new_ordinal_priority?: number
         }
         Returns: undefined
+      }
+      update_tasks_order: {
+        Args: {
+          p_task_ids: string[]
+          p_priorities: number[]
+        }
+        Returns: boolean
       }
       upsert_draft_task: {
         Args: {
