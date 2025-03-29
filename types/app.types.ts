@@ -1,4 +1,3 @@
-// types/app.types.ts
 import { Tables } from "@/types/database.types";
 import { User } from "@supabase/supabase-js";
 
@@ -30,6 +29,7 @@ type ProjectSubscription = Tables<"project_subscriptions">;
 type UserRole = Tables<"user_roles">;
 type Milestone = Tables<"milestones">;
 type Contract = Tables<"contracts">;
+type ContractPayment = Tables<"contract_payments">;
 
 // Define member with profile
 export interface ProjectMemberWithProfile extends ProjectMember {
@@ -86,7 +86,12 @@ export interface MilestoneEvent {
   actor: MilestoneEventActor;
 }
 
-// Update the ContractMember interface (remove the duplicate at the bottom of the file)
+// Contract payment interface
+export interface ContractPaymentWithDetails extends ContractPayment {
+  milestone_id: string | null;
+}
+
+// Update the ContractMember interface
 export interface ContractMember {
   id: string;
   display_name: string | null;
@@ -96,9 +101,10 @@ export interface ContractMember {
   hasApproved: boolean;
 }
 
-// Define Contract with Members
+// Define Contract with Members and Payments
 export interface ContractWithMembers extends Contract {
   members: ContractMember[];
+  payments: ContractPaymentWithDetails[];
 }
 
 // Project Invitation With Details for the invitation.hooks and actions
@@ -149,8 +155,8 @@ export interface AppState {
   // Tasks data
   tasks: TaskWithAssignee[];
   task: TaskComplete | null;
-  userInvitations: ProjectInvitationWithDetails[]; // Updated to match the actual type used in hooks
-  projectInvitations: ProjectInvitationWithDetails[]; // Updated to match the actual type used in hooks
+  userInvitations: ProjectInvitationWithDetails[];
+  projectInvitations: ProjectInvitationWithDetails[];
 
   // Milestone data
   milestone: MilestoneWithTasks | null;
@@ -173,8 +179,8 @@ export interface AppState {
   setProject: (project: ProjectWithDetails | null) => void;
   setTasks: (tasks: TaskWithAssignee[]) => void;
   setTask: (task: TaskComplete | null) => void;
-  setUserInvitations: (invitations: ProjectInvitationWithDetails[]) => void; // Updated to match the actual type
-  setProjectInvitations: (invitations: ProjectInvitationWithDetails[]) => void; // Updated to match the actual type
+  setUserInvitations: (invitations: ProjectInvitationWithDetails[]) => void;
+  setProjectInvitations: (invitations: ProjectInvitationWithDetails[]) => void;
   setSubscription: (subscription: ProjectSubscription | null) => void;
   setAppRole: (appRole: string | null) => void;
   setProjectMemberRole: (projectMemberRole: string | null) => void;

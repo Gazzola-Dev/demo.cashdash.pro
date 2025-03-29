@@ -664,12 +664,9 @@ interface ContractInfo {
 }
 
 export function useContractPayment() {
+  const { contract } = useAppData();
   const { isProjectManager } = useContractRole();
-  const { contract } = useContractMembers();
 
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [isPaid, setIsPaid] = useState(false);
-  const [paymentDate, setPaymentDate] = useState<Date | null>(null);
   const [showForm, setShowForm] = useState(false);
 
   // Form state
@@ -677,6 +674,22 @@ export function useContractPayment() {
   const [cardExpiry, setCardExpiry] = useState("");
   const [cardCvc, setCardCvc] = useState("");
   const [cardName, setCardName] = useState("");
+
+  // Check if contract has been paid by looking at payments array
+  const isPaid =
+    contract?.payments?.some(
+      payment =>
+        payment.status === "completed" || payment.status === "confirmed",
+    ) || false;
+
+  // Get payment data if available
+  const paymentData =
+    isPaid && contract?.payments
+      ? contract.payments.find(
+          payment =>
+            payment.status === "completed" || payment.status === "confirmed",
+        )
+      : null;
 
   // Check if all members have approved
   const allMembersApproved =
@@ -692,32 +705,24 @@ export function useContractPayment() {
   };
 
   const handleShowPaymentForm = () => {
-    if (isProjectManager && allMembersApproved) {
+    if (isProjectManager && allMembersApproved && !isPaid) {
       setShowForm(true);
     }
   };
 
   const handleProcessPayment = () => {
     if (!isProjectManager) return;
-
-    setIsProcessing(true);
-
-    // Simulate payment processing
-    setTimeout(() => {
-      setIsProcessing(false);
-      setIsPaid(true);
-      setPaymentDate(new Date());
-      setShowForm(false);
-    }, 2000);
+    setShowForm(false);
+    // Payment processing would be handled by the actual payment form component
   };
 
   return {
     contract,
     isProjectManager,
-    isProcessing,
     isPaid,
-    paymentDate,
+    paymentData,
     showForm,
+    setShowForm,
     cardNumber,
     setCardNumber,
     cardExpiry,

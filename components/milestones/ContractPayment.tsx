@@ -2,62 +2,34 @@
 
 import StripePaymentForm from "@/components/layout/StripePaymentForm";
 import { Separator } from "@/components/ui/separator";
-import { useContractMembers, useContractRole } from "@/hooks/contract.hooks";
+import { useContractPayment } from "@/hooks/contract.hooks";
 import { formatCurrency } from "@/lib/contract.util";
 import { CheckCircle, CreditCard, LockIcon } from "lucide-react";
-import { useState } from "react";
 
 export const ContractPayment = () => {
-  const { isProjectManager } = useContractRole();
-  const { contract } = useContractMembers();
-
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [isPaid, setIsPaid] = useState(false);
-  const [paymentDate, setPaymentDate] = useState<Date | null>(null);
-  // Form state
-  const [cardNumber, setCardNumber] = useState("");
-  const [cardExpiry, setCardExpiry] = useState("");
-  const [cardCvc, setCardCvc] = useState("");
-  const [cardName, setCardName] = useState("");
+  const {
+    contract,
+    isProjectManager,
+    isPaid,
+    paymentData,
+    showForm,
+    setShowForm,
+    allMembersApproved,
+    getPendingMemberNames,
+    handleShowPaymentForm,
+  } = useContractPayment();
 
   if (!contract) {
     return null;
   }
-
-  // Check if all members have approved
-  const allMembersApproved =
-    contract.members?.every(member => member.hasApproved) || false;
-
-  // Get names of members who haven't approved
-  const getPendingMemberNames = () => {
-    const pendingMembers =
-      contract.members?.filter(member => !member.hasApproved) || [];
-    return pendingMembers
-      .map(member => member.display_name || "Unnamed User")
-      .join(", ");
-  };
-
-  // No handleShowPaymentForm function needed
-
-  const handleProcessPayment = () => {
-    if (!isProjectManager) return;
-
-    setIsProcessing(true);
-
-    // Simulate payment processing
-    setTimeout(() => {
-      setIsProcessing(false);
-      setIsPaid(true);
-      setPaymentDate(new Date());
-    }, 2000);
-  };
 
   const totalAmount = contract?.total_amount_cents
     ? contract.total_amount_cents / 100
     : 0;
 
   // Format date helper
-  const formatDate = (date: Date) => {
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
     return new Intl.DateTimeFormat("en-US", {
       year: "numeric",
       month: "long",
@@ -66,7 +38,7 @@ export const ContractPayment = () => {
   };
 
   // If already paid, show payment summary
-  if (isPaid && paymentDate) {
+  if (isPaid && paymentData) {
     return (
       <div className="mt-6 border rounded-md p-4 bg-green-50 dark:bg-green-900/20">
         <div className="flex items-center gap-2 mb-3">
@@ -83,7 +55,11 @@ export const ContractPayment = () => {
           </div>
           <div className="flex justify-between">
             <span className="text-sm">Date:</span>
-            <span>{formatDate(paymentDate)}</span>
+            <span>
+              {paymentData.payment_date
+                ? formatDate(paymentData.payment_date)
+                : "N/A"}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="text-sm">Status:</span>
@@ -91,6 +67,14 @@ export const ContractPayment = () => {
               Paid
             </span>
           </div>
+          {paymentData.transaction_id && (
+            <div className="flex justify-between">
+              <span className="text-sm">Transaction ID:</span>
+              <span className="text-xs font-mono">
+                {paymentData.transaction_id.substring(0, 16)}...
+              </span>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -119,7 +103,28 @@ export const ContractPayment = () => {
           </div>
         ) : allMembersApproved && isProjectManager ? (
           <div className="border rounded-md p-4 space-y-4">
-            <StripePaymentForm />
+            {showForm ? (
+              <StripePaymentForm />
+            ) : (
+              <div
+                className="flex items-center justify-between p-3 border rounded-md cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                onClick={handleShowPaymentForm}
+              >
+                <div className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5 text-slate-600 dark:text-slate-400" />
+                  <div>
+                    <h4 className="font-medium">Process Payment</h4>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                      All members have approved. Process the payment of{" "}
+                      {formatCurrency(totalAmount)}.
+                    </p>
+                  </div>
+                </div>
+                <button className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm">
+                  Pay Now
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="flex flex-col space-y-4">

@@ -43,7 +43,8 @@ export const useConfirmPayment = () => {
     onSuccess: () => {
       toast({
         title: "Payment Successful",
-        description: "Your subscription has been activated",
+        description:
+          "Contract payment was successful, the milestone is now active.",
       });
     },
     onError: error => {

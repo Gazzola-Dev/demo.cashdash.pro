@@ -66,62 +66,41 @@ export const confirmPaymentAction = async (
 
     conditionalLog(actionName, { paymentIntentId, projectId }, true);
 
-    // If projectId is provided, verify the user is a member of this project
-    if (projectId) {
-      const { data: memberData, error: memberError } = await supabase
-        .from("project_members")
-        .select("id")
-        .eq("project_id", projectId)
-        .eq("user_id", user.id)
-        .single();
-
-      if (memberError || !memberData) {
-        throw new Error("You must be a member of the project to subscribe");
-      }
-
-      // Check if this project already has a subscription
-      const { data: existingSubscription, error: subError } = await supabase
-        .from("project_subscriptions")
-        .select("id")
-        .eq("project_id", projectId)
-        .maybeSingle();
-
-      if (existingSubscription) {
-        throw new Error("This project already has an active subscription");
-      }
-    }
-
-    // Retrieve the payment intent to confirm its status
+    // Retrieve the payment intent to get transaction details
     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
 
     if (paymentIntent.status !== "succeeded") {
       throw new Error("Payment has not been completed");
     }
 
-    // Store the payment record in your database
-    const { data, error } = await supabase
-      .from("project_subscriptions")
-      .insert({
-        project_id: projectId,
-        user_id: user.id,
-        payment_intent_id: paymentIntentId,
-        amount_cents: paymentIntent.amount,
-        status: "active",
-        tier: paymentIntent.metadata.tierName,
-        start_date: new Date().toISOString(),
-        end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
-      });
+    // Get transaction details
+    const transactionId = paymentIntent.latest_charge as string;
+    let paymentMethod = "stripe";
+
+    // Fetch charge details to get payment method info if needed
+    if (transactionId) {
+      const charge = await stripe.charges.retrieve(transactionId);
+      if (charge.payment_method_details?.type) {
+        paymentMethod = charge.payment_method_details.type;
+      }
+    }
+
+    // Call the database function to record the payment
+    const { data } = await supabase.rpc("confirm_contract_payment", {
+      p_payment_intent_id: paymentIntentId,
+      p_user_id: user.id,
+      p_project_id: projectId || undefined,
+      p_transaction_id: transactionId || undefined,
+      p_payment_method: paymentMethod,
+    });
+
+    const error = (data as any)?.error;
 
     if (error) throw error;
+    conditionalLog(actionName, { data, error }, true);
 
-    // If this is for a specific project, update the project's subscription status
-    if (projectId) {
-      const { error: projectError } = await supabase
-        .from("projects")
-        .update({ subscription_status: "active" })
-        .eq("id", projectId);
-
-      if (projectError) throw projectError;
+    if (!data) {
+      throw new Error("Failed to confirm payment");
     }
 
     return getActionResponse({ data: true });

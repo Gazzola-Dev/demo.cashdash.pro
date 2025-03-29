@@ -282,6 +282,7 @@ export type Database = {
           payment_id: string | null
           payment_method: string | null
           status: string
+          transaction_id: string | null
           updated_at: string
         }
         Insert: {
@@ -296,6 +297,7 @@ export type Database = {
           payment_id?: string | null
           payment_method?: string | null
           status: string
+          transaction_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -310,6 +312,7 @@ export type Database = {
           payment_id?: string | null
           payment_method?: string | null
           status?: string
+          transaction_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -1302,6 +1305,16 @@ export type Database = {
           "": string
         }
         Returns: string
+      }
+      confirm_contract_payment: {
+        Args: {
+          p_payment_intent_id: string
+          p_user_id: string
+          p_project_id?: string
+          p_transaction_id?: string
+          p_payment_method?: string
+        }
+        Returns: Json
       }
       create_comment_data: {
         Args: {

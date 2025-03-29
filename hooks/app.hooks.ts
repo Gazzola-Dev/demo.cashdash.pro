@@ -4,11 +4,17 @@ import {
   updateProfileAction,
   updateProjectAction,
 } from "@/actions/app.actions";
+import { getContractByIdAction } from "@/actions/contract.actions";
 import configuration from "@/configuration";
 import { useToast } from "@/hooks/use-toast";
 import { conditionalLog } from "@/lib/log.utils";
 import { useAppData, useAppStore } from "@/stores/app.store";
-import { AppState, ProjectWithDetails, TaskComplete } from "@/types/app.types";
+import {
+  AppState,
+  ContractWithMembers,
+  ProjectWithDetails,
+  TaskComplete,
+} from "@/types/app.types";
 import { Tables } from "@/types/database.types";
 import { UseQueryOptions, useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -37,7 +43,8 @@ export const useGetAppData = (
     setSubscription,
     setAppRole,
     setProjectMemberRole,
-    setMilestone: setMilestone,
+    setMilestone,
+    setContract,
   } = useAppStore();
 
   return useQuery({
@@ -68,6 +75,14 @@ export const useGetAppData = (
           setMilestone(data.milestone);
         } else {
           setMilestone(null);
+        }
+
+        // Update contract with payments data
+        if (data.contract) {
+          conditionalLog(hookName, { contract: data.contract }, false);
+          setContract(data.contract);
+        } else {
+          setContract(null);
         }
       }
 
@@ -104,6 +119,35 @@ export const useGetTask = (
     initialData,
     staleTime: 1000 * 60, // 1 minute
     enabled: !!taskIdentifier,
+    ...config,
+  });
+};
+
+export const useGetContract = (
+  contractId: string,
+  initialData?: ContractWithMembers | null,
+  config?: QueryConfig<ContractWithMembers | null>,
+) => {
+  const hookName = "useGetContract";
+  const { setContract } = useAppStore();
+
+  return useQuery({
+    queryKey: ["contract", contractId],
+    queryFn: async () => {
+      const { data, error } = await getContractByIdAction(contractId);
+      conditionalLog(hookName, { data, error }, false);
+      if (error) throw new Error(error);
+
+      // Update store with fetched contract data
+      if (data) {
+        setContract(data);
+      }
+
+      return data;
+    },
+    initialData,
+    staleTime: 1000 * 60, // 1 minute
+    enabled: !!contractId,
     ...config,
   });
 };
