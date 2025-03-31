@@ -11,6 +11,7 @@ export function ThemeSwitcher() {
   if (!open) {
     return (
       <div
+        id="theme-switcher"
         className="flex items-center justify-center p-2 cursor-pointer rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
         onClick={toggleDarkMode}
         role="button"
@@ -29,6 +30,7 @@ export function ThemeSwitcher() {
 
   return (
     <div
+      id="theme-switcher"
       className={cn(
         "flex items-center px-3 cursor-pointer",
         "transition-all duration-200 ease-in-out justify-between w-full hover:bg-gray-100 dark:hover:bg-gray-800",

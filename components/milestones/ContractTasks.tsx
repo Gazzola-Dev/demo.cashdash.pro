@@ -122,7 +122,7 @@ export const ContractTasks: React.FC<ContractTasksProps> = ({ tasks }) => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" id="contract-tasks-section">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-medium">Contract Tasks</h3>
         <div className="flex items-center gap-2">

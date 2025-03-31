@@ -68,6 +68,7 @@ const ProfileFormSmall = () => {
 
   return (
     <div
+      id="profile-form"
       className={cn(
         "flex items-center gap-2 rounded-md",
         open ? "p-2 pt-2" : "",

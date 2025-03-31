@@ -114,6 +114,7 @@ function MilestoneCard() {
         open={isOpen}
         onOpenChange={setIsOpen}
         className="h-full w-full"
+        id="milestone-card"
       >
         <Card className="h-full">
           <CardHeader className="flex flex-row items-center justify-between pb-2">

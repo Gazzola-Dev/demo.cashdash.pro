@@ -138,6 +138,7 @@ export const ContractPayment = () => {
                 onClick={handleProcessPayment}
                 disabled={isPending}
                 className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm"
+                id="payment-button"
               >
                 Pay {formatCurrency(totalAmount)}
               </Button>

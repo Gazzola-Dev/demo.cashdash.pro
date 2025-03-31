@@ -174,7 +174,12 @@ const ProjectMembersCard = () => {
 
   return (
     <>
-      <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
+      <Collapsible
+        open={isOpen}
+        onOpenChange={setIsOpen}
+        className="w-full"
+        id="members-card"
+      >
         <Card className="h-full">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>

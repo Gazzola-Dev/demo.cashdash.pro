@@ -97,7 +97,12 @@ export const ContractCard = () => {
 
   return (
     <>
-      <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
+      <Collapsible
+        open={isOpen}
+        onOpenChange={setIsOpen}
+        className="w-full"
+        id="contract-card"
+      >
         <Card className="w-full">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle>Contract</CardTitle>

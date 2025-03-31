@@ -129,7 +129,7 @@ function AppSidebar() {
 
   return (
     <>
-      <Sidebar collapsible="icon">
+      <Sidebar collapsible="icon" id="sidebar-root">
         <SidebarContent className="border-r dark:border-blue-900 overflow-x-hidden">
           <SidebarHeader className="flex">
             <ProjectSwitcher />

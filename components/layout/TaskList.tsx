@@ -305,7 +305,14 @@ const TaskList = () => {
                       <>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <span className="px-1">
+                            <span
+                              className="px-1"
+                              id={
+                                task.id === appTask?.id
+                                  ? "task-status-icon"
+                                  : undefined
+                              }
+                            >
                               <StatusIconSimple status={task.status ?? ""} />
                             </span>
                           </TooltipTrigger>

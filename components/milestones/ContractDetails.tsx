@@ -51,7 +51,7 @@ export const ContractDetails = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" id="contract-details-section">
       <div className="flex flex-col sm:flex-row sm:justify-between space-y-2 sm:space-y-0">
         {editingField === "title" ? (
           <Input

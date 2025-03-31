@@ -46,7 +46,7 @@ export function ProjectSwitcher() {
   }
 
   return (
-    <SidebarMenu>
+    <SidebarMenu id="project-switcher">
       <SidebarMenuItem
         className={cn(
           "flex items-center",
