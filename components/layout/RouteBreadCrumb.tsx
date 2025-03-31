@@ -185,20 +185,12 @@ export default function RouteBreadcrumb() {
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator className="h-full flex items-center" />
-            <BreadcrumbItem className="h-full">
-              <BreadcrumbLink
-                href={`/${projectSlug}/tasks`}
-                className="h-full flex items-center px-2"
-              >
-                Tasks
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator className="h-full flex items-center" />
+
             <BreadcrumbItem className="h-full">
               <BreadcrumbPage className="h-full flex items-center px-2">
                 {task
                   ? `${task?.ordinal_id}: ${capitalizeFirstLetter(task?.title ?? "")}`
-                  : segments[1]}
+                  : capitalizeFirstLetter(segments[1])}
               </BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
