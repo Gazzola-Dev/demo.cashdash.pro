@@ -28,8 +28,6 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     if (matchingProject) {
       // Only update if project has changed
       if (matchingProject.id !== profile?.current_project_id) {
-        console.log(`Switching to project: ${matchingProject.name}`);
-
         // Update current project in profile
         updateProfile({ current_project_id: matchingProject.id });
 

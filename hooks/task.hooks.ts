@@ -484,6 +484,7 @@ export function useTaskListCard() {
       const destinationIndex = result.destination.index;
 
       // Reorder tasks using the reorderByDragDrop function
+
       reorderByDragDrop(sourceIndex, destinationIndex);
     },
     [reorderByDragDrop],
@@ -818,3 +819,160 @@ export const useDeleteTask = () => {
     isPending,
   };
 };
+
+/**
+ * Hook to update task order specifically for drag and drop operations
+ */
+export const useTaskDragDrop = () => {
+  const { toast } = useToast();
+  const {
+    tasks,
+    setTasks,
+    task: currentTask,
+    setTask,
+    milestone,
+  } = useAppData();
+  const [prevState, setPrevState] = useState<TaskWithAssignee[]>([]);
+  const [prevCurrentTask, setPrevCurrentTask] =
+    useState<Partial<TaskComplete> | null>(null);
+  const [isPending, setIsPending] = useState<boolean>(false);
+
+  /**
+   * Updates the task order based on a drag and drop operation
+   */
+  const handleDragEnd = useCallback<OnDragEndResponder>(
+    result => {
+      // Return early if there's no destination or if the item is dropped in the same position
+      if (
+        !result.destination ||
+        result.source.index === result.destination.index
+      ) {
+        return;
+      }
+
+      setIsPending(true);
+      try {
+        // Store current state for potential rollback
+        setPrevState([...tasks] as TaskWithAssignee[]);
+        if (currentTask) {
+          setPrevCurrentTask({ ...currentTask });
+        }
+
+        // Get the source and destination indices from the drag event
+        const sourceIndex = result.source.index;
+        const destinationIndex = result.destination.index;
+
+        // Get the tasks that should be considered for reordering
+        // Either all tasks or only the tasks in the current milestone
+        const relevantTasks = milestone
+          ? tasks.filter(t =>
+              (milestone.tasks || []).some(mt => mt.id === t.id),
+            )
+          : [...tasks];
+
+        // Sort the relevant tasks by their current ordinal_priority
+        const sortedTasks = [...relevantTasks].sort(
+          (a, b) => (a.ordinal_priority || 0) - (b.ordinal_priority || 0),
+        );
+
+        // Extract the task being moved
+        const taskToMove = sortedTasks[sourceIndex];
+
+        if (!taskToMove) {
+          throw new Error("Task not found at source index");
+        }
+
+        // Remove the task from the array
+        sortedTasks.splice(sourceIndex, 1);
+
+        // Insert it at the new position
+        sortedTasks.splice(destinationIndex, 0, taskToMove);
+
+        // Update ordinal priorities for all affected tasks
+        const updatedTasks = sortedTasks.map((task, index) => ({
+          ...task,
+          ordinal_priority: index + 1,
+        }));
+
+        // Create a map of task IDs to updated tasks for efficient lookup
+        const updatedTasksMap = new Map(
+          updatedTasks.map(task => [task.id, task]),
+        );
+
+        // Update all tasks with their new ordinal_priority values
+        const allUpdatedTasks = tasks.map(task => {
+          const updatedTask = updatedTasksMap.get(task.id);
+          return updatedTask || task;
+        });
+
+        // Update tasks in state
+        setTasks(allUpdatedTasks);
+
+        // If the current task was affected, update it too
+        if (currentTask && updatedTasksMap.has(currentTask.id)) {
+          const updatedCurrentTask = updatedTasksMap.get(currentTask.id);
+          if (updatedCurrentTask) {
+            setTask({
+              ...currentTask,
+              ordinal_priority: updatedCurrentTask.ordinal_priority,
+            });
+          }
+        }
+
+        toast({
+          title: "Task order updated",
+          description: "Task priorities have been successfully updated.",
+        });
+
+        return true;
+      } catch (error) {
+        console.error("Error updating task order:", error);
+        // Restore previous state on error
+        if (prevState.length > 0) {
+          setTasks(prevState);
+        }
+        if (prevCurrentTask) {
+          setTask(prevCurrentTask);
+        }
+        toast({
+          title: "Failed to update task order",
+          description: "An error occurred while updating task order.",
+          variant: "destructive",
+        });
+        return false;
+      } finally {
+        setIsPending(false);
+      }
+    },
+    [
+      currentTask,
+      milestone,
+      prevCurrentTask,
+      prevState,
+      setTask,
+      setTasks,
+      tasks,
+      toast,
+    ],
+  );
+
+  return {
+    handleDragEnd,
+    isPending,
+  };
+};
+
+/**
+ * Enhanced version of useTaskListCard that incorporates the drag and drop functionality
+ */
+export function useEnhancedTaskListCard() {
+  const baseHook = useTaskListCard();
+  const { handleDragEnd, isPending: isDragDropPending } = useTaskDragDrop();
+
+  // Replace the original handleDragEnd with our improved version
+  return {
+    ...baseHook,
+    handleDragEnd,
+    isPending: baseHook.isPending || isDragDropPending,
+  };
+}

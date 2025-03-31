@@ -145,8 +145,6 @@ const ProjectMembersCard = () => {
     isCancelPending,
   } = useMembersManagement();
 
-  console.log(members);
-
   // Use the projectRole hook to determine if the current user is a project manager
   const { isProjectManager } = useProjectRole();
 

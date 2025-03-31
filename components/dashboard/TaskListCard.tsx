@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/tooltip";
 import configuration from "@/configuration";
 import useProjectRole from "@/hooks/member.hooks";
-import { useTaskListCard } from "@/hooks/task.hooks";
+import { useEnhancedTaskListCard } from "@/hooks/task.hooks";
 import { capitalizeFirstLetter } from "@/lib/string.util";
 import { cn } from "@/lib/utils";
 import { useAppData } from "@/stores/app.store";
@@ -115,7 +115,7 @@ const TaskListCard = () => {
     limitedTasks,
     selectedStatus,
     isPending,
-    handleDragEnd,
+    handleDragEnd, // Using the enhanced drag end handler
     handleStatusChange,
     handleAssigneeChange,
     toggleAssignee,
@@ -125,7 +125,7 @@ const TaskListCard = () => {
     handleIdHeaderClick,
     handleStatusHeaderClick,
     getIdHeaderText,
-  } = useTaskListCard();
+  } = useEnhancedTaskListCard(); // Use the enhanced hook instead
   const { user, profile } = useAppData();
   const { canEdit } = useProjectRole();
 
