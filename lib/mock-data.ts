@@ -579,7 +579,7 @@ const mockMilestones = {
             avatar_url: "/avatars/alice.jpg",
             professional_title: "UI/UX Designer",
           },
-          "completed",
+          "todo",
           "high",
           5000,
           "Create all UI mockups for login, registration, and password reset screens",
@@ -4470,8 +4470,8 @@ function createTaskWithDetails(
     recorded_minutes: recordedMinutes ?? 0,
     start_time: startTime,
     prefix: projectId.substring(0, 4),
-    ordinal_id: taskNumber,
-    ordinal_priority: taskNumber, // Use the task number from the ID for ordinal_priority
+    ordinal_id: taskNumber, // This should use the relative position within the milestone
+    ordinal_priority: taskNumber, // This should use the relative position within the milestone
     slug: title.toLowerCase().replace(/\s+/g, "-"),
     tags,
     schedule,
@@ -4482,7 +4482,7 @@ function createTaskWithDetails(
 
 export const getMockDataForProject = (
   projectId: string,
-  milestoneId?: string, // Optional parameter to get milestone-specific data
+  milestoneId?: string,
 ): {
   tasks: Partial<TaskWithAssignee>[];
   project: Partial<ProjectWithDetails> | null;
@@ -4580,6 +4580,7 @@ export const getMockDataForProject = (
   // Ensure all tasks in the collection have sequential ordinal_priority values starting from 1
   tasks = tasks.map((task, index) => ({
     ...task,
+    ordinal_id: index + 1,
     ordinal_priority: index + 1,
   }));
 
