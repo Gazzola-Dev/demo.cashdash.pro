@@ -2,6 +2,7 @@
 
 import useIsMounted from "@/hooks/useIsMounted";
 import AppProvider from "@/providers/AppProvider";
+import DemoProvider from "@/providers/DemoProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { ZIndexProvider } from "@/providers/ZIndexProvider";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
@@ -19,7 +20,9 @@ const Providers = ({ children }: { children: ReactNode }) => {
         disableTransitionOnChange
       >
         <ZIndexProvider>
-          <AppProvider>{children}</AppProvider>
+          <AppProvider>
+            <DemoProvider>{children}</DemoProvider>
+          </AppProvider>
         </ZIndexProvider>
       </ThemeProvider>
     </NuqsAdapter>

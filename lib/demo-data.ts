@@ -1,9 +1,10 @@
 /**
- * Demo Data for Project Management Walkthrough
- * This file contains the demo walkthrough steps that guide users through the main features of the app.
+ * Contextual Demo Data for Project Management
+ * This file contains the demo information that will be displayed when elements with
+ * corresponding IDs are detected in the DOM.
  */
 
-// Element IDs for targeting in the demo
+// Element IDs for targeting in the demo - kept the same as original for compatibility
 export enum DemoElementId {
   // Invitation Modal
   INVITATION_ACCEPT_BUTTON = "invitation-accept-button",
@@ -48,273 +49,236 @@ export enum DemoElementId {
   CONTRACT_PAYMENT_EXPAND = "contract-payment-expand",
 }
 
+// Group related elements by feature area for better organization
+export enum DemoCategory {
+  PROJECT = "Project Management",
+  MILESTONE = "Milestone Management",
+  TASK = "Task Management",
+  TEAM = "Team Management",
+  CONTRACT = "Contract Management",
+}
+
 export interface DemoStep {
   id: string;
   title: string;
   content: string;
   targetIds?: DemoElementId[];
-  waitForInteraction?: boolean;
-  nextButtonText?: string;
-  skipButtonText?: string;
-  showSkipButton?: boolean;
-  showProgressBar?: boolean;
-  disableOverlayClose?: boolean;
-  disableKeyboardNav?: boolean;
-  type: "dialog" | "popover";
+  category: DemoCategory;
+  priority?: number; // Higher values show first in the list
 }
 
-const demoData: DemoStep[] = [
-  // Welcome step
-  {
-    id: "welcome",
-    title: "Welcome to Project Management",
-    content:
-      "Let's walk through the main features of our project management tool to help you get started.",
-    nextButtonText: "Let's Go",
-    showSkipButton: true,
-    skipButtonText: "Skip Tour",
-    showProgressBar: true,
-    disableOverlayClose: true,
-    type: "dialog",
-  },
-
-  // Invitation step
-  {
-    id: "invitation-accept",
-    title: "Accept Invitation",
-    content: "Start by accepting the project invitation to join the team.",
-    targetIds: [DemoElementId.INVITATION_ACCEPT_BUTTON],
-    waitForInteraction: true,
-    type: "popover",
-  },
-
-  // Project Card expand button
+const contextualDemoData: DemoStep[] = [
+  // Project Management Items
   {
     id: "project-card-expand",
-    title: "Project Details",
+    title: "Project Details Expand",
     content:
-      "Click this button to expand the project card and view all details.",
+      "Click this button to expand the project card and view or edit all project details.",
     targetIds: [DemoElementId.PROJECT_CARD_EXPAND],
-    waitForInteraction: true,
-    type: "popover",
+    category: DemoCategory.PROJECT,
+    priority: 10,
   },
-
-  // Project Card fields
   {
-    id: "project-card-fields",
+    id: "project-editing",
     title: "Edit Project Information",
     content:
-      "You can edit any of these fields to update your project details. Click on any field to continue.",
+      "These fields allow you to update your project details. Click on any field to edit it directly.",
     targetIds: [
       DemoElementId.PROJECT_NAME_FIELD,
       DemoElementId.PROJECT_DESCRIPTION_FIELD,
       DemoElementId.PROJECT_PREFIX_FIELD,
       DemoElementId.PROJECT_GITHUB_URL_FIELD,
     ],
-    waitForInteraction: true,
-    type: "popover",
+    category: DemoCategory.PROJECT,
+    priority: 9,
   },
 
-  // Members Card expand button
-  {
-    id: "members-card-expand",
-    title: "Team Members",
-    content:
-      "Click this button to expand the members card and view the project team.",
-    targetIds: [DemoElementId.MEMBERS_CARD_EXPAND],
-    waitForInteraction: true,
-    type: "popover",
-  },
-
-  // Member Cards
-  {
-    id: "member-cards",
-    title: "Project Team",
-    content:
-      "Here you can see all team members and their roles. Project Managers can add, remove, or change member roles.",
-    targetIds: [DemoElementId.MEMBER_CARDS],
-    waitForInteraction: true,
-    type: "popover",
-  },
-
-  // Invitation Cards
-  {
-    id: "invitation-cards",
-    title: "Pending Invitations",
-    content:
-      "Any pending invitations will appear here. You can cancel invitations that haven't been accepted yet.",
-    targetIds: [DemoElementId.INVITATION_CARDS],
-    waitForInteraction: false,
-    type: "popover",
-  },
-
-  // Milestone Card expand button
+  // Milestone Management Items
   {
     id: "milestone-card-expand",
-    title: "Milestone Details",
+    title: "Milestone Details Expand",
     content:
-      "Click this button to expand the milestone card and view all milestone details.",
+      "Click this button to expand the milestone card and access all milestone information.",
     targetIds: [DemoElementId.MILESTONE_CARD_EXPAND],
-    waitForInteraction: true,
-    type: "popover",
+    category: DemoCategory.MILESTONE,
+    priority: 10,
   },
-
-  // Milestone Card fields
   {
-    id: "milestone-card-fields",
+    id: "milestone-editing",
     title: "Edit Milestone Information",
     content:
-      "You can edit any of these fields to update your milestone details. Click on any field to continue.",
+      "You can update milestone details by clicking on these fields. Changes are saved automatically.",
     targetIds: [
       DemoElementId.MILESTONE_TITLE_FIELD,
       DemoElementId.MILESTONE_STATUS_FIELD,
       DemoElementId.MILESTONE_DESCRIPTION_FIELD,
       DemoElementId.MILESTONE_DUE_DATE_FIELD,
     ],
-    waitForInteraction: true,
-    type: "popover",
+    category: DemoCategory.MILESTONE,
+    priority: 9,
   },
-
-  // Milestone Nav Button
   {
-    id: "milestone-nav-button",
+    id: "milestone-navigation",
     title: "Milestone Navigation",
     content:
-      "Click this button in the sidebar to quickly navigate to the current milestone.",
-    targetIds: [DemoElementId.MILESTONE_NAV_BUTTON],
-    waitForInteraction: true,
-    type: "popover",
+      "Use these controls to navigate between milestones in your project.",
+    targetIds: [
+      DemoElementId.MILESTONE_NAV_BUTTON,
+      DemoElementId.MILESTONE_SELECT,
+    ],
+    category: DemoCategory.MILESTONE,
+    priority: 8,
   },
 
-  // Milestone Select Element
+  // Task Management Items
   {
-    id: "milestone-select",
-    title: "Switch Milestones",
-    content:
-      "Use this dropdown to switch between different milestones in your project. Try changing the selected milestone now.",
-    targetIds: [DemoElementId.MILESTONE_SELECT],
-    waitForInteraction: true,
-    type: "popover",
-  },
-
-  // Task List Header Buttons
-  {
-    id: "task-list-header-buttons",
+    id: "task-list-controls",
     title: "Task List Controls",
     content:
-      "These buttons allow you to sort, filter, and organize your tasks by priority, status, creation date, and assignee.",
+      "These buttons let you sort, filter, and organize your tasks by different criteria.",
     targetIds: [DemoElementId.TASK_LIST_HEADER_BUTTONS],
-    waitForInteraction: true,
-    type: "popover",
+    category: DemoCategory.TASK,
+    priority: 10,
   },
-
-  // Task List Items
   {
-    id: "task-list-items",
-    title: "Task List",
+    id: "task-items",
+    title: "Task List Items",
     content:
-      "Your tasks appear here. You can click on any task to view and edit its details. Tasks are color-coded by status.",
+      "Your tasks appear here. They're color-coded by status for easy identification.",
     targetIds: [DemoElementId.TASK_LIST_ITEMS],
-    waitForInteraction: true,
-    type: "popover",
+    category: DemoCategory.TASK,
+    priority: 9,
   },
-
-  // Task Components
   {
-    id: "task-components",
-    title: "Task Management",
+    id: "task-details",
+    title: "Task Details",
     content:
-      "The task view has several components: header to edit the title, description area for details, and a sidebar with controls for status, assignee, and priority.",
+      "View and edit task details in this area. The header shows the title, description area for details, and sidebar for status and assignments.",
     targetIds: [
       DemoElementId.TASK_HEADER,
       DemoElementId.TASK_DESCRIPTION,
       DemoElementId.TASK_SIDEBAR,
     ],
-    waitForInteraction: true,
-    type: "popover",
+    category: DemoCategory.TASK,
+    priority: 8,
   },
-
-  // Task List drag handles
   {
-    id: "task-drag-handles",
+    id: "task-reordering",
     title: "Task Reordering",
     content:
-      "Drag any task to reorder your task list. Drag and drop a task to continue.",
+      "Use these handles to drag and drop tasks to change their order in the list.",
     targetIds: [DemoElementId.TASK_DRAG_HANDLE],
-    waitForInteraction: true,
-    type: "popover",
+    category: DemoCategory.TASK,
+    priority: 7,
   },
-
-  // Task List select elements
   {
-    id: "task-select-elements",
-    title: "Task Management",
+    id: "task-quick-edit",
+    title: "Quick Task Management",
     content:
-      "Change the status or assignee of any task to update its progress. Change any of these values to continue.",
+      "Use these dropdowns to quickly change task status or assignee without opening the full task details.",
     targetIds: [
       DemoElementId.TASK_STATUS_SELECT,
       DemoElementId.TASK_ASSIGNEE_SELECT,
     ],
-    waitForInteraction: true,
-    type: "popover",
+    category: DemoCategory.TASK,
+    priority: 6,
   },
 
-  // Contract Details Expand
+  // Team Management Items
+  {
+    id: "invitation-accept",
+    title: "Accept Project Invitation",
+    content:
+      "Click this button to accept the invitation and join the project team.",
+    targetIds: [DemoElementId.INVITATION_ACCEPT_BUTTON],
+    category: DemoCategory.TEAM,
+    priority: 10,
+  },
+  {
+    id: "members-card-expand",
+    title: "Team Members Expand",
+    content: "Click to view all project team members and their roles.",
+    targetIds: [DemoElementId.MEMBERS_CARD_EXPAND],
+    category: DemoCategory.TEAM,
+    priority: 9,
+  },
+  {
+    id: "member-cards",
+    title: "Project Team",
+    content:
+      "This area shows all current team members and their project roles. Project Managers can add or remove members.",
+    targetIds: [DemoElementId.MEMBER_CARDS],
+    category: DemoCategory.TEAM,
+    priority: 8,
+  },
+  {
+    id: "invitation-cards",
+    title: "Pending Invitations",
+    content:
+      "View and manage pending team invitations in this section. You can resend or cancel invitations as needed.",
+    targetIds: [DemoElementId.INVITATION_CARDS],
+    category: DemoCategory.TEAM,
+    priority: 7,
+  },
+
+  // Contract Management Items
   {
     id: "contract-details-expand",
     title: "Contract Details",
     content:
-      "Click this button to expand the contract details card and view information about the client and project scope.",
+      "Expand this section to view information about the client and project scope.",
     targetIds: [DemoElementId.CONTRACT_DETAILS_EXPAND],
-    waitForInteraction: true,
-    type: "popover",
+    category: DemoCategory.CONTRACT,
+    priority: 10,
   },
-
-  // Contract Tasks Expand
   {
     id: "contract-tasks-expand",
     title: "Contract Tasks",
     content:
-      "Click this button to expand the contract tasks card and view deliverables associated with this contract.",
+      "View all deliverables associated with this contract by expanding this section.",
     targetIds: [DemoElementId.CONTRACT_TASKS_EXPAND],
-    waitForInteraction: true,
-    type: "popover",
+    category: DemoCategory.CONTRACT,
+    priority: 9,
   },
-
-  // Contract Members Expand
   {
     id: "contract-members-expand",
-    title: "Contract Members",
+    title: "Contract Team",
     content:
-      "Click this button to expand the contract members card and view team members working on this contract.",
+      "See which team members are assigned to this contract by expanding this section.",
     targetIds: [DemoElementId.CONTRACT_MEMBERS_EXPAND],
-    waitForInteraction: true,
-    type: "popover",
+    category: DemoCategory.CONTRACT,
+    priority: 8,
   },
-
-  // Contract Payment Expand
   {
     id: "contract-payment-expand",
-    title: "Contract Payment",
+    title: "Payment Information",
     content:
-      "Click this button to expand the payment information card and manage billing for this contract.",
+      "Manage billing and payment details for this contract in this section.",
     targetIds: [DemoElementId.CONTRACT_PAYMENT_EXPAND],
-    waitForInteraction: true,
-    type: "popover",
-  },
-
-  // Complete step
-  {
-    id: "tour-complete",
-    title: "Tour Complete! 🎉",
-    content:
-      "Congratulations! You now know the basics of our project management tool. Start managing your projects, milestones, and tasks with ease.",
-    nextButtonText: "Get Started",
-    showSkipButton: false,
-    showProgressBar: false,
-    disableOverlayClose: true,
-    type: "dialog",
+    category: DemoCategory.CONTRACT,
+    priority: 7,
   },
 ];
 
-export default demoData;
+// Helper function to get demo items by category
+export const getDemoItemsByCategory = (category: DemoCategory): DemoStep[] => {
+  return contextualDemoData
+    .filter(item => item.category === category)
+    .sort((a, b) => (b.priority || 0) - (a.priority || 0));
+};
+
+// Helper function to get demo item by ID
+export const getDemoItemById = (id: string): DemoStep | undefined => {
+  return contextualDemoData.find(item => item.id === id);
+};
+
+// Helper function to get demo items by element ID
+export const getDemoItemsByElementId = (
+  elementId: DemoElementId,
+): DemoStep[] => {
+  return contextualDemoData
+    .filter(item => item.targetIds?.includes(elementId))
+    .sort((a, b) => (b.priority || 0) - (a.priority || 0));
+};
+
+export default contextualDemoData;
