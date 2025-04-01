@@ -9,6 +9,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import configuration from "@/configuration";
+import { DemoElementId } from "@/lib/demo-data";
 import { capitalizeFirstLetter } from "@/lib/string.util";
 import { cn } from "@/lib/utils";
 import { useAppData } from "@/stores/app.store";
@@ -137,7 +138,10 @@ const TaskList = () => {
             <h3 className="text-sm text-gray-800 dark:text-gray-200 font-medium">
               Tasks
             </h3>
-            <div className="flex items-center gap-1">
+            <div
+              className="flex items-center gap-1"
+              id={DemoElementId.TASK_LIST_HEADER_BUTTONS}
+            >
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -238,7 +242,10 @@ const TaskList = () => {
           </div>
         </>
       )}
-      <div className="space-y-2 flex-grow overflow-auto">
+      <div
+        className="space-y-2 flex-grow overflow-auto"
+        id={DemoElementId.TASK_LIST_ITEMS}
+      >
         <div className="flex-1 overflow-y-auto pr-2">
           {
             <TooltipProvider>

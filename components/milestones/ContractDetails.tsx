@@ -14,6 +14,7 @@ import {
   useUpdateContract,
 } from "@/hooks/contract.hooks";
 import { formatCurrency, formatDate } from "@/lib/contract.util";
+import { DemoElementId } from "@/lib/demo-data";
 import { cn } from "@/lib/utils";
 import { useAppData } from "@/stores/app.store";
 import { Tables } from "@/types/database.types";
@@ -51,7 +52,7 @@ export const ContractDetails = () => {
   }
 
   return (
-    <div className="space-y-4" id="contract-details-section">
+    <div className="space-y-4" id={DemoElementId.CONTRACT_DETAILS_EXPAND}>
       <div className="flex flex-col sm:flex-row sm:justify-between space-y-2 sm:space-y-0">
         {editingField === "title" ? (
           <Input

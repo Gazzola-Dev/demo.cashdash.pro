@@ -23,6 +23,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useUpdateProject } from "@/hooks/app.hooks";
 import useProjectRole from "@/hooks/member.hooks";
 import { useCreateProject, useDeleteProject } from "@/hooks/project.hooks";
+import { DemoElementId } from "@/lib/demo-data";
 import { cn } from "@/lib/utils";
 import { useAppData } from "@/stores/app.store";
 import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
@@ -249,7 +250,7 @@ const ProjectCard = () => {
       open={isOpen}
       onOpenChange={setIsOpen}
       className="h-full w-full"
-      id="project-card"
+      id={DemoElementId.PROJECT_CARD_EXPAND}
     >
       <Card className="h-full">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -309,7 +310,7 @@ const ProjectCard = () => {
             </label>
             {canEdit && editingField === "name" ? (
               <Input
-                id="name"
+                id={DemoElementId.PROJECT_NAME_FIELD}
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
@@ -326,6 +327,7 @@ const ProjectCard = () => {
                   canEdit && "cursor-text",
                 )}
                 onClick={() => canEdit && setEditingField("name")}
+                id={DemoElementId.PROJECT_NAME_FIELD}
               >
                 {project?.name}
               </p>
@@ -343,7 +345,7 @@ const ProjectCard = () => {
                 </label>
                 {canEdit && editingField === "description" ? (
                   <Textarea
-                    id="description"
+                    id={DemoElementId.PROJECT_DESCRIPTION_FIELD}
                     name="description"
                     value={formData.description || ""}
                     onChange={handleChange}
@@ -361,6 +363,7 @@ const ProjectCard = () => {
                       canEdit && "cursor-text",
                     )}
                     onClick={() => canEdit && setEditingField("description")}
+                    id={DemoElementId.PROJECT_DESCRIPTION_FIELD}
                   >
                     {project?.description || (
                       <span className="text-gray-500 italic">
@@ -383,7 +386,7 @@ const ProjectCard = () => {
                   </label>
                   {editingField === "prefix" ? (
                     <Input
-                      id="prefix"
+                      id={DemoElementId.PROJECT_PREFIX_FIELD}
                       name="prefix"
                       value={formData.prefix}
                       onChange={handleChange}
@@ -400,6 +403,7 @@ const ProjectCard = () => {
                         isAdmin && "cursor-text",
                       )}
                       onClick={() => isAdmin && setEditingField("prefix")}
+                      id={DemoElementId.PROJECT_PREFIX_FIELD}
                     >
                       {project?.prefix || (
                         <span className="text-gray-500 italic">No prefix</span>
@@ -419,7 +423,7 @@ const ProjectCard = () => {
                   </label>
                   {editingField === "github_repo_url" ? (
                     <Input
-                      id="github_repo_url"
+                      id={DemoElementId.PROJECT_GITHUB_URL_FIELD}
                       name="github_repo_url"
                       value={formData.github_repo_url || ""}
                       onChange={handleChange}
@@ -438,6 +442,7 @@ const ProjectCard = () => {
                       onClick={() =>
                         isAdmin && setEditingField("github_repo_url")
                       }
+                      id={DemoElementId.PROJECT_GITHUB_URL_FIELD}
                     >
                       {project?.github_repo_url || (
                         <span className="text-gray-500 italic">

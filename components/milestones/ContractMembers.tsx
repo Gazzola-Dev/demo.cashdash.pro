@@ -16,6 +16,7 @@ import {
   useToggleContractMember,
   useUpdateContractMemberApproval,
 } from "@/hooks/contract.hooks";
+import { DemoElementId } from "@/lib/demo-data";
 import { AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
 
@@ -77,7 +78,7 @@ export const ContractMembers = () => {
       open={isOpen}
       onOpenChange={setIsOpen}
       className="w-full"
-      id="contract-members-card"
+      id={DemoElementId.CONTRACT_MEMBERS_EXPAND}
     >
       <Card className="h-full">
         <CardHeader className="flex flex-row items-center justify-between pb-2">

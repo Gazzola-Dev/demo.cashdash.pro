@@ -24,6 +24,7 @@ import {
   useUpdateTask,
 } from "@/hooks/task.hooks";
 import { useToast } from "@/hooks/use-toast";
+import { DemoElementId } from "@/lib/demo-data";
 import { cn } from "@/lib/utils";
 import { Tables } from "@/types/database.types";
 import { LockIcon, PlusCircle, Trash2 } from "lucide-react";
@@ -122,7 +123,7 @@ export const ContractTasks: React.FC<ContractTasksProps> = ({ tasks }) => {
   };
 
   return (
-    <div className="space-y-4" id="contract-tasks-section">
+    <div className="space-y-4" id={DemoElementId.CONTRACT_TASKS_EXPAND}>
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-medium">Contract Tasks</h3>
         <div className="flex items-center gap-2">

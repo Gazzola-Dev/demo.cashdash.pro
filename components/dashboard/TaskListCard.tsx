@@ -24,6 +24,7 @@ import {
 import configuration from "@/configuration";
 import useProjectRole from "@/hooks/member.hooks";
 import { useEnhancedTaskListCard } from "@/hooks/task.hooks";
+import { DemoElementId } from "@/lib/demo-data";
 import { capitalizeFirstLetter } from "@/lib/string.util";
 import { cn } from "@/lib/utils";
 import { useAppData } from "@/stores/app.store";
@@ -208,7 +209,11 @@ const TaskListCard = () => {
           <CardContent className="flex-1 pb-3 flex flex-col overflow-hidden">
             <div className="border rounded-md flex flex-col overflow-hidden h-full">
               {/* Fixed header row that doesn't scroll */}
-              <div className="grid grid-cols-[30px_60px_50px_120px_1fr_120px] bg-muted px-2 py-2 text-xs font-medium">
+
+              <div
+                className="grid grid-cols-[30px_60px_50px_120px_1fr_120px] bg-muted px-2 py-2 text-xs font-medium"
+                id={DemoElementId.TASK_LIST_HEADER_BUTTONS}
+              >
                 <div></div>
                 <button
                   onClick={canEdit ? handlePriorityHeaderClick : undefined}
@@ -296,6 +301,7 @@ const TaskListCard = () => {
                                       "flex items-center justify-center",
                                       isPending && "opacity-50",
                                     )}
+                                    id={DemoElementId.TASK_DRAG_HANDLE}
                                   >
                                     <Menu
                                       className={cn(
@@ -342,7 +348,10 @@ const TaskListCard = () => {
                                       }
                                       disabled={!canEdit || isPending}
                                     >
-                                      <SelectTrigger className="w-[110px]">
+                                      <SelectTrigger
+                                        className="w-[110px]"
+                                        id={DemoElementId.TASK_STATUS_SELECT}
+                                      >
                                         <SelectValue>
                                           <div className="flex items-center gap-1">
                                             <StatusIconSimple
@@ -407,7 +416,10 @@ const TaskListCard = () => {
                                       }
                                       disabled={!canEdit || isPending}
                                     >
-                                      <SelectTrigger className="w-[110px]">
+                                      <SelectTrigger
+                                        className="w-[110px]"
+                                        id={DemoElementId.TASK_ASSIGNEE_SELECT}
+                                      >
                                         <SelectValue>
                                           <div className="flex items-center gap-1">
                                             <Avatar className="h-5 w-5">

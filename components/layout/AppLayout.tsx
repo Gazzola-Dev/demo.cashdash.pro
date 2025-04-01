@@ -47,6 +47,7 @@ import {
 import configuration from "@/configuration";
 import { useToast } from "@/hooks/use-toast";
 import { useDialogQueue } from "@/hooks/useDialogQueue";
+import { DemoElementId } from "@/lib/demo-data";
 import { cn } from "@/lib/utils";
 import { useAppData } from "@/stores/app.store";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -129,7 +130,7 @@ function AppSidebar() {
 
   return (
     <>
-      <Sidebar collapsible="icon" id="sidebar-root">
+      <Sidebar collapsible="icon" id={DemoElementId.TASK_SIDEBAR}>
         <SidebarContent className="border-r dark:border-blue-900 overflow-x-hidden">
           <SidebarHeader className="flex">
             <ProjectSwitcher />
@@ -195,7 +196,9 @@ function AppSidebar() {
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger>
-                        <SidebarMenuItem>
+                        <SidebarMenuItem
+                          id={DemoElementId.MILESTONE_NAV_BUTTON}
+                        >
                           <SidebarButton
                             href={configuration.paths.appHome}
                             matchPattern={`(^${configuration.paths.appHome}$)|(^${configuration.paths.project.view({ project_slug: "[^/]+" })}$)`}

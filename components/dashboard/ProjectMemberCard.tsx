@@ -30,6 +30,7 @@ import {
   useProjectRole,
   useUpdateProjectMember,
 } from "@/hooks/member.hooks";
+import { DemoElementId } from "@/lib/demo-data";
 import { capitalizeFirstLetter } from "@/lib/string.util";
 import { ProjectInvitationWithDetails } from "@/types/app.types";
 import {
@@ -178,7 +179,7 @@ const ProjectMembersCard = () => {
         open={isOpen}
         onOpenChange={setIsOpen}
         className="w-full"
-        id="members-card"
+        id={DemoElementId.MEMBERS_CARD_EXPAND}
       >
         <Card className="h-full">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -229,7 +230,10 @@ const ProjectMembersCard = () => {
             {/* Expanded view - show members with scroll */}
             <CollapsibleContent className="space-y-2">
               <div className="overflow-x-auto" style={{ maxHeight: "320px" }}>
-                <div className="flex flex-row flex-wrap">
+                <div
+                  className="flex flex-row flex-wrap"
+                  id={DemoElementId.MEMBER_CARDS}
+                >
                   {/* Render active members */}
                   {members.map(
                     member =>
@@ -353,18 +357,21 @@ const ProjectMembersCard = () => {
                   {/* Render pending invitations */}
                   {!!pendingInvitations?.length && (
                     <>
-                      {pendingInvitations.map(invitation => (
-                        <InvitationItem
-                          key={invitation.invitation?.id}
-                          invitation={invitation}
-                          onCancel={id =>
-                            confirmCancelInvitation(
-                              id,
-                              invitation.invitation?.email || "this invitation",
-                            )
-                          }
-                        />
-                      ))}
+                      <div id={DemoElementId.INVITATION_CARDS}>
+                        {pendingInvitations.map(invitation => (
+                          <InvitationItem
+                            key={invitation.invitation?.id}
+                            invitation={invitation}
+                            onCancel={id =>
+                              confirmCancelInvitation(
+                                id,
+                                invitation.invitation?.email ||
+                                  "this invitation",
+                              )
+                            }
+                          />
+                        ))}
+                      </div>
                     </>
                   )}
 

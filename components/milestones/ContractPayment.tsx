@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useContractPayment } from "@/hooks/contract.hooks";
+import { DemoElementId } from "@/lib/demo-data";
 import { CheckCircle, CreditCard, LockIcon } from "lucide-react";
 
 export const ContractPayment = () => {
@@ -98,7 +99,7 @@ export const ContractPayment = () => {
   }
 
   return (
-    <Card className="w-full">
+    <Card className="w-full" id={DemoElementId.CONTRACT_PAYMENT_EXPAND}>
       <CardHeader>
         <CardTitle>Payment Information</CardTitle>
       </CardHeader>

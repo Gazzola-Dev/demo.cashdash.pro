@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useMilestoneCard } from "@/hooks/milestone.hooks";
+import { DemoElementId } from "@/lib/demo-data";
 import {
   ArchiveIcon,
   CheckCircle,
@@ -114,7 +115,7 @@ function MilestoneCard() {
         open={isOpen}
         onOpenChange={setIsOpen}
         className="h-full w-full"
-        id="milestone-card"
+        id={DemoElementId.MILESTONE_CARD_EXPAND}
       >
         <Card className="h-full">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -174,7 +175,7 @@ function MilestoneCard() {
                 onValueChange={handleMilestoneChange}
                 disabled={isPending}
               >
-                <SelectTrigger>
+                <SelectTrigger id={DemoElementId.MILESTONE_SELECT}>
                   <SelectValue placeholder="Select a milestone" />
                 </SelectTrigger>
                 <SelectContent>
@@ -207,7 +208,7 @@ function MilestoneCard() {
                       </Label>
                       {canEdit && editingField === "title" ? (
                         <Input
-                          id="title"
+                          id={DemoElementId.MILESTONE_TITLE_FIELD}
                           name="title"
                           value={formData.title}
                           onChange={handleChange}
@@ -221,6 +222,7 @@ function MilestoneCard() {
                         <p
                           className={`text-sm ${canEdit ? "cursor-text" : ""} bg-gray-50/70 dark:bg-gray-900 rounded py-1 px-2`}
                           onClick={() => canEdit && setEditingField("title")}
+                          id={DemoElementId.MILESTONE_TITLE_FIELD}
                         >
                           {currentMilestone.title || "Untitled Milestone"}
                         </p>
@@ -239,7 +241,10 @@ function MilestoneCard() {
                         onValueChange={handleStatusChange}
                         disabled={!canEdit || isPending}
                       >
-                        <SelectTrigger className="h-8">
+                        <SelectTrigger
+                          id={DemoElementId.MILESTONE_STATUS_FIELD}
+                          className="h-8"
+                        >
                           <SelectValue>
                             <div className="flex items-center gap-2">
                               {getStatusIcon(formData.status)}
@@ -287,7 +292,7 @@ function MilestoneCard() {
                       </Label>
                       {canEdit && editingField === "description" ? (
                         <Textarea
-                          id="description"
+                          id={DemoElementId.MILESTONE_DESCRIPTION_FIELD}
                           name="description"
                           value={formData.description || ""}
                           onChange={handleChange}
@@ -304,6 +309,7 @@ function MilestoneCard() {
                           onClick={() =>
                             canEdit && setEditingField("description")
                           }
+                          id={DemoElementId.MILESTONE_DESCRIPTION_FIELD}
                         >
                           {currentMilestone.description || (
                             <span className="text-gray-500 italic">
@@ -323,7 +329,7 @@ function MilestoneCard() {
                       </Label>
                       {canEdit && editingField === "dueDate" ? (
                         <Input
-                          id="dueDate"
+                          id={DemoElementId.MILESTONE_DUE_DATE_FIELD}
                           name="dueDate"
                           type="date"
                           value={formData.dueDate}
@@ -337,6 +343,7 @@ function MilestoneCard() {
                         <p
                           className={`text-sm ${canEdit ? "cursor-text" : ""} bg-gray-50/70 dark:bg-gray-900 rounded py-1 px-2`}
                           onClick={() => canEdit && setEditingField("dueDate")}
+                          id={DemoElementId.MILESTONE_DUE_DATE_FIELD}
                         >
                           {currentMilestone.due_date !== null ? (
                             formatDate(currentMilestone.due_date ?? "")

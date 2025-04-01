@@ -4226,27 +4226,7 @@ const mockProfile = {
 };
 
 // User invitations
-const mockUserInvitations: Partial<ProjectInvitationWithProfile>[] = [
-  //   {
-  //     invitation: {
-  //       id: "user-inv-1",
-  //       project_id: "project-3",
-  //       email: "jane@example.com",
-  //       role: "developer",
-  //       invited_by: "user-8",
-  //       created_at: "2025-11-01T10:00:00Z",
-  //       expires_at: "2025-11-08T10:00:00Z",
-  //       status: "pending",
-  //     },
-  //     sender_profile: {
-  //       id: "user-8",
-  //       display_name: "Chris Black",
-  //       avatar_url: "/avatars/chris.jpg",
-  //       professional_title: "AI Engineer",
-  //     },
-  //     project: mockProjects[2],
-  //   },
-];
+const mockUserInvitations: Partial<ProjectInvitationWithProfile>[] = [];
 
 // Create the initial app state with default project (project-1)
 export const mockInitialAppState = {
