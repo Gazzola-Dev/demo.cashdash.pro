@@ -864,11 +864,20 @@ export const useTaskDragDrop = () => {
 
         // Get the tasks that should be considered for reordering
         // Either all tasks or only the tasks in the current milestone
-        const relevantTasks = milestone
-          ? tasks.filter(t =>
-              (milestone.tasks || []).some(mt => mt.id === t.id),
-            )
-          : [...tasks];
+        const relevantTasks = (
+          milestone
+            ? tasks.filter(t =>
+                (milestone.tasks || []).some(mt => mt.id === t.id),
+              )
+            : [...tasks]
+        ).filter(
+          task =>
+            task.status !== "completed" &&
+            task.status !== "backlog" &&
+            task.status !== "draft",
+        );
+
+        console.log(relevantTasks);
 
         // Sort the relevant tasks by their current ordinal_priority
         const sortedTasks = [...relevantTasks].sort(
@@ -887,6 +896,8 @@ export const useTaskDragDrop = () => {
 
         // Insert it at the new position
         sortedTasks.splice(destinationIndex, 0, taskToMove);
+
+        console.log(taskToMove.title, destinationIndex);
 
         // Update ordinal priorities for all affected tasks
         const updatedTasks = sortedTasks.map((task, index) => ({
